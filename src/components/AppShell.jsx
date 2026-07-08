@@ -9,12 +9,24 @@ export default function AppShell({
   feed,
   friends,
   threads,
+  games,
   onMeet,
   onNavigate,
+  onSendMessage,
+  onToast,
 }) {
   const renderView = () => {
     if (activeView === "feed") return <FeedView feed={feed} />;
-    if (activeView === "messages") return <MessagesView threads={threads} />;
+    if (activeView === "messages") {
+      return (
+        <MessagesView
+          threads={threads}
+          games={games}
+          onSendMessage={onSendMessage}
+          onToast={onToast}
+        />
+      );
+    }
     if (activeView === "friends") return <FriendsView friends={friends} />;
     if (activeView === "settings") return <SettingsView />;
     return <HomeView user={user} feed={feed} onMeet={onMeet} />;

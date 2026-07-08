@@ -70,6 +70,24 @@ export default function App() {
     });
   };
 
+  const sendFriendMessage = (friendId, message) => {
+    setThreads((current) =>
+      current.map((thread) => {
+        if (thread.friendId !== friendId) return thread;
+        const reply =
+          message.type === "image"
+            ? { from: "them", text: "我看到图片啦，很有画面感。" }
+            : { from: "them", text: "收到，我也想继续聊这个。" };
+
+        return {
+          ...thread,
+          subtitle: message.type === "image" ? "刚刚分享了一张图片。" : message.text,
+          messages: [...thread.messages, { from: "me", ...message }, reply],
+        };
+      }),
+    );
+  };
+
   if (phase === "landing") {
     return (
       <>
@@ -134,8 +152,11 @@ export default function App() {
         feed={mock.feed}
         friends={friends}
         threads={threads}
+        games={mock.games}
         onNavigate={setActiveView}
         onMeet={() => setModal("meet")}
+        onSendMessage={sendFriendMessage}
+        onToast={showToast}
       />
 
       {modal === "meet" ? (
