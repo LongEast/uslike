@@ -1,17 +1,137 @@
-import { ChevronLeft, Mic, MessageSquareText, Move } from "lucide-react";
-import { useState } from "react";
+import {
+  ChevronLeft,
+  Compass,
+  Mic,
+  MessageSquareText,
+  Move,
+  Newspaper,
+  Sparkles,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
 
-export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) {
-  const [selectedId, setSelectedId] = useState(rooms[0]?.id);
-  const [marker, setMarker] = useState({ x: 48, y: 48 });
-  const selectedRoom = rooms.find((room) => room.id === selectedId) || rooms[0];
+const INITIAL_PAN = { x: 0, y: 0 };
+const PAN_LIMIT = { x: 520, y: 380 };
+const INITIAL_ZOOM = 1;
+const MIN_ZOOM = 0.72;
+const MAX_ZOOM = 1.46;
 
-  const moveMarker = (event) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const x = Math.round(((event.clientX - bounds.left) / bounds.width) * 100);
-    const y = Math.round(((event.clientY - bounds.top) / bounds.height) * 100);
-    setMarker({ x: Math.min(92, Math.max(8, x)), y: Math.min(86, Math.max(12, y)) });
+const getRoomPosition = (room) => ({
+  mapX: room.mapX ?? (room.x - 50) * 12,
+  mapY: room.mapY ?? (room.y - 50) * 9,
+});
+
+const getStaticSimilarity = (room) => {
+  if (room.similarity) return room.similarity;
+  const { mapX, mapY } = getRoomPosition(room);
+  const distance = Math.hypot(mapX, mapY);
+  return Math.max(32, Math.min(98, Math.round(100 - distance / 8)));
+};
+
+const getMatchTone = (similarity) => {
+  if (similarity >= 76) return "同频很近";
+  if (similarity >= 64) return "高匹配";
+  if (similarity >= 52) return "可探索";
+  return "遥远星系";
+};
+
+const clampPan = (pan, zoom = INITIAL_ZOOM) => ({
+  x: Math.max(-PAN_LIMIT.x * zoom, Math.min(PAN_LIMIT.x * zoom, pan.x)),
+  y: Math.max(-PAN_LIMIT.y * zoom, Math.min(PAN_LIMIT.y * zoom, pan.y)),
+});
+
+export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) {
+  const canvasRef = useRef(null);
+  const dragRef = useRef(null);
+  const listRefs = useRef({});
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [selectedId, setSelectedId] = useState(
+    [...rooms].sort((a, b) => getStaticSimilarity(b) - getStaticSimilarity(a))[0]?.id,
+  );
+  const [hoveredId, setHoveredId] = useState(null);
+  const [pan, setPan] = useState(INITIAL_PAN);
+  const [zoom, setZoom] = useState(INITIAL_ZOOM);
+  const [isPanning, setIsPanning] = useState(false);
+  const selectedRoom = rooms.find((room) => room.id === selectedId) || rooms[0];
+  const roomsWithSignal = useMemo(
+    () =>
+      rooms.map((room) => {
+        const similarity = getStaticSimilarity(room);
+        return {
+          ...room,
+          ...getRoomPosition(room),
+          matchLabel: getMatchTone(similarity),
+          similarity,
+        };
+      }),
+    [rooms],
+  );
+  const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId) || roomsWithSignal[0];
+
+  useEffect(() => {
+    if (!canvasRef.current) return undefined;
+
+    const syncCanvasSize = () => {
+      const bounds = canvasRef.current.getBoundingClientRect();
+      setCanvasSize({ width: bounds.width, height: bounds.height });
+    };
+
+    syncCanvasSize();
+    const observer = new ResizeObserver(syncCanvasSize);
+    observer.observe(canvasRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    listRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
+
+  const getLineEnd = (room) => ({
+    x: canvasSize.width / 2 + pan.x + room.mapX * zoom,
+    y: canvasSize.height / 2 + pan.y + room.mapY * zoom,
+  });
+
+  const startPanning = (event) => {
+    if (event.target.closest("[data-stop-pan]")) return;
+    dragRef.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: pan.x,
+      originY: pan.y,
+    };
+    setIsPanning(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const panMap = (event) => {
+    if (!dragRef.current) return;
+    const nextPan = clampPan(
+      {
+        x: dragRef.current.originX + event.clientX - dragRef.current.startX,
+        y: dragRef.current.originY + event.clientY - dragRef.current.startY,
+      },
+      zoom,
+    );
+    setPan(nextPan);
+  };
+
+  const stopPanning = () => {
+    dragRef.current = null;
+    setIsPanning(false);
+  };
+
+  const changeZoom = (delta) => {
+    setZoom((current) => {
+      const nextZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Number((current + delta).toFixed(2))));
+      setPan((currentPan) => clampPan(currentPan, nextZoom));
+      return nextZoom;
+    });
+  };
+
+  const viewProfileFeed = (room) => {
+    onToast(`${room.hostName} 的动态页稍后开放，先从这张星系卡片认识 TA。`);
   };
 
   const meetRoom = () => {
@@ -32,85 +152,247 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
         返回首页
       </button>
 
-      <section className="mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-5 pt-16 lg:grid-cols-[1fr_390px]">
+      <section className="mx-auto grid h-[calc(100vh-64px)] w-full max-w-7xl gap-5 pt-16 lg:grid-cols-[1fr_390px]">
         <div
-          onClick={moveMarker}
-          className="semantic-space relative min-h-[620px] overflow-hidden rounded-[36px] border border-white/80 shadow-soft"
+          ref={canvasRef}
+          onPointerDown={startPanning}
+          onPointerMove={panMap}
+          onPointerUp={stopPanning}
+          onPointerCancel={stopPanning}
+          className={`semantic-space relative h-full min-h-[620px] overflow-hidden rounded-[36px] border border-white/80 shadow-soft ${
+            isPanning ? "is-panning" : ""
+          }`}
         >
-          <div className="absolute left-8 top-8 max-w-lg">
-            <p className="text-sm font-semibold text-[#af6449]">高维语义空间</p>
-            <h1 className="mt-2 text-4xl font-semibold text-stone-800">拖动你的方向，靠近相似的房间 cluster</h1>
-          </div>
-          <div className="absolute inset-0 opacity-35">
-            <div className="absolute left-[18%] top-[28%] h-48 w-48 rounded-full border border-[#ff8a7a]" />
-            <div className="absolute left-[58%] top-[18%] h-52 w-52 rounded-full border border-[#50bfa5]" />
-            <div className="absolute left-[44%] top-[58%] h-56 w-56 rounded-full border border-[#f6bd60]" />
+          <div className="pointer-events-none absolute left-8 top-8 z-10 max-w-xl">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/62 px-3 py-2 text-sm font-semibold text-[#af6449] shadow-sm backdrop-blur-xl">
+              <Sparkles size={15} />
+              宇宙房间地图
+            </p>
+            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-stone-800">
+              越靠近我的星系，越可能同频相遇
+            </h1>
           </div>
 
-          <button
-            onPointerDown={(event) => event.currentTarget.setPointerCapture(event.pointerId)}
-            onPointerMove={(event) => {
-              if (event.buttons === 1) moveMarker(event);
-            }}
-            style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
-            className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-[#f06f52] px-4 py-3 font-semibold text-white shadow-glow"
+          <div
+            data-stop-pan
+            className="absolute right-6 top-6 z-30 flex items-center gap-2 rounded-full border border-white/76 bg-white/70 p-2 shadow-sm backdrop-blur-xl"
+          >
+            <button
+              onClick={() => changeZoom(-0.12)}
+              className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white"
+              aria-label="缩小星图"
+              title="缩小星图"
+            >
+              <ZoomOut size={18} />
+            </button>
+            <span className="min-w-12 text-center text-xs font-semibold text-stone-500">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => changeZoom(0.12)}
+              className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white"
+              aria-label="放大星图"
+              title="放大星图"
+            >
+              <ZoomIn size={18} />
+            </button>
+          </div>
+
+          {canvasSize.width && canvasSize.height ? (
+            <svg
+              className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-45"
+              viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
+              preserveAspectRatio="none"
+            >
+              {roomsWithSignal.map((room) => {
+                const end = getLineEnd(room);
+                return (
+                  <line
+                    key={room.id}
+                    x1={canvasSize.width / 2}
+                    y1={canvasSize.height / 2}
+                    x2={end.x}
+                    y2={end.y}
+                    stroke={room.color}
+                    strokeWidth={selectedId === room.id || hoveredId === room.id ? 1.7 : 0.8}
+                    strokeDasharray="7 9"
+                    opacity={selectedId === room.id || hoveredId === room.id ? 0.58 : 0.2}
+                  />
+                );
+              })}
+            </svg>
+          ) : null}
+
+          <div
+            className="my-star pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+          >
+            <span className="my-star__orbit" />
+            <span className="my-star__core">
+              <Compass size={20} />
+            </span>
+          </div>
+
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 z-20 mt-16 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border border-white/80 bg-[#f06f52] px-4 py-3 text-sm font-semibold text-white shadow-glow"
           >
             <Move size={16} />
-            当前方向
-          </button>
-
-          {rooms.map((room, index) => (
-            <button
-              key={room.id}
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedId(room.id);
-              }}
-              style={{
-                left: `${room.x}%`,
-                top: `${room.y}%`,
-                "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
-                "--rotate": `${(index - 1.5) * 2}deg`,
-              }}
-              className={`room-card absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 rounded-[26px] border p-3 text-left shadow-soft transition hover:-translate-y-[54%] ${
-                selectedId === room.id
-                  ? "border-[#f06f52] bg-white"
-                  : "border-white/80 bg-white/72 hover:bg-white"
-              }`}
-            >
-              <Avatar src={room.hostAvatar} name={room.hostName} />
-              <span>
-                <span className="block font-semibold text-stone-800">{room.hostName}</span>
-                <span className="block text-xs text-stone-500">{room.name}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <aside className="glass-panel flex flex-col rounded-[36px] p-5">
-          <p className="mb-4 text-sm font-semibold text-[#af6449]">附近房间</p>
-          <div className="card-scroll mb-5 flex gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
-            {rooms.map((room) => (
-              <button
-                key={room.id}
-                onClick={() => setSelectedId(room.id)}
-                className={`flex min-w-[220px] items-center gap-3 rounded-3xl p-3 text-left transition lg:min-w-0 ${
-                  selectedId === room.id ? "bg-[#fff0d7]" : "bg-white/68 hover:bg-white"
-                }`}
-              >
-                <Avatar src={room.hostAvatar} name={room.hostName} />
-                <span>
-                  <span className="block font-semibold text-stone-800">{room.hostName}</span>
-                  <span className="block text-xs text-stone-500">{room.type}</span>
-                </span>
-              </button>
-            ))}
+            我的坐标
           </div>
 
-          <div className="mt-auto rounded-[30px] bg-white/74 p-5 shadow-sm">
+          <div
+            className="galaxy-map absolute inset-0 z-10"
+            style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})` }}
+          >
+            {roomsWithSignal.map((room, index) => (
+              <div
+                key={room.id}
+                role="button"
+                tabIndex={0}
+                data-stop-pan
+                data-selected={selectedId === room.id ? "true" : undefined}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setSelectedId(room.id);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  setSelectedId(room.id);
+                }}
+                onMouseEnter={() => setHoveredId(room.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                style={{
+                  left: `calc(50% + ${room.mapX}px)`,
+                  top: `calc(50% + ${room.mapY}px)`,
+                  "--room-color": room.color,
+                  "--halo-size": `${168 + room.similarity * 0.82}px`,
+                  "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
+                  "--rotate": `${(index - 1.5) * 2}deg`,
+                }}
+                className={`galaxy-room absolute z-10 -translate-x-1/2 -translate-y-1/2 text-left transition ${
+                  selectedId === room.id || hoveredId === room.id ? "is-active" : ""
+                }`}
+              >
+                <span className="galaxy-room__halo" />
+                <span className="galaxy-room__dust galaxy-room__dust--one" />
+                <span className="galaxy-room__dust galaxy-room__dust--two" />
+                <span className="galaxy-room__card flex flex-wrap items-center gap-3">
+                  <Avatar src={room.hostAvatar} name={room.hostName} />
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
+                    <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
+                    <span className="mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
+                      {room.matchLabel} · {room.similarity}%
+                    </span>
+                  </span>
+                  <span className="galaxy-room__profile">
+                    <span className="mb-2 block text-xs font-semibold text-[#af6449]">个人信息</span>
+                    <span className="grid grid-cols-2 gap-2 text-xs text-stone-500">
+                      <span>
+                        <strong className="block text-stone-700">{room.nickname || room.hostName}</strong>
+                        昵称
+                      </span>
+                      <span>
+                        <strong className="block text-stone-700">{room.age ? `${room.age} 岁` : "选填"}</strong>
+                        年龄
+                      </span>
+                      <span>
+                        <strong className="block text-stone-700">{room.gender || "神秘"}</strong>
+                        性别
+                      </span>
+                      <span>
+                        <strong className="block text-stone-700">{room.region || "未填写"}</strong>
+                        地域
+                      </span>
+                    </span>
+                    <span className="mt-3 flex flex-wrap gap-1.5">
+                      {(room.interests || []).map((interest) => (
+                        <span
+                          key={interest}
+                          className="rounded-full bg-white/82 px-2 py-1 text-[11px] font-semibold text-stone-600"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        viewProfileFeed(room);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        viewProfileFeed(room);
+                      }}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fff8ee] px-3 py-2 text-xs font-semibold text-[#af6449] transition hover:bg-white"
+                    >
+                      <Newspaper size={14} />
+                      查看TA的动态
+                    </span>
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <aside className="glass-panel cosmic-side-panel flex min-h-0 flex-col rounded-[36px] p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-[#af6449]">附近房间</p>
+            <span className="rounded-full bg-white/62 px-3 py-1 text-xs font-semibold text-stone-500">
+              以我的坐标排序
+            </span>
+          </div>
+          <div className="card-scroll mb-5 flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
+            {[...roomsWithSignal]
+              .sort((a, b) => b.similarity - a.similarity)
+              .map((room) => (
+                <button
+                  key={room.id}
+                  data-selected={selectedId === room.id ? "true" : undefined}
+                  ref={(node) => {
+                    listRefs.current[room.id] = node;
+                  }}
+                  onClick={() => setSelectedId(room.id)}
+                  onMouseEnter={() => setHoveredId(room.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  className={`cosmic-list-item flex min-w-[250px] items-center gap-3 rounded-3xl border p-3 text-left transition lg:min-w-0 ${
+                    selectedId === room.id
+                      ? "border-[#f06f52]/45 bg-[#fff0d7]"
+                      : "border-white/70 bg-white/62 hover:border-white hover:bg-white"
+                  }`}
+                >
+                  <Avatar src={room.hostAvatar} name={room.hostName} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="truncate font-semibold text-stone-800">{room.hostName}</span>
+                      <span className="shrink-0 text-xs font-semibold" style={{ color: room.color }}>
+                        {room.similarity}%
+                      </span>
+                    </span>
+                    <span className="mt-1 flex items-center justify-between gap-2 text-xs text-stone-500">
+                      <span>{room.type}</span>
+                      <span>{room.matchLabel}</span>
+                    </span>
+                  </span>
+                </button>
+              ))}
+          </div>
+
+          <div
+            className="selected-galaxy-card mt-auto rounded-[30px] border border-white/76 bg-white/76 p-5 shadow-sm"
+            style={{ "--room-color": selectedSignal?.color || "#f06f52" }}
+          >
             <div className="mb-4 flex items-center gap-4">
               <Avatar src={selectedRoom.hostAvatar} name={selectedRoom.hostName} size="lg" glow />
-              <div>
+              <div className="min-w-0">
+                <p className="mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold text-[#af6449]">
+                  选中的星系 · {selectedSignal?.matchLabel}
+                </p>
                 <h2 className="text-2xl font-semibold text-stone-800">{selectedRoom.name}</h2>
                 <p className="mt-1 text-sm text-stone-500">房主 {selectedRoom.hostName}</p>
               </div>
@@ -118,9 +400,15 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
             <p className="mb-4 rounded-2xl bg-[#fff8ee] px-4 py-3 text-sm leading-6 text-stone-600">
               {selectedRoom.vibe}
             </p>
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#e6f7f2] px-3 py-2 text-sm font-semibold text-[#2d8c77]">
-              {selectedRoom.type === "语音房" ? <Mic size={16} /> : <MessageSquareText size={16} />}
-              {selectedRoom.type}
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#e6f7f2] px-3 py-2 text-sm font-semibold text-[#2d8c77]">
+                {selectedRoom.type === "语音房" ? <Mic size={16} /> : <MessageSquareText size={16} />}
+                {selectedRoom.type}
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-600">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: selectedSignal?.color }} />
+                相似度 {selectedSignal?.similarity}%
+              </div>
             </div>
             <button
               onClick={meetRoom}

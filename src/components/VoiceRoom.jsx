@@ -202,7 +202,7 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
               : "bg-stone-100 text-stone-400 hover:bg-stone-200"
           }`}
         >
-          跳过此问题
+          下一题
         </button>
       </div>
 
