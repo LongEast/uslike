@@ -5,12 +5,16 @@ import {
   Image,
   ImagePlus,
   Lock,
+  MessageCircle,
   Mic,
+  MoreHorizontal,
   PenLine,
   PhoneCall,
   Plus,
   Send,
+  Share2,
   Smile,
+  ThumbsUp,
   Video,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -19,14 +23,76 @@ import Modal from "./Modal.jsx";
 
 export function FeedView({ feed }) {
   return (
-    <section className="mx-auto w-full max-w-4xl pb-32 pt-24">
-      <h2 className="mb-5 text-3xl font-semibold text-stone-800">动态</h2>
-      <div className="grid gap-4">
+    <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-3xl font-semibold text-stone-800">空间动态</h2>
+        <span className="rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-[#af6449] shadow-sm">
+          同频近况
+        </span>
+      </div>
+      <div className="overflow-hidden rounded-[34px] border border-white/76 bg-white/58 shadow-soft backdrop-blur-xl">
         {feed.map((item) => (
-          <article key={item.id} className="glass-panel rounded-[28px] p-6">
-            <p className="text-sm font-semibold text-[#b7664d]">{item.user}</p>
-            <h3 className="mt-2 text-xl font-semibold text-stone-800">{item.title}</h3>
-            <p className="mt-2 leading-7 text-stone-500">{item.text}</p>
+          <article key={item.id} className="border-b border-stone-100/90 bg-white/64 px-5 py-6 last:border-b-0">
+            <div className="flex items-start gap-3">
+              <Avatar src={item.avatar} name={item.user} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-semibold text-stone-800">{item.user}</h3>
+                      {item.badge ? (
+                        <span className="rounded-full bg-[#fff0d7] px-2 py-1 text-[11px] font-semibold text-[#b66a32]">
+                          {item.badge}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-sm text-stone-400">{item.status}</p>
+                  </div>
+                  <button className="rounded-full p-2 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700">
+                    <MoreHorizontal size={20} />
+                  </button>
+                </div>
+
+                <p className="mt-4 whitespace-pre-line text-[22px] leading-9 text-stone-900">{item.text}</p>
+
+                {item.tags?.length ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {item.tags.map((tag) => (
+                      <span key={tag} className="rounded-full bg-[#fff8ee] px-3 py-1.5 text-xs font-semibold text-stone-500">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="mt-4 flex items-center justify-between gap-4 text-sm text-stone-400">
+                  <span>{item.time}</span>
+                  <div className="flex items-center gap-5 text-stone-700">
+                    <button className="transition hover:text-[#f06f52]" title="赞">
+                      <ThumbsUp size={25} />
+                    </button>
+                    <button className="transition hover:text-[#f06f52]" title="评论">
+                      <MessageCircle size={25} />
+                    </button>
+                    <button className="transition hover:text-[#f06f52]" title="分享">
+                      <Share2 size={25} />
+                    </button>
+                  </div>
+                </div>
+
+                {item.likedBy ? (
+                  <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#587097]">
+                    <ThumbsUp size={16} />
+                    {item.likedBy} 赞了
+                  </div>
+                ) : null}
+
+                <div className="mt-4 flex items-center gap-3 rounded-2xl bg-stone-100/80 px-3 py-3">
+                  <Avatar src={item.viewerAvatar} name="我" size="sm" />
+                  <span className="text-stone-400">说点什么吧...</span>
+                </div>
+              </div>
+            </div>
           </article>
         ))}
       </div>
