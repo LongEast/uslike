@@ -35,12 +35,6 @@ export default function AppShell({
 
       <div className="relative z-10">{renderView()}</div>
 
-      <button
-        onClick={onMeet}
-        className="fixed bottom-24 left-1/2 z-30 flex -translate-x-1/2 items-center justify-center rounded-full bg-[#f06f52] px-10 py-4 text-lg font-semibold text-white shadow-glow transition hover:-translate-y-1 hover:bg-[#e45f47]"
-      >
-        相遇
-      </button>
       <BottomNav
         active={activeView}
         onSelect={(key) => {
