@@ -13,7 +13,7 @@ import {
   Smile,
   Video,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
 import Modal from "./Modal.jsx";
 
@@ -39,6 +39,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
   const [friendActions, setFriendActions] = useState(null);
   const [gamePicker, setGamePicker] = useState(null);
   const [toolPanelOpen, setToolPanelOpen] = useState(false);
+  const [callOptionsOpen, setCallOptionsOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const imageInputRef = useRef(null);
   const activeThread = threads.find((thread) => thread.id === activeThreadId) || null;
@@ -48,11 +49,18 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
   );
   const textGameUnlocked = conversationCount >= 50;
 
+  useEffect(() => {
+    setToolPanelOpen(false);
+    setCallOptionsOpen(false);
+    setDraft("");
+  }, [activeThreadId]);
+
   const submitMessage = () => {
     if (!activeThread || !draft.trim()) return;
     onSendMessage(activeThread.friendId, { type: "text", text: draft.trim() });
     setDraft("");
     setToolPanelOpen(false);
+    setCallOptionsOpen(false);
   };
 
   const uploadImage = (event) => {
@@ -65,6 +73,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
     });
     event.target.value = "";
     setToolPanelOpen(false);
+    setCallOptionsOpen(false);
   };
 
   const startCall = (type) => {
@@ -94,7 +103,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
     {
       label: "通话",
       icon: PhoneCall,
-      action: () => startCall("通话"),
+      action: () => setCallOptionsOpen((open) => !open),
     },
     {
       label: "礼物",
@@ -144,45 +153,6 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
               </div>
             </div>
 
-            <div className="my-4 grid gap-2 sm:grid-cols-4">
-              <button
-                onClick={() => startCall("语音")}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#e6f7f2] px-3 py-3 text-sm font-semibold text-[#247e68] transition hover:bg-[#d7f2ea]"
-              >
-                <Mic size={17} />
-                语音
-              </button>
-              <button
-                onClick={() => startCall("视频")}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#eef5ff] px-3 py-3 text-sm font-semibold text-[#4070b8] transition hover:bg-[#e1eeff]"
-              >
-                <Video size={17} />
-                视频
-              </button>
-              <button
-                onClick={() => setGamePicker(activeThread)}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#fff0d7] px-3 py-3 text-sm font-semibold text-[#b66a32] transition hover:bg-[#ffe4b8]"
-              >
-                <Gamepad2 size={17} />
-                双人游戏
-              </button>
-              <button
-                onClick={openTextGame}
-                className={`inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold transition ${
-                  textGameUnlocked
-                    ? "bg-[#ffe0ce] text-[#b85e46] hover:bg-[#ffd0bb]"
-                    : "bg-stone-100 text-stone-400"
-                }`}
-              >
-                {textGameUnlocked ? <PenLine size={17} /> : <Lock size={17} />}
-                文字游戏
-              </button>
-            </div>
-
-            <div className="mb-4 rounded-2xl bg-white/58 px-4 py-3 text-xs font-semibold text-stone-500">
-              双人互动文字游戏：互发 50 条消息后解锁，当前 {conversationCount}/50
-            </div>
-
             {activeThread.decorHint ? (
               <div className="mb-4 flex h-24 items-center justify-center rounded-[28px] border border-dashed border-[#e3b494] bg-white/48 text-sm text-stone-500">
                 开始装点属于你们的空间吧！
@@ -220,6 +190,27 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                 className="hidden"
                 onChange={uploadImage}
               />
+              <div className="mb-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setGamePicker(activeThread)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#fff0d7] px-4 py-2.5 text-sm font-semibold text-[#b66a32] transition hover:bg-[#ffe4b8]"
+                >
+                  <Gamepad2 size={16} />
+                  双人游戏
+                </button>
+                <button
+                  onClick={openTextGame}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                    textGameUnlocked
+                      ? "bg-[#ffe0ce] text-[#b85e46] hover:bg-[#ffd0bb]"
+                      : "bg-stone-100 text-stone-400"
+                  }`}
+                  title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
+                >
+                  {textGameUnlocked ? <PenLine size={16} /> : <Lock size={16} />}
+                  互动文游
+                </button>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onToast("按住说话功能稍后开放。")}
@@ -266,6 +257,32 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
 
               {toolPanelOpen ? (
                 <div className="mt-4 rounded-[28px] bg-stone-100/64 p-5">
+                  {callOptionsOpen ? (
+                    <div className="mb-5 grid gap-3 sm:grid-cols-2">
+                      <button
+                        onClick={() => {
+                          setCallOptionsOpen(false);
+                          setToolPanelOpen(false);
+                          startCall("视频通话");
+                        }}
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#eef5ff] px-5 py-3 text-sm font-semibold text-[#4070b8] transition hover:bg-[#e1eeff]"
+                      >
+                        <Video size={17} />
+                        视频通话
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCallOptionsOpen(false);
+                          setToolPanelOpen(false);
+                          startCall("语音通话");
+                        }}
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#e6f7f2] px-5 py-3 text-sm font-semibold text-[#247e68] transition hover:bg-[#d7f2ea]"
+                      >
+                        <Mic size={17} />
+                        语音通话
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="grid grid-cols-3 gap-5 sm:grid-cols-5">
                     {chatTools.map(({ label, icon: Icon, action }) => (
                       <button
