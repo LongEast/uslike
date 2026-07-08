@@ -145,12 +145,6 @@ button {
   transform: translate(calc(-50% + var(--offset)), -50%) rotate(var(--rotate));
 }
 
-.galaxy-room:hover,
-.galaxy-room:focus-within {
-  width: min(326px, 34vw);
-  z-index: 24;
-}
-
 .galaxy-room__halo {
   position: absolute;
   left: 50%;
@@ -227,24 +221,6 @@ button {
   content: "";
   border: 1px solid color-mix(in srgb, var(--room-color) 45%, transparent);
   border-radius: 30px;
-}
-
-.galaxy-room__profile {
-  display: block;
-  flex-basis: 100%;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: max-height 180ms ease, opacity 160ms ease, transform 160ms ease, padding-top 160ms ease;
-}
-
-.galaxy-room:hover .galaxy-room__profile,
-.galaxy-room:focus-within .galaxy-room__profile {
-  max-height: 220px;
-  padding-top: 4px;
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .cosmic-side-panel {
