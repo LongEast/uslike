@@ -203,6 +203,7 @@ export default function App() {
 
       {modal === "create-room" ? (
         <CreateRoomModal
+          user={user}
           onClose={() => setModal(null)}
           onCreated={() => {
             setModal(null);
