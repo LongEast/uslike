@@ -245,6 +245,7 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
           </button>
         ))}
         <input
+          key={question.id}
           onKeyDown={(event) => {
             if (event.key === "Enter" && event.currentTarget.value.trim()) {
               onAnswer(event.currentTarget.value.trim());
