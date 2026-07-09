@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
+import Modal from "./Modal.jsx";
 
 const INITIAL_PAN = { x: 0, y: 0 };
 const PAN_LIMIT = { x: 520, y: 380 };
@@ -90,6 +91,7 @@ export default function RoomDiscovery({
   const [isPanning, setIsPanning] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [waitingCollapsed, setWaitingCollapsed] = useState(false);
+  const [closeWaitingConfirmOpen, setCloseWaitingConfirmOpen] = useState(false);
   const selectedRoom = rooms.find((room) => room.id === selectedId);
   const roomsWithSignal = useMemo(
     () =>
@@ -228,7 +230,7 @@ export default function RoomDiscovery({
                 <ChevronUp size={16} />
               </button>
               <button
-                onClick={onDismissWaiting}
+                onClick={() => setCloseWaitingConfirmOpen(true)}
                 className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#fff8ee] hover:text-stone-700"
                 aria-label="关闭等待提示"
                 title="关闭等待提示"
@@ -253,6 +255,31 @@ export default function RoomDiscovery({
             </div>
           </div>
         )
+      ) : null}
+
+      {closeWaitingConfirmOpen ? (
+        <Modal title="你确认关闭当前房间吗？" onClose={() => setCloseWaitingConfirmOpen(false)} width="max-w-sm">
+          <p className="text-sm leading-6 text-stone-500">
+            关闭后将停止当前房间的等待提示，你仍然可以继续浏览并加入已有房间。
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setCloseWaitingConfirmOpen(false)}
+              className="rounded-2xl bg-white/78 px-5 py-3 font-semibold text-stone-600 transition hover:bg-white"
+            >
+              取消
+            </button>
+            <button
+              onClick={() => {
+                setCloseWaitingConfirmOpen(false);
+                onDismissWaiting();
+              }}
+              className="rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+            >
+              确认
+            </button>
+          </div>
+        </Modal>
       ) : null}
 
       <section className="mx-auto grid h-[calc(100vh-64px)] w-full max-w-7xl gap-5 pt-16 lg:grid-cols-[1fr_390px]">
