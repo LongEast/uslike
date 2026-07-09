@@ -1,10 +1,22 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { ArrowRight, Plus, SkipForward } from "lucide-react";
 import Modal from "./Modal.jsx";
 
 const baseInterests = ["书籍", "电影", "旅行", "音乐", "游戏", "美食"];
 const normalizeInterest = (interest) => interest.trim();
 const getInterestOptions = (interests) => Array.from(new Set([...baseInterests, ...interests]));
+const onboardingQuestions = [
+  { id: "onboarding-1", text: "你最近最常反复想起的一件小事是什么？" },
+  { id: "onboarding-2", text: "认识新朋友时，什么样的相处方式会让你觉得舒服？" },
+  { id: "onboarding-3", text: "你最喜欢和别人一起完成哪类事？" },
+  { id: "onboarding-4", text: "什么时候你会觉得自己被理解了？" },
+  { id: "onboarding-5", text: "你希望对方先了解你的哪个习惯或边界？" },
+  { id: "onboarding-6", text: "如果给最近的生活选一个关键词，你会选什么？" },
+  { id: "onboarding-7", text: "你更喜欢热闹的烟火气，还是安静的氛围？" },
+  { id: "onboarding-8", text: "你最近在听、看、玩或研究什么？" },
+  { id: "onboarding-9", text: "什么话题会让你愿意继续聊下去？" },
+  { id: "onboarding-10", text: "你期待在 Uslike 遇见什么样的人？" },
+];
 
 export function RegisterModal({ onSuccess, onClose }) {
   const [phone, setPhone] = useState("");
@@ -172,6 +184,89 @@ export function ProfileModal({ defaultUser, onSave }) {
       >
         保存信息
       </button>
+    </Modal>
+  );
+}
+
+export function OnboardingQuestionsModal({ onSkip, onSave }) {
+  const [answers, setAnswers] = useState(() =>
+    onboardingQuestions.reduce((result, question) => ({ ...result, [question.id]: "" }), {}),
+  );
+
+  const answeredCount = Object.values(answers).filter((answer) => String(answer || "").trim()).length;
+
+  const updateAnswer = (questionId, answer) => {
+    setAnswers((current) => ({
+      ...current,
+      [questionId]: answer,
+    }));
+  };
+
+  const saveAnswers = () => {
+    const normalizedAnswers = onboardingQuestions
+      .map((question) => ({
+        question: question.text,
+        answer: String(answers[question.id] || "").trim(),
+      }))
+      .filter((item) => item.answer);
+
+    onSave(normalizedAnswers);
+  };
+
+  return (
+    <Modal title="让相遇更同频" width="max-w-3xl">
+      <div className="space-y-5">
+        <div className="rounded-2xl bg-white/72 p-4 text-stone-600 shadow-sm">
+          <p className="text-base font-semibold text-stone-800">
+            回答一些轻问题，可以帮助系统更好地把你带到相似的人身边。
+          </p>
+          <p className="mt-2 text-sm leading-6">
+            这十题都不是必填，你可以只回答有感觉的部分，也可以先跳过直接进入 Uslike。
+          </p>
+        </div>
+
+        <div className="max-h-[48vh] space-y-3 overflow-y-auto pr-1">
+          {onboardingQuestions.map((question, index) => (
+            <label
+              key={question.id}
+              className="block rounded-2xl bg-white/70 p-4 text-sm font-medium text-stone-700 shadow-sm"
+            >
+              <span className="mb-2 flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ffe0ce] text-xs font-bold text-[#bc5a42]">
+                  {index + 1}
+                </span>
+                <span className="leading-7">{question.text}</span>
+              </span>
+              <textarea
+                value={answers[question.id] || ""}
+                onChange={(event) => updateAnswer(question.id, event.target.value)}
+                rows={2}
+                placeholder="想写多少都可以"
+                className="warm-field mt-2 w-full resize-none rounded-2xl px-4 py-3 text-stone-700"
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            type="button"
+            onClick={onSkip}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-white/78 px-5 py-3 font-semibold text-stone-600 transition hover:bg-white"
+          >
+            <SkipForward size={18} />
+            跳过，直接进入
+          </button>
+          <button
+            type="button"
+            onClick={saveAnswers}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+          >
+            保存{answeredCount ? ` ${answeredCount} 个回答` : ""}并进入
+            <ArrowRight size={18} />
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import AppShell from "./components/AppShell.jsx";
-import { ProfileModal, RegisterModal } from "./components/AuthModals.jsx";
+import { OnboardingQuestionsModal, ProfileModal, RegisterModal } from "./components/AuthModals.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
@@ -56,9 +56,24 @@ export default function App() {
       region: profile.region || current.region,
       interests,
     }));
+    setModal("onboarding-questions");
+    showToast("基础信息已保存。");
+  };
+
+  const skipOnboardingQuestions = () => {
     setModal(null);
     setPhase("home");
-    showToast("保存成功，欢迎进入 Uslike。");
+    showToast("欢迎进入 Uslike。");
+  };
+
+  const saveOnboardingQuestions = (questionAnswers) => {
+    setUser((current) => ({
+      ...current,
+      questionAnswers,
+    }));
+    setModal(null);
+    setPhase("home");
+    showToast(questionAnswers.length ? "回答已保存，正在为你优化相遇。" : "欢迎进入 Uslike。");
   };
 
   const addFriendFromRoom = (room) => {
@@ -105,6 +120,12 @@ export default function App() {
           />
         ) : null}
         {modal === "profile" ? <ProfileModal defaultUser={user} onSave={saveProfile} /> : null}
+        {modal === "onboarding-questions" ? (
+          <OnboardingQuestionsModal
+            onSkip={skipOnboardingQuestions}
+            onSave={saveOnboardingQuestions}
+          />
+        ) : null}
         <Toast message={toast} />
       </>
     );
