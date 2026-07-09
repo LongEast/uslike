@@ -522,7 +522,7 @@ export default function RoomDiscovery({
         className="fixed left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
       >
         <ChevronLeft size={18} />
-        返回首页
+        返回
       </button>
 
       {waitingRoom ? (

@@ -38,6 +38,7 @@ export default function App() {
   const [threads, setThreads] = useState(mock.messages);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [waitingRoom, setWaitingRoom] = useState(null);
+  const [discoverBackView, setDiscoverBackView] = useState("home");
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
 
@@ -148,6 +149,7 @@ export default function App() {
           waitingRoom={waitingRoom}
           onBack={() => {
             setWaitingRoom(null);
+            setActiveView(discoverBackView);
             setPhase("home");
           }}
           onDismissWaiting={() => setWaitingRoom(null)}
@@ -230,6 +232,7 @@ export default function App() {
           onJoin={() => {
             setModal(null);
             setWaitingRoom(null);
+            setDiscoverBackView("messages");
             setPhase("discover");
           }}
         />
@@ -242,6 +245,7 @@ export default function App() {
           onCreated={(roomDraft) => {
             setModal(null);
             setWaitingRoom({ ...roomDraft, startedAt: Date.now() });
+            setDiscoverBackView("home");
             setPhase("discover");
             showToast("房间已创建，正在等待玩家加入。");
           }}
