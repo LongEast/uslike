@@ -32,13 +32,13 @@ export default function App() {
 
   const [phase, setPhase] = useState("landing");
   const [modal, setModal] = useState(null);
-  const [activeView, setActiveView] = useState("home");
+  const [activeView, setActiveView] = useState("messages");
   const [user, setUser] = useState(mock.user);
   const [friends, setFriends] = useState([]);
   const [threads, setThreads] = useState(mock.messages);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [waitingRoom, setWaitingRoom] = useState(null);
-  const [discoverBackView, setDiscoverBackView] = useState("home");
+  const [discoverBackView, setDiscoverBackView] = useState("messages");
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
 
@@ -174,7 +174,7 @@ export default function App() {
           games={mock.games}
           onExit={() => {
             setPhase("home");
-            setActiveView("home");
+            setActiveView("messages");
           }}
           onToast={showToast}
           onAddFriend={addFriendFromRoom}
@@ -194,7 +194,7 @@ export default function App() {
           games={mock.games}
           onExit={() => {
             setPhase("home");
-            setActiveView("home");
+            setActiveView("messages");
           }}
           onToast={showToast}
           onAddFriend={addFriendFromRoom}
@@ -239,7 +239,7 @@ export default function App() {
           onCreated={(roomDraft) => {
             setModal(null);
             setWaitingRoom({ ...roomDraft, startedAt: Date.now() });
-            setDiscoverBackView("home");
+            setDiscoverBackView("messages");
             setPhase("discover");
             showToast("房间已创建，正在等待玩家加入。");
           }}
