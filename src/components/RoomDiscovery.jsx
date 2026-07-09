@@ -76,6 +76,7 @@ export default function RoomDiscovery({
   onBack,
   onDismissWaiting,
   onEnterVoice,
+  onEnterText,
   onToast,
 }) {
   const canvasRef = useRef(null);
@@ -194,7 +195,7 @@ export default function RoomDiscovery({
       onEnterVoice(selectedRoom);
       return;
     }
-    onToast("这个打字房暂时是展示卡片，语音房可以进入完整 demo。");
+    onEnterText(selectedRoom);
   };
 
   return (

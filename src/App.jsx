@@ -5,6 +5,7 @@ import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
 import RoomDiscovery from "./components/RoomDiscovery.jsx";
+import TextRoom from "./components/TextRoom.jsx";
 import VoiceRoom from "./components/VoiceRoom.jsx";
 import {
   getGameList,
@@ -156,6 +157,11 @@ export default function App() {
             setCurrentRoom(room);
             setPhase("voice");
           }}
+          onEnterText={(room) => {
+            setWaitingRoom(null);
+            setCurrentRoom(room);
+            setPhase("text");
+          }}
         />
         <Toast message={toast} />
       </>
@@ -166,6 +172,26 @@ export default function App() {
     return (
       <>
         <VoiceRoom
+          user={user}
+          room={currentRoom}
+          questions={mock.questions}
+          games={mock.games}
+          onExit={() => {
+            setPhase("home");
+            setActiveView("home");
+          }}
+          onToast={showToast}
+          onAddFriend={addFriendFromRoom}
+        />
+        <Toast message={toast} />
+      </>
+    );
+  }
+
+  if (phase === "text" && currentRoom) {
+    return (
+      <>
+        <TextRoom
           user={user}
           room={currentRoom}
           questions={mock.questions}
