@@ -2,11 +2,9 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronUp,
-  Compass,
   Clock,
   Mic,
   MessageSquareText,
-  Move,
   Newspaper,
   Sparkles,
   X,
@@ -83,9 +81,7 @@ export default function RoomDiscovery({
   const dragRef = useRef(null);
   const listRefs = useRef({});
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [selectedId, setSelectedId] = useState(
-    [...rooms].sort((a, b) => getStaticSimilarity(b) - getStaticSimilarity(a))[0]?.id,
-  );
+  const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [pan, setPan] = useState(INITIAL_PAN);
   const [zoom, setZoom] = useState(INITIAL_ZOOM);
@@ -120,7 +116,12 @@ export default function RoomDiscovery({
     syncCanvasSize();
     const observer = new ResizeObserver(syncCanvasSize);
     observer.observe(canvasRef.current);
-    return () => observer.disconnect();
+    window.addEventListener("resize", syncCanvasSize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncCanvasSize);
+    };
   }, []);
 
   useEffect(() => {
@@ -331,7 +332,7 @@ export default function RoomDiscovery({
 
           {canvasSize.width && canvasSize.height ? (
             <svg
-              className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-45"
+              className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-[0.62]"
               viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
               preserveAspectRatio="none"
             >
@@ -345,29 +346,18 @@ export default function RoomDiscovery({
                     x2={end.x}
                     y2={end.y}
                     stroke={room.color}
-                    strokeWidth={selectedId === room.id || hoveredId === room.id ? 1.7 : 0.8}
-                    strokeDasharray="7 9"
-                    opacity={selectedId === room.id || hoveredId === room.id ? 0.58 : 0.2}
+                    strokeWidth={selectedId === room.id || hoveredId === room.id ? 1.45 : 1}
+                    strokeDasharray="6 8"
+                    opacity={selectedId === room.id || hoveredId === room.id ? 0.62 : 0.32}
                   />
                 );
               })}
             </svg>
           ) : null}
 
-          <div
-            className="my-star pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-          >
+          <div className="my-star pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2">
             <span className="my-star__orbit" />
-            <span className="my-star__core">
-              <Compass size={20} />
-            </span>
-          </div>
-
-          <div
-            className="pointer-events-none absolute left-1/2 top-1/2 z-20 mt-16 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border border-white/80 bg-[#f06f52] px-4 py-3 text-sm font-semibold text-white shadow-glow"
-          >
-            <Move size={16} />
-            我的坐标
+            <span className="my-star__core" />
           </div>
 
           <div
@@ -377,6 +367,7 @@ export default function RoomDiscovery({
             {roomsWithSignal.map((room, index) => {
               const roomTypeStyle = getRoomTypeStyle(room.type);
               const RoomTypeIcon = roomTypeStyle.Icon;
+              const isExpanded = selectedId === room.id;
 
               return (
                 <div
@@ -384,7 +375,9 @@ export default function RoomDiscovery({
                   role="button"
                   tabIndex={0}
                   data-stop-pan
-                  data-selected={selectedId === room.id ? "true" : undefined}
+                  data-selected={isExpanded ? "true" : undefined}
+                  data-expanded={isExpanded ? "true" : undefined}
+                  aria-label={`${room.hostName}，匹配度 ${room.similarity}%，点击查看详情`}
                   onClick={(event) => {
                     event.stopPropagation();
                     setSelectedId(room.id);
@@ -405,27 +398,33 @@ export default function RoomDiscovery({
                     "--rotate": `${(index - 1.5) * 2}deg`,
                   }}
                   className={`galaxy-room absolute z-10 -translate-x-1/2 -translate-y-1/2 text-left transition ${
-                    selectedId === room.id || hoveredId === room.id ? "is-active" : ""
+                    isExpanded || hoveredId === room.id ? "is-active" : ""
                   }`}
                 >
                   <span className="galaxy-room__halo" />
                   <span className="galaxy-room__dust galaxy-room__dust--one" />
                   <span className="galaxy-room__dust galaxy-room__dust--two" />
-                  <span className="galaxy-room__card flex items-center gap-3">
+                  <span className="galaxy-room__card flex items-center gap-2">
                     <Avatar src={room.hostAvatar} name={room.hostName} />
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
-                      <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
-                      <span className="mt-2 flex flex-wrap gap-1.5">
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${roomTypeStyle.badgeClass}`}>
-                          <RoomTypeIcon size={12} />
-                          {room.type}
-                        </span>
-                        <span className="inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
-                          {room.similarity}%
+                    {isExpanded ? (
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
+                        <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
+                        <span className="mt-2 flex flex-wrap gap-1.5">
+                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${roomTypeStyle.badgeClass}`}>
+                            <RoomTypeIcon size={12} />
+                            {room.type}
+                          </span>
+                          <span className="inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
+                            {room.similarity}%
+                          </span>
                         </span>
                       </span>
-                    </span>
+                    ) : (
+                      <span className="galaxy-room__match inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
+                        {room.similarity}%
+                      </span>
+                    )}
                   </span>
                 </div>
               );
