@@ -213,7 +213,7 @@ function Toast({ message }) {
   if (!message) return null;
 
   return (
-    <div className="fixed left-1/2 top-6 z-[70] -translate-x-1/2 animate-pop rounded-full bg-stone-900/88 px-5 py-3 text-sm font-semibold text-white shadow-soft">
+    <div className="fixed left-1/2 top-6 z-[70] -translate-x-1/2 animate-pop rounded-full border border-[#f0c6a8] bg-white/95 px-5 py-3 text-sm font-semibold text-stone-800 shadow-[0_18px_48px_rgba(92,55,32,0.22)] backdrop-blur-xl">
       {message}
     </div>
   );
