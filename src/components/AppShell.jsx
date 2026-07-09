@@ -28,7 +28,7 @@ export default function AppShell({
       );
     }
     if (activeView === "friends") return <FriendsView friends={friends} />;
-    if (activeView === "settings") return <SettingsView />;
+    if (activeView === "settings") return <SettingsView user={user} />;
     return <HomeView user={user} feed={feed} onMeet={onMeet} />;
   };
 

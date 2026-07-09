@@ -1,5 +1,7 @@
 import {
+  Box,
   Camera,
+  ChevronRight,
   Gamepad2,
   Gift,
   Image,
@@ -11,9 +13,13 @@ import {
   PenLine,
   PhoneCall,
   Plus,
+  QrCode,
   Send,
+  Settings,
   Share2,
   Smile,
+  Star,
+  Store,
   ThumbsUp,
   Video,
 } from "lucide-react";
@@ -239,7 +245,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
             {isAssistantThread ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: "购买月卡", hint: "解锁更多同频相遇权益" },
+                  { label: "购买月卡", hint: "解锁更多相遇权益" },
                   { label: "个性商城", hint: "装扮头像与聊天空间" },
                 ].map((item) => (
                   <button
@@ -462,12 +468,66 @@ export function FriendsView({ friends }) {
   );
 }
 
-export function SettingsView() {
+export function SettingsView({ user }) {
+  const menuGroups = [
+    [
+      { label: "收藏", icon: Box, color: "text-[#f0a33b]" },
+      { label: "动态", icon: Image, color: "text-[#2d9cdb]" },
+      { label: "卡包", icon: Store, color: "text-[#f06f52]", badge: "推荐" },
+      { label: "表情商店", icon: Smile, color: "text-[#f0c23b]" },
+    ],
+    [{ label: "设置", icon: Settings, color: "text-[#2d9cdb]" }],
+  ];
+
   return (
-    <section className="mx-auto w-full max-w-4xl pb-32 pt-24">
-      <div className="glass-panel rounded-[32px] p-8">
-        <h2 className="text-3xl font-semibold text-stone-800">设置</h2>
-        <p className="mt-3 text-stone-500">这里先保留为 demo stub。</p>
+    <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
+      <div className="overflow-hidden rounded-[34px] border border-white/76 bg-white/82 shadow-soft backdrop-blur-xl">
+        <div className="flex items-center gap-5 px-6 py-8 sm:px-8">
+          <Avatar src={user.avatar} name={user.nickname} size="lg" glow />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-3xl font-semibold text-stone-900">{user.nickname}</h2>
+            <p className="mt-2 text-base text-stone-500">Uslike ID：{user.id}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
+                + 状态
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
+                <Star size={15} className="text-[#f06f52]" />
+                同频好友 6
+                <span className="h-2 w-2 rounded-full bg-[#f25d5d]" />
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-stone-400">
+            <QrCode size={25} />
+            <ChevronRight size={24} />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        {menuGroups.map((group, groupIndex) => (
+          <div
+            key={groupIndex}
+            className="overflow-hidden rounded-[28px] border border-white/76 bg-white/82 shadow-sm backdrop-blur-xl"
+          >
+            {group.map(({ label, icon: Icon, color, badge }) => (
+              <button
+                key={label}
+                className="flex w-full items-center gap-4 border-b border-stone-100/90 px-6 py-5 text-left transition last:border-b-0 hover:bg-[#fff8ee]"
+              >
+                <Icon size={27} className={color} />
+                <span className="min-w-0 flex-1 text-xl font-semibold text-stone-800">{label}</span>
+                {badge ? (
+                  <span className="rounded-full bg-[#fff0d7] px-2.5 py-1 text-xs font-semibold text-[#b66a32]">
+                    {badge}
+                  </span>
+                ) : null}
+                <ChevronRight size={22} className="text-stone-300" />
+              </button>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   );

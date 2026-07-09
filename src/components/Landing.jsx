@@ -17,7 +17,7 @@ export default function Landing({ onStart }) {
           Uslike
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-tight text-stone-800 sm:text-7xl">
-          同频相遇，互像欢喜
+          同频相遇 · 互像欢喜
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-600">
           same vibe，same like
