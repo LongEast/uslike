@@ -62,6 +62,7 @@ export default function App() {
 
   const skipOnboardingQuestions = () => {
     setModal(null);
+    setActiveView("messages");
     setPhase("home");
     showToast("欢迎进入 Uslike。");
   };
@@ -72,6 +73,7 @@ export default function App() {
       questionAnswers,
     }));
     setModal(null);
+    setActiveView("messages");
     setPhase("home");
     showToast(questionAnswers.length ? "回答已保存，正在为你优化相遇。" : "欢迎进入 Uslike。");
   };

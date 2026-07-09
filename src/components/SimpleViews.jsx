@@ -101,7 +101,7 @@ export function FeedView({ feed }) {
 }
 
 export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
-  const [activeThreadId, setActiveThreadId] = useState(null);
+  const [activeThreadId, setActiveThreadId] = useState(() => threads[0]?.id || null);
   const [friendActions, setFriendActions] = useState(null);
   const [gamePicker, setGamePicker] = useState(null);
   const [toolPanelOpen, setToolPanelOpen] = useState(false);
@@ -120,6 +120,17 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
     setCallOptionsOpen(false);
     setDraft("");
   }, [activeThreadId]);
+
+  useEffect(() => {
+    if (!threads.length) {
+      setActiveThreadId(null);
+      return;
+    }
+
+    if (!activeThreadId || !threads.some((thread) => thread.id === activeThreadId)) {
+      setActiveThreadId(threads[0].id);
+    }
+  }, [activeThreadId, threads]);
 
   const submitMessage = () => {
     if (!activeThread || !draft.trim()) return;
