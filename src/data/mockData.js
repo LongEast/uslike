@@ -328,7 +328,7 @@ export function makeFriendFromRoom(room) {
     id: room.id,
     name: room.hostName,
     avatar: room.hostAvatar,
-    subtitle: "你们已添加为好友，继续你们的缘分吧！",
+    subtitle: room.vibe,
     messages: [
       { from: "system", text: "你们已添加为好友，继续你们的缘分吧！" },
       { from: "them", text: "刚刚那个问题好有画面感。" },

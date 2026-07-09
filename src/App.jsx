@@ -97,7 +97,6 @@ export default function App() {
     setThreads((current) =>
       current.map((thread) => {
         if (thread.friendId !== friendId) return thread;
-        const isAssistantThread = thread.id === "thread-welcome";
         const reply =
           message.type === "image"
             ? { from: "them", text: "我看到图片啦，很有画面感。" }
@@ -105,11 +104,6 @@ export default function App() {
 
         return {
           ...thread,
-          subtitle: isAssistantThread
-            ? thread.subtitle
-            : message.type === "image"
-              ? "刚刚分享了一张图片。"
-              : message.text,
           messages: [...thread.messages, { from: "me", ...message }, reply],
         };
       }),

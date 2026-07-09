@@ -321,27 +321,40 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
               </div>
             ) : null}
             <div className="flex-1 space-y-3 overflow-auto py-4">
-              {activeThread.messages.map((message, index) => (
-                <div
-                  key={`${message.from}-${index}`}
-                  className={`max-w-[72%] rounded-3xl px-4 py-3 text-sm ${
-                    message.from === "me"
-                      ? "ml-auto bg-[#f06f52] text-white"
-                      : "mr-auto border border-[#f0c6a8]/60 bg-[#fff4e8] text-stone-700"
-                  }`}
-                >
-                  {message.type === "image" ? (
-                    <span className="block">
-                      <span className="mb-2 flex h-28 items-center justify-center rounded-2xl bg-white/30">
-                        <ImagePlus size={24} />
+              {activeThread.messages.map((message, index) => {
+                if (message.from === "system") {
+                  return (
+                    <div
+                      key={`${message.from}-${index}`}
+                      className="mx-auto max-w-[78%] px-3 py-1 text-center text-xs font-medium leading-5 text-stone-400"
+                    >
+                      {message.text}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={`${message.from}-${index}`}
+                    className={`max-w-[72%] rounded-3xl px-4 py-3 text-sm ${
+                      message.from === "me"
+                        ? "ml-auto bg-[#f06f52] text-white"
+                        : "mr-auto border border-[#f0c6a8]/60 bg-[#fff4e8] text-stone-700"
+                    }`}
+                  >
+                    {message.type === "image" ? (
+                      <span className="block">
+                        <span className="mb-2 flex h-28 items-center justify-center rounded-2xl bg-white/30">
+                          <ImagePlus size={24} />
+                        </span>
+                        {message.imageName || message.text}
                       </span>
-                      {message.imageName || message.text}
-                    </span>
-                  ) : (
-                    message.text
-                  )}
-                </div>
-              ))}
+                    ) : (
+                      message.text
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="mt-4 border-t border-white/70 pt-4">
