@@ -136,6 +136,7 @@ export default function RoomDiscovery({
   const spaceRef = useRef(null);
   const sceneCanvasRef = useRef(null);
   const dragRef = useRef(null);
+  const suppressNextSpaceClickRef = useRef(false);
   const listRefs = useRef({});
   const cameraStateRef = useRef({ ...INITIAL_CAMERA });
   const sceneStateRef = useRef(null);
@@ -446,6 +447,7 @@ export default function RoomDiscovery({
       startY: event.clientY,
       originTargetX: cameraStateRef.current.targetX,
       originTargetZ: cameraStateRef.current.targetZ,
+      moved: false,
     };
     setIsExploring(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -455,6 +457,9 @@ export default function RoomDiscovery({
     if (!dragRef.current) return;
     const deltaX = event.clientX - dragRef.current.startX;
     const deltaY = event.clientY - dragRef.current.startY;
+    if (Math.hypot(deltaX, deltaY) > 6) {
+      dragRef.current.moved = true;
+    }
     const panSpeed = cameraStateRef.current.distance / 520;
     const right = new THREE.Vector3(Math.cos(INITIAL_CAMERA.yaw), 0, -Math.sin(INITIAL_CAMERA.yaw));
     const forward = new THREE.Vector3(-Math.sin(INITIAL_CAMERA.yaw), 0, -Math.cos(INITIAL_CAMERA.yaw));
@@ -467,8 +472,20 @@ export default function RoomDiscovery({
   };
 
   const stopExploring = () => {
+    if (dragRef.current?.moved) {
+      suppressNextSpaceClickRef.current = true;
+    }
     dragRef.current = null;
     setIsExploring(false);
+  };
+
+  const closeSelectedFromSpace = (event) => {
+    if (event.target.closest("[data-stop-pan]")) return;
+    if (suppressNextSpaceClickRef.current) {
+      suppressNextSpaceClickRef.current = false;
+      return;
+    }
+    setSelectedId(null);
   };
 
   const changeZoom = (delta) => {
@@ -590,6 +607,7 @@ export default function RoomDiscovery({
           onPointerMove={exploreGalaxy}
           onPointerUp={stopExploring}
           onPointerCancel={stopExploring}
+          onClick={closeSelectedFromSpace}
           className={`semantic-space relative h-full min-h-[620px] min-w-0 overflow-hidden rounded-[36px] border border-white/80 shadow-soft ${
             isExploring ? "is-panning" : ""
           }`}
@@ -650,12 +668,12 @@ export default function RoomDiscovery({
                   aria-label={`${room.hostName}，匹配度 ${room.similarity}%，点击查看详情`}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelectedId(room.id);
+                    setSelectedId((currentId) => (currentId === room.id ? null : room.id));
                   }}
                   onKeyDown={(event) => {
                     if (event.key !== "Enter" && event.key !== " ") return;
                     event.preventDefault();
-                    setSelectedId(room.id);
+                    setSelectedId((currentId) => (currentId === room.id ? null : room.id));
                   }}
                   onMouseEnter={() => setHoveredId(room.id)}
                   onMouseLeave={() => setHoveredId(null)}
