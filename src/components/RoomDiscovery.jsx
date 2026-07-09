@@ -38,6 +38,22 @@ const getMatchTone = (similarity) => {
   return "遥远星系";
 };
 
+const getRoomTypeStyle = (type) => {
+  if (type === "打字房") {
+    return {
+      Icon: MessageSquareText,
+      badgeClass: "border-[#a8dfd1]/70 bg-[#e6f7f2] text-[#2d8c77]",
+      dotColor: "#50bfa5",
+    };
+  }
+
+  return {
+    Icon: Mic,
+    badgeClass: "border-[#f4b598]/70 bg-[#ffe0ce] text-[#bc5a42]",
+    dotColor: "#f06f52",
+  };
+};
+
 const clampPan = (pan, zoom = INITIAL_ZOOM) => ({
   x: Math.max(-PAN_LIMIT.x * zoom, Math.min(PAN_LIMIT.x * zoom, pan.x)),
   y: Math.max(-PAN_LIMIT.y * zoom, Math.min(PAN_LIMIT.y * zoom, pan.y)),
@@ -246,51 +262,62 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
             className="galaxy-map absolute inset-0 z-10"
             style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})` }}
           >
-            {roomsWithSignal.map((room, index) => (
-              <div
-                key={room.id}
-                role="button"
-                tabIndex={0}
-                data-stop-pan
-                data-selected={selectedId === room.id ? "true" : undefined}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setSelectedId(room.id);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  setSelectedId(room.id);
-                }}
-                onMouseEnter={() => setHoveredId(room.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                style={{
-                  left: `calc(50% + ${room.mapX}px)`,
-                  top: `calc(50% + ${room.mapY}px)`,
-                  "--room-color": room.color,
-                  "--halo-size": `${168 + room.similarity * 0.82}px`,
-                  "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
-                  "--rotate": `${(index - 1.5) * 2}deg`,
-                }}
-                className={`galaxy-room absolute z-10 -translate-x-1/2 -translate-y-1/2 text-left transition ${
-                  selectedId === room.id || hoveredId === room.id ? "is-active" : ""
-                }`}
-              >
-                <span className="galaxy-room__halo" />
-                <span className="galaxy-room__dust galaxy-room__dust--one" />
-                <span className="galaxy-room__dust galaxy-room__dust--two" />
-                <span className="galaxy-room__card flex items-center gap-3">
-                  <Avatar src={room.hostAvatar} name={room.hostName} />
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
-                    <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
-                    <span className="mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
-                      {room.matchLabel} · {room.similarity}%
+            {roomsWithSignal.map((room, index) => {
+              const roomTypeStyle = getRoomTypeStyle(room.type);
+              const RoomTypeIcon = roomTypeStyle.Icon;
+
+              return (
+                <div
+                  key={room.id}
+                  role="button"
+                  tabIndex={0}
+                  data-stop-pan
+                  data-selected={selectedId === room.id ? "true" : undefined}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedId(room.id);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    setSelectedId(room.id);
+                  }}
+                  onMouseEnter={() => setHoveredId(room.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  style={{
+                    left: `calc(50% + ${room.mapX}px)`,
+                    top: `calc(50% + ${room.mapY}px)`,
+                    "--room-color": room.color,
+                    "--halo-size": `${168 + room.similarity * 0.82}px`,
+                    "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
+                    "--rotate": `${(index - 1.5) * 2}deg`,
+                  }}
+                  className={`galaxy-room absolute z-10 -translate-x-1/2 -translate-y-1/2 text-left transition ${
+                    selectedId === room.id || hoveredId === room.id ? "is-active" : ""
+                  }`}
+                >
+                  <span className="galaxy-room__halo" />
+                  <span className="galaxy-room__dust galaxy-room__dust--one" />
+                  <span className="galaxy-room__dust galaxy-room__dust--two" />
+                  <span className="galaxy-room__card flex items-center gap-3">
+                    <Avatar src={room.hostAvatar} name={room.hostName} />
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
+                      <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
+                      <span className="mt-2 flex flex-wrap gap-1.5">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${roomTypeStyle.badgeClass}`}>
+                          <RoomTypeIcon size={12} />
+                          {room.type}
+                        </span>
+                        <span className="inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
+                          {room.similarity}%
+                        </span>
+                      </span>
                     </span>
                   </span>
-                </span>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -304,37 +331,45 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
           <div className="card-scroll mb-5 flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
             {[...roomsWithSignal]
               .sort((a, b) => b.similarity - a.similarity)
-              .map((room) => (
-                <button
-                  key={room.id}
-                  data-selected={selectedId === room.id ? "true" : undefined}
-                  ref={(node) => {
-                    listRefs.current[room.id] = node;
-                  }}
-                  onClick={() => setSelectedId(room.id)}
-                  onMouseEnter={() => setHoveredId(room.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  className={`cosmic-list-item flex min-w-[250px] items-center gap-3 rounded-3xl border p-3 text-left transition lg:min-w-0 ${
-                    selectedId === room.id
-                      ? "border-[#f06f52]/45 bg-[#fff0d7]"
-                      : "border-white/70 bg-white/62 hover:border-white hover:bg-white"
-                  }`}
-                >
-                  <Avatar src={room.hostAvatar} name={room.hostName} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-3">
-                      <span className="truncate font-semibold text-stone-800">{room.hostName}</span>
-                      <span className="shrink-0 text-xs font-semibold" style={{ color: room.color }}>
-                        {room.similarity}%
+              .map((room) => {
+                const roomTypeStyle = getRoomTypeStyle(room.type);
+                const RoomTypeIcon = roomTypeStyle.Icon;
+
+                return (
+                  <button
+                    key={room.id}
+                    data-selected={selectedId === room.id ? "true" : undefined}
+                    ref={(node) => {
+                      listRefs.current[room.id] = node;
+                    }}
+                    onClick={() => setSelectedId(room.id)}
+                    onMouseEnter={() => setHoveredId(room.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    className={`cosmic-list-item flex min-w-[250px] items-center gap-3 rounded-3xl border p-3 text-left transition lg:min-w-0 ${
+                      selectedId === room.id
+                        ? "border-[#f06f52]/45 bg-[#fff0d7]"
+                        : "border-white/70 bg-white/62 hover:border-white hover:bg-white"
+                    }`}
+                  >
+                    <Avatar src={room.hostAvatar} name={room.hostName} />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-3">
+                        <span className="truncate font-semibold text-stone-800">{room.hostName}</span>
+                        <span className="shrink-0 text-xs font-semibold" style={{ color: room.color }}>
+                          {room.similarity}%
+                        </span>
+                      </span>
+                      <span className="mt-2 flex items-center justify-between gap-2 text-xs text-stone-500">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 font-semibold ${roomTypeStyle.badgeClass}`}>
+                          <RoomTypeIcon size={12} />
+                          {room.type}
+                        </span>
+                        <span>{room.matchLabel}</span>
                       </span>
                     </span>
-                    <span className="mt-1 flex items-center justify-between gap-2 text-xs text-stone-500">
-                      <span>{room.type}</span>
-                      <span>{room.matchLabel}</span>
-                    </span>
-                  </span>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
           </div>
 
           {selectedRoom && selectedSignal ? (
@@ -405,10 +440,17 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
                 </button>
               </div>
               <div className="mb-5 flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#e6f7f2] px-3 py-2 text-sm font-semibold text-[#2d8c77]">
-                  {selectedRoom.type === "语音房" ? <Mic size={16} /> : <MessageSquareText size={16} />}
-                  {selectedRoom.type}
-                </div>
+                {(() => {
+                  const roomTypeStyle = getRoomTypeStyle(selectedRoom.type);
+                  const RoomTypeIcon = roomTypeStyle.Icon;
+
+                  return (
+                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold ${roomTypeStyle.badgeClass}`}>
+                      <RoomTypeIcon size={16} />
+                      {selectedRoom.type}
+                    </div>
+                  );
+                })()}
                 <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-600">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: selectedSignal.color }} />
                   相似度 {selectedSignal.similarity}%
@@ -416,7 +458,11 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
               </div>
               <button
                 onClick={meetRoom}
-                className="w-full rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+                className={`w-full rounded-2xl px-5 py-3 font-semibold text-white transition ${
+                  selectedRoom.type === "打字房"
+                    ? "bg-[#50bfa5] shadow-[0_18px_40px_rgba(80,191,165,0.26)] hover:bg-[#42aa92]"
+                    : "bg-[#f06f52] shadow-glow hover:bg-[#e45f47]"
+                }`}
               >
                 相遇
               </button>

@@ -14,6 +14,20 @@ const traitOptions = [
   "一起玩游戏",
   "深夜电台感",
 ];
+const roomTypeOptions = [
+  {
+    label: "语音房",
+    icon: Mic,
+    selectedClass: "bg-[#f06f52] text-white shadow-glow",
+    idleClass: "bg-[#fff0d7] text-[#b66a32] hover:bg-[#ffe4b8]",
+  },
+  {
+    label: "打字房",
+    icon: MessageCircle,
+    selectedClass: "bg-[#50bfa5] text-white shadow-[0_18px_40px_rgba(80,191,165,0.26)]",
+    idleClass: "bg-[#e6f7f2] text-[#2d8c77] hover:bg-[#d8f4ec]",
+  },
+];
 
 export default function CreateRoomModal({ user, onClose, onCreated }) {
   const [roomName, setRoomName] = useState("");
@@ -70,18 +84,13 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
           <div className="text-sm font-medium text-stone-600">
             房间类型
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {[
-                { label: "语音房", icon: Mic },
-                { label: "打字房", icon: MessageCircle },
-              ].map(({ label, icon: Icon }) => (
+              {roomTypeOptions.map(({ label, icon: Icon, selectedClass, idleClass }) => (
                 <button
                   key={label}
                   type="button"
                   onClick={() => setRoomType(label)}
                   className={`flex items-center justify-center gap-2 rounded-2xl px-4 py-3 font-semibold transition ${
-                    roomType === label
-                      ? "bg-[#f06f52] text-white shadow-glow"
-                      : "bg-white/72 text-stone-600 hover:bg-white"
+                    roomType === label ? selectedClass : idleClass
                   }`}
                 >
                   <Icon size={18} />

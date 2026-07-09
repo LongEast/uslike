@@ -306,7 +306,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
             {isAssistantThread ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: "购买月卡", hint: "解锁更多相遇权益" },
+                  { label: "购买月卡", hint: "解锁更多权益" },
                   { label: "个性商城", hint: "装扮头像与聊天空间" },
                 ].map((item) => (
                   <button
