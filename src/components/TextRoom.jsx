@@ -99,7 +99,7 @@ export default function TextRoom({
             onSkip={() => setQuestionIndex((index) => index + 1)}
           />
 
-          <div className="flex items-center justify-center gap-12 md:gap-28">
+          <div className="flex items-start justify-center gap-12 md:gap-28">
             <UserSeat user={user} label="你" />
             <UserSeat
               user={{ nickname: room.hostName, avatar: room.hostAvatar }}
@@ -280,7 +280,7 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
 
 function UserSeat({ user, label, action }) {
   return (
-    <div className="flex flex-col items-center text-center">
+    <div className="flex w-40 flex-col items-center text-center">
       <Avatar src={user.avatar} name={user.nickname} size="xl" glow />
       <div className="mt-4 flex items-center gap-2 rounded-full bg-white/78 px-4 py-2 shadow-sm">
         <span className="font-semibold text-stone-800">{user.nickname}</span>
