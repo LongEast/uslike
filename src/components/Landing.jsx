@@ -17,10 +17,10 @@ export default function Landing({ onStart }) {
           Uslike
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-tight text-stone-800 sm:text-7xl">
-          在柔软的问题里，遇见刚刚好的同频
+          同频相遇，互像欢喜
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-600">
-          从一个问题开始，把陌生人慢慢变成可以继续聊天的人。
+          same vibe，same like
         </p>
         <button
           onClick={onStart}
