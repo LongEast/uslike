@@ -178,7 +178,7 @@ export default function RoomDiscovery({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xfff8ee, 0.0065);
+    scene.fog = new THREE.FogExp2(0x070a1a, 0.0048);
 
     const camera = new THREE.PerspectiveCamera(47, 1, 0.1, 600);
     updateCamera(camera, cameraStateRef);
@@ -187,20 +187,23 @@ export default function RoomDiscovery({
     galaxyGroup.rotation.y = -0.26;
     scene.add(galaxyGroup);
 
-    scene.add(new THREE.AmbientLight(0xfff6ec, 1.4));
-    const keyLight = new THREE.PointLight(0xffb392, 12, 260);
+    scene.add(new THREE.AmbientLight(0xbfd2ff, 1.05));
+    const keyLight = new THREE.PointLight(0xffd36f, 16, 280);
     keyLight.position.set(-34, 44, 58);
     scene.add(keyLight);
-    const mintLight = new THREE.PointLight(0x9ee5d5, 6, 220);
+    const mintLight = new THREE.PointLight(0x74f1df, 10, 240);
     mintLight.position.set(42, 28, -44);
     scene.add(mintLight);
+    const violetLight = new THREE.PointLight(0xa78bfa, 7, 260);
+    violetLight.position.set(-64, 18, -38);
+    scene.add(violetLight);
 
     const farStars = new THREE.Points(
-      buildStarField(760, 176, ["#ffffff", "#ffd9c7", "#f8b39a", "#bcebdc", "#f7dda6"]),
+      buildStarField(840, 176, ["#ffffff", "#c9d7ff", "#8ff7e9", "#ffd36f", "#c4b5fd"]),
       new THREE.PointsMaterial({
-        size: 0.72,
+        size: 0.82,
         transparent: true,
-        opacity: 0.62,
+        opacity: 0.78,
         vertexColors: true,
         depthWrite: false,
       }),
@@ -208,11 +211,11 @@ export default function RoomDiscovery({
     scene.add(farStars);
 
     const spiral = new THREE.Points(
-      buildStarField(920, 82, ["#fff9ef", "#ffd1bd", "#f6bd60", "#9fe2d4", "#cfc4ff"], true),
+      buildStarField(980, 86, ["#f8fbff", "#91f7e5", "#ffd36f", "#f0abfc", "#a5b4fc"], true),
       new THREE.PointsMaterial({
-        size: 1.05,
+        size: 1.12,
         transparent: true,
-        opacity: 0.82,
+        opacity: 0.92,
         vertexColors: true,
         depthWrite: false,
       }),
@@ -223,9 +226,12 @@ export default function RoomDiscovery({
       const ring = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(createRingPoints(radius, -1.2 + index * 0.28)),
         new THREE.LineBasicMaterial({
-          color: index % 2 ? 0x8dd8c8 : 0xf0a187,
+          color: index % 2 ? 0x74f1df : 0xffd36f,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          fog: false,
           transparent: true,
-          opacity: 0.24,
+          opacity: 0.3,
         }),
       );
       ring.rotation.x = Math.PI / 2 + index * 0.015;
@@ -235,9 +241,9 @@ export default function RoomDiscovery({
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(2.7, 32, 32),
       new THREE.MeshStandardMaterial({
-        color: 0xf06f52,
-        emissive: 0xf6bd60,
-        emissiveIntensity: 1.8,
+        color: 0xffdf7a,
+        emissive: 0xffb84f,
+        emissiveIntensity: 2.4,
         roughness: 0.38,
         metalness: 0.08,
       }),
@@ -247,9 +253,9 @@ export default function RoomDiscovery({
     const coreHalo = new THREE.Mesh(
       new THREE.SphereGeometry(7.8, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0xf06f52,
+        color: 0xffd36f,
         transparent: true,
-        opacity: 0.11,
+        opacity: 0.18,
         depthWrite: false,
       }),
     );
@@ -346,6 +352,7 @@ export default function RoomDiscovery({
 
       updateCamera(camera, cameraStateRef);
       const bounds = container.getBoundingClientRect();
+      const minLabelY = bounds.width < 520 ? 190 : 168;
       const nextLabels = {};
       sceneState.roomObjects.forEach((object, id) => {
         projected.copy(object.position).applyMatrix4(sceneState.galaxyGroup.matrixWorld).project(camera);
@@ -356,7 +363,7 @@ export default function RoomDiscovery({
           projected.z < 1 &&
           x > 58 &&
           x < bounds.width - 58 &&
-          y > 54 &&
+          y > minLabelY &&
           y < bounds.height - 54;
         nextLabels[id] = {
           x,
@@ -590,33 +597,33 @@ export default function RoomDiscovery({
           <canvas ref={sceneCanvasRef} className="cosmic-canvas absolute inset-0 z-[2] h-full w-full" />
 
           <div className="pointer-events-none absolute left-8 top-8 z-20 max-w-xl">
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/62 px-3 py-2 text-sm font-semibold text-[#af6449] shadow-sm backdrop-blur-xl">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[#111634]/64 px-3 py-2 text-sm font-semibold text-[#f7c96d] shadow-sm backdrop-blur-xl">
               <Sparkles size={15} />
               3D 宇宙房间地图
             </p>
-            <h1 className="mt-4 max-w-[calc(100vw-96px)] text-3xl font-semibold leading-tight text-stone-800 sm:max-w-2xl sm:text-4xl">
+            <h1 className="mt-4 max-w-[calc(100vw-96px)] text-3xl font-semibold leading-tight text-[#fff6df] drop-shadow-[0_8px_26px_rgba(0,0,0,0.42)] sm:max-w-2xl sm:text-4xl">
               越靠近我的星系，越可能同频相遇
             </h1>
           </div>
 
           <div
             data-stop-pan
-            className="absolute bottom-6 right-6 z-30 flex items-center gap-2 rounded-full border border-white/76 bg-white/70 p-2 shadow-sm backdrop-blur-xl sm:bottom-auto sm:top-6"
+            className="absolute bottom-6 right-6 z-30 flex items-center gap-2 rounded-full border border-white/18 bg-[#101631]/72 p-2 shadow-[0_18px_44px_rgba(0,0,0,0.26)] backdrop-blur-xl sm:bottom-auto sm:top-6"
           >
             <button
               onClick={() => changeZoom(14)}
-              className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white"
+              className="grid h-10 w-10 place-items-center rounded-full text-[#e9efff] transition hover:bg-white/14"
               aria-label="缩小星图"
               title="缩小星图"
             >
               <ZoomOut size={18} />
             </button>
-            <span className="min-w-12 text-center text-xs font-semibold text-stone-500">
+            <span className="min-w-12 text-center text-xs font-semibold text-[#f4d991]">
               {Math.round(((MAX_DISTANCE - cameraDistance) / (MAX_DISTANCE - MIN_DISTANCE)) * 100 + 58)}%
             </span>
             <button
               onClick={() => changeZoom(-14)}
-              className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white"
+              className="grid h-10 w-10 place-items-center rounded-full text-[#e9efff] transition hover:bg-white/14"
               aria-label="放大星图"
               title="放大星图"
             >
@@ -669,10 +676,12 @@ export default function RoomDiscovery({
                   <span className="galaxy-room__halo" />
                   <span className="galaxy-room__dust galaxy-room__dust--one" />
                   <span className="galaxy-room__dust galaxy-room__dust--two" />
-                  <span className="galaxy-room__card flex items-center gap-2">
-                    <Avatar src={room.hostAvatar} name={room.hostName} />
+                  <span className="galaxy-room__card flex items-center gap-3">
+                    <span className="galaxy-room__avatar-star">
+                      <Avatar src={room.hostAvatar} name={room.hostName} />
+                    </span>
                     {isExpanded ? (
-                      <span className="min-w-0">
+                      <span className="galaxy-room__details min-w-0">
                         <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
                         <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
                         <span className="mt-2 flex flex-wrap gap-1.5">
@@ -680,7 +689,7 @@ export default function RoomDiscovery({
                             <RoomTypeIcon size={12} />
                             {room.type}
                           </span>
-                          <span className="inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
+                          <span className="galaxy-room__match galaxy-room__match--inline inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
                             {room.similarity}%
                           </span>
                         </span>

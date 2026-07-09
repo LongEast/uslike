@@ -58,12 +58,12 @@ button {
   user-select: none;
   -webkit-user-select: none;
   background:
-    radial-gradient(circle at 52% 46%, rgba(240, 111, 82, 0.24) 0 5%, transparent 21%),
-    radial-gradient(circle at 30% 28%, rgba(255, 177, 155, 0.28) 0 11%, transparent 30%),
-    radial-gradient(circle at 73% 30%, rgba(80, 191, 165, 0.24) 0 10%, transparent 28%),
-    radial-gradient(circle at 70% 72%, rgba(246, 189, 96, 0.24) 0 11%, transparent 30%),
-    radial-gradient(ellipse at 50% 52%, rgba(82, 56, 89, .22), transparent 62%),
-    linear-gradient(135deg, rgba(255, 255, 255, .9), rgba(255, 248, 238, .78) 46%, rgba(245, 238, 255, .72));
+    radial-gradient(circle at 50% 48%, rgba(255, 210, 104, .22) 0 5%, transparent 18%),
+    radial-gradient(circle at 28% 34%, rgba(244, 98, 142, .28) 0 12%, transparent 34%),
+    radial-gradient(circle at 72% 28%, rgba(80, 201, 211, .26) 0 12%, transparent 34%),
+    radial-gradient(circle at 66% 72%, rgba(143, 112, 245, .3) 0 13%, transparent 36%),
+    radial-gradient(ellipse at 54% 56%, rgba(245, 232, 196, .16), transparent 56%),
+    linear-gradient(145deg, #070a1a 0%, #101436 36%, #2a1945 66%, #081424 100%);
 }
 
 .semantic-space.is-panning {
@@ -80,11 +80,11 @@ button {
 
 .semantic-space::before {
   z-index: 0;
-  opacity: .45;
+  opacity: .8;
   background-image:
-    radial-gradient(circle, rgba(175, 100, 73, .24) 0 1px, transparent 1.4px),
-    radial-gradient(circle, rgba(80, 191, 165, .22) 0 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(246, 189, 96, .22) 0 1px, transparent 1.5px);
+    radial-gradient(circle, rgba(255, 255, 255, .72) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(117, 232, 223, .52) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 199, 106, .58) 0 1.2px, transparent 1.7px);
   background-position: 0 0, 34px 28px, 18px 56px;
   background-size: 86px 86px, 118px 118px, 152px 152px;
 }
@@ -92,8 +92,9 @@ button {
 .semantic-space::after {
   z-index: 1;
   background:
-    linear-gradient(120deg, transparent 0 28%, rgba(255, 255, 255, .28) 48%, transparent 68%),
-    radial-gradient(ellipse at 50% 50%, transparent 0 48%, rgba(255, 255, 255, .46) 82%);
+    radial-gradient(ellipse at 52% 48%, rgba(255, 238, 189, .18), transparent 40%),
+    linear-gradient(120deg, transparent 0 22%, rgba(145, 236, 228, .12) 42%, rgba(255, 197, 104, .1) 56%, transparent 76%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 58%, rgba(2, 6, 23, .56) 92%);
 }
 
 .cosmic-canvas {
@@ -112,6 +113,7 @@ button {
 }
 
 .galaxy-room {
+  --planet-size: 76px;
   width: auto;
   min-width: 0;
   cursor: pointer;
@@ -121,8 +123,8 @@ button {
 }
 
 .galaxy-room[data-expanded="true"] {
-  width: min(236px, 28vw);
-  min-width: 188px;
+  width: min(248px, 32vw);
+  min-width: 208px;
 }
 
 .galaxy-room__halo {
@@ -132,13 +134,13 @@ button {
   width: var(--halo-size);
   height: var(--halo-size);
   transform: translate(-50%, -50%);
-  border: 1px solid color-mix(in srgb, var(--room-color) 34%, transparent);
+  border: 1px solid color-mix(in srgb, var(--room-color) 58%, transparent);
   border-radius: 999px;
   background:
-    radial-gradient(circle, color-mix(in srgb, var(--room-color) 18%, transparent), transparent 58%),
-    radial-gradient(circle, rgba(255, 255, 255, .28), transparent 68%);
+    radial-gradient(circle, color-mix(in srgb, var(--room-color) 34%, transparent), transparent 58%),
+    radial-gradient(circle, rgba(255, 255, 255, .16), transparent 68%);
   filter: blur(.1px);
-  opacity: .34;
+  opacity: .52;
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
 }
 
@@ -148,9 +150,9 @@ button {
   background: var(--room-color);
   box-shadow:
     24px 12px 0 -2px color-mix(in srgb, var(--room-color) 52%, transparent),
-    -18px 18px 0 -3px rgba(255, 255, 255, .9),
+    -18px 18px 0 -3px rgba(255, 255, 255, .74),
     8px -20px 0 -3px color-mix(in srgb, var(--room-color) 42%, transparent);
-  opacity: .42;
+  opacity: .68;
 }
 
 .galaxy-room__dust--one {
@@ -169,33 +171,127 @@ button {
 
 .galaxy-room__card {
   position: relative;
-  overflow: hidden;
-  min-height: 70px;
-  border: 1px solid rgba(255, 255, 255, .8);
+  overflow: visible;
+  width: var(--planet-size);
+  min-height: var(--planet-size);
+  border: 1px solid rgba(255, 255, 255, .5);
   border-radius: 999px;
-  padding: 10px 12px 10px 10px;
-  background: rgba(255, 255, 255, .8);
-  box-shadow: 0 18px 48px rgba(104, 73, 48, .16);
+  padding: 8px;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 34% 27%, rgba(255, 255, 255, .94), rgba(255, 255, 255, .42) 24%, transparent 42%),
+    radial-gradient(circle at 62% 66%, color-mix(in srgb, var(--room-color) 72%, #0f172a), color-mix(in srgb, var(--room-color) 36%, #070a1a) 66%, #070a1a);
+  box-shadow:
+    inset -12px -16px 24px rgba(0, 0, 0, .42),
+    inset 8px 8px 18px rgba(255, 255, 255, .22),
+    0 0 0 7px color-mix(in srgb, var(--room-color) 16%, transparent),
+    0 18px 54px color-mix(in srgb, var(--room-color) 46%, rgba(0, 0, 0, .32));
   backdrop-filter: blur(18px);
-  transition: min-height 180ms ease, padding 180ms ease, border-radius 180ms ease, transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
+  transition: width 180ms ease, min-height 180ms ease, padding 180ms ease, border-radius 180ms ease, transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
 .galaxy-room[data-expanded="true"] .galaxy-room__card {
+  width: 100%;
   min-height: 84px;
-  border-radius: 26px;
-  padding: 12px;
+  border-radius: 999px 28px 28px 999px;
+  padding: 12px 14px 12px 12px;
+  justify-content: flex-start;
+  background:
+    radial-gradient(circle at 30px 28px, rgba(255, 255, 255, .74), color-mix(in srgb, var(--room-color) 44%, rgba(9, 14, 35, .86)) 46%, transparent 58%),
+    linear-gradient(90deg, rgba(13, 18, 48, .9), rgba(18, 24, 58, .76));
+}
+
+.galaxy-room__avatar-star {
+  position: relative;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .95), transparent 30%),
+    radial-gradient(circle, color-mix(in srgb, var(--room-color) 72%, #ffffff), color-mix(in srgb, var(--room-color) 58%, #071124));
+  box-shadow:
+    0 0 0 7px color-mix(in srgb, var(--room-color) 18%, transparent),
+    0 0 28px color-mix(in srgb, var(--room-color) 58%, transparent),
+    inset -8px -10px 16px rgba(0, 0, 0, .34);
+}
+
+.galaxy-room__avatar-star::before {
+  position: absolute;
+  inset: -8px -12px;
+  content: "";
+  border: 1px solid color-mix(in srgb, var(--room-color) 64%, rgba(255, 255, 255, .2));
+  border-radius: 50%;
+  transform: rotate(-16deg);
+}
+
+.galaxy-room__avatar-star::after {
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  width: 14px;
+  height: 9px;
+  content: "";
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  filter: blur(.2px);
+}
+
+.galaxy-room__avatar-star > div {
+  position: relative;
+  z-index: 1;
+  width: 48px;
+  height: 48px;
+  box-shadow: none;
+}
+
+.galaxy-room__details {
+  position: relative;
+  z-index: 1;
+  color: #fff7df;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, .34);
+}
+
+.galaxy-room__details .text-stone-800 {
+  color: #fff8e7;
+}
+
+.galaxy-room__details .text-stone-500 {
+  color: rgba(226, 232, 255, .72);
 }
 
 .galaxy-room__match {
+  position: absolute;
+  right: -20px;
+  bottom: -1px;
+  z-index: 2;
+  border: 1px solid color-mix(in srgb, var(--room-color) 54%, rgba(255, 255, 255, .54));
+  background: rgba(6, 10, 28, .82) !important;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, .12),
+    0 10px 28px color-mix(in srgb, var(--room-color) 46%, rgba(0, 0, 0, .34));
+  color: #fff8da !important;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .5);
   white-space: nowrap;
+}
+
+.galaxy-room__match--inline {
+  position: static;
+  border-color: color-mix(in srgb, var(--room-color) 54%, rgba(255, 255, 255, .28));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
 }
 
 .galaxy-room:hover .galaxy-room__card,
 .galaxy-room.is-active .galaxy-room__card {
   transform: translateY(-6px) scale(1.02);
-  border-color: color-mix(in srgb, var(--room-color) 54%, white);
-  background: rgba(255, 255, 255, .9);
-  box-shadow: 0 24px 70px color-mix(in srgb, var(--room-color) 25%, rgba(104, 73, 48, .16));
+  border-color: color-mix(in srgb, var(--room-color) 68%, white);
+  box-shadow:
+    inset -12px -16px 24px rgba(0, 0, 0, .36),
+    inset 8px 8px 18px rgba(255, 255, 255, .24),
+    0 0 0 8px color-mix(in srgb, var(--room-color) 18%, transparent),
+    0 26px 78px color-mix(in srgb, var(--room-color) 54%, rgba(0, 0, 0, .3));
 }
 
 .galaxy-room:hover .galaxy-room__halo,
@@ -210,7 +306,8 @@ button {
   inset: -5px;
   content: "";
   border: 1px solid color-mix(in srgb, var(--room-color) 45%, transparent);
-  border-radius: 30px;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 .cosmic-side-panel {
