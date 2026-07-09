@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import Modal from "./Modal.jsx";
 
 const baseInterests = ["书籍", "电影", "旅行", "音乐", "游戏", "美食"];
+const normalizeInterest = (interest) => interest.trim();
+const getInterestOptions = (interests) => Array.from(new Set([...baseInterests, ...interests]));
 
 export function RegisterModal({ onSuccess, onClose }) {
   const [phone, setPhone] = useState("");
@@ -45,7 +48,7 @@ export function ProfileModal({ defaultUser, onSave }) {
     age: "",
     gender: "神秘",
     region: defaultUser.region,
-    interests: defaultUser.interests,
+    interests: [...defaultUser.interests],
     customInterest: "",
   });
 
@@ -56,6 +59,26 @@ export function ProfileModal({ defaultUser, onSave }) {
         ? current.interests.filter((item) => item !== interest)
         : [...current.interests, interest],
     }));
+  };
+
+  const addCustomInterest = () => {
+    const customInterest = normalizeInterest(profile.customInterest);
+    if (!customInterest) return;
+
+    setProfile((current) => ({
+      ...current,
+      interests: current.interests.includes(customInterest)
+        ? current.interests
+        : [...current.interests, customInterest],
+      customInterest: "",
+    }));
+  };
+
+  const handleCustomInterestKeyDown = (event) => {
+    if (event.key !== "Enter" && event.key !== "，" && event.key !== ",") return;
+
+    event.preventDefault();
+    addCustomInterest();
   };
 
   return (
@@ -108,7 +131,7 @@ export function ProfileModal({ defaultUser, onSave }) {
       <div className="mt-5">
         <p className="mb-3 text-sm font-medium text-stone-600">兴趣标签</p>
         <div className="flex flex-wrap gap-2">
-          {baseInterests.map((interest) => (
+          {getInterestOptions(profile.interests).map((interest) => (
             <button
               key={interest}
               onClick={() => toggleInterest(interest)}
@@ -122,12 +145,25 @@ export function ProfileModal({ defaultUser, onSave }) {
             </button>
           ))}
         </div>
-        <input
-          value={profile.customInterest}
-          onChange={(event) => setProfile({ ...profile, customInterest: event.target.value })}
-          placeholder="自定义兴趣"
-          className="warm-field mt-4 w-full rounded-2xl px-4 py-3"
-        />
+        <div className="mt-4 flex gap-2">
+          <input
+            value={profile.customInterest}
+            onChange={(event) => setProfile({ ...profile, customInterest: event.target.value })}
+            onKeyDown={handleCustomInterestKeyDown}
+            onBlur={addCustomInterest}
+            placeholder="自定义兴趣"
+            className="warm-field min-w-0 flex-1 rounded-2xl px-4 py-3"
+          />
+          <button
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={addCustomInterest}
+            className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-[#f06f52] text-white shadow-glow transition hover:bg-[#e45f47]"
+            aria-label="添加自定义兴趣"
+          >
+            <Plus size={22} />
+          </button>
+        </div>
       </div>
 
       <button

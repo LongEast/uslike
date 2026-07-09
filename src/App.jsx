@@ -46,12 +46,15 @@ export default function App() {
   };
 
   const saveProfile = (profile) => {
-    const customInterests = profile.customInterest ? [profile.customInterest] : [];
+    const interests = Array.from(
+      new Set([...profile.interests, profile.customInterest.trim()].filter(Boolean)),
+    );
+
     setUser((current) => ({
       ...current,
       nickname: profile.nickname || current.nickname,
       region: profile.region || current.region,
-      interests: [...profile.interests, ...customInterests],
+      interests,
     }));
     setModal(null);
     setPhase("home");
