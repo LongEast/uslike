@@ -2,11 +2,13 @@ import {
   Bell,
   Box,
   Camera,
+  Check,
   ChevronRight,
   Gamepad2,
   Gift,
   Image,
   ImagePlus,
+  Link,
   Lock,
   MessageCircle,
   Mic,
@@ -15,6 +17,7 @@ import {
   PhoneCall,
   Plus,
   QrCode,
+  RefreshCw,
   Send,
   Settings,
   Share2,
@@ -29,6 +32,8 @@ import Avatar from "./Avatar.jsx";
 import Modal from "./Modal.jsx";
 
 export function FeedView({ feed }) {
+  const [showNonFriendComments, setShowNonFriendComments] = useState(false);
+
   return (
     <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
       <div className="mb-5 flex items-center justify-between">
@@ -37,6 +42,61 @@ export function FeedView({ feed }) {
           同频近况
         </span>
       </div>
+
+      <div className="mb-5 overflow-hidden rounded-[28px] border border-white/76 bg-white/72 shadow-soft backdrop-blur-xl">
+        <div className="flex min-h-[96px] border-b border-stone-100/90">
+          <textarea
+            placeholder="说点儿什么吧"
+            className="min-w-0 flex-1 resize-none bg-transparent px-5 py-4 text-lg text-stone-700 outline-none placeholder:text-stone-400"
+          />
+          <div className="flex shrink-0 border-l border-stone-100/90">
+            <button
+              className="grid w-[72px] place-items-center px-5 text-stone-500 transition hover:bg-[#fff8ee] hover:text-[#f06f52]"
+              title="添加图片"
+            >
+              <Camera size={28} />
+            </button>
+            <button
+              className="grid w-[72px] place-items-center border-l border-stone-100/90 px-5 text-stone-500 transition hover:bg-[#fff8ee] hover:text-[#f06f52]"
+              title="添加链接"
+            >
+              <Link size={28} />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <button className="text-base font-semibold text-stone-800 transition hover:text-[#f06f52]">
+            与我相关
+          </button>
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={() => setShowNonFriendComments((value) => !value)}
+              className="inline-flex items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900"
+            >
+              <span
+                className={`grid h-5 w-5 place-items-center rounded border ${
+                  showNonFriendComments
+                    ? "border-[#f06f52] bg-[#f06f52] text-white"
+                    : "border-stone-300 bg-white text-transparent"
+                }`}
+              >
+                <Check size={14} />
+              </span>
+              显示非好友评论
+            </button>
+            <button
+              className="rounded-full p-2 text-stone-400 transition hover:bg-[#fff8ee] hover:text-[#f06f52]"
+              title="刷新"
+            >
+              <RefreshCw size={21} />
+            </button>
+            <button className="rounded-full bg-[#f06f52] px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-[#e45f47]">
+              发布
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="overflow-hidden rounded-[34px] border border-white/76 bg-white/58 shadow-soft backdrop-blur-xl">
         {feed.map((item) => (
           <article key={item.id} className="border-b border-stone-100/90 bg-white/64 px-5 py-6 last:border-b-0">
