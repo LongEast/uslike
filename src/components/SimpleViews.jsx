@@ -547,7 +547,7 @@ export function SettingsView({ user }) {
     [
       { label: "收藏", icon: Box, color: "text-[#f0a33b]" },
       { label: "动态", icon: Bell, color: "text-[#2d9cdb]" },
-      { label: "卡包", icon: Store, color: "text-[#f06f52]", badge: "推荐" },
+      { label: "商城", icon: Store, color: "text-[#f06f52]", badge: "推荐" },
       { label: "表情商店", icon: Smile, color: "text-[#f0c23b]" },
     ],
     [{ label: "设置", icon: Settings, color: "text-[#2d9cdb]" }],
