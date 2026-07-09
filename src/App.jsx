@@ -97,7 +97,7 @@ export default function App() {
         const reply =
           message.type === "image"
             ? { from: "them", text: "我看到图片啦，很有画面感。" }
-            : { from: "them", text: "收到，我也想继续聊这个。" };
+            : { from: "them", text: "^.^~" };
 
         return {
           ...thread,

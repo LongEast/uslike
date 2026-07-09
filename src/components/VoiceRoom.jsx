@@ -72,7 +72,7 @@ export default function VoiceRoom({
     setMessages((current) => [
       ...current,
       { from: "me", text },
-      { from: "them", text: "收到，我也想继续聊这个。" },
+      { from: "them", text: "哈哈哈" },
     ]);
   };
 

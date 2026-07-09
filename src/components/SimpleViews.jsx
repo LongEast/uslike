@@ -109,6 +109,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
   const [draft, setDraft] = useState("");
   const imageInputRef = useRef(null);
   const activeThread = threads.find((thread) => thread.id === activeThreadId) || null;
+  const isAssistantThread = activeThread?.id === "thread-welcome";
   const conversationCount = useMemo(
     () => activeThread?.messages.filter((message) => message.from === "me" || message.from === "them").length || 0,
     [activeThread],
@@ -235,14 +236,31 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                 开始装点属于你们的空间吧！
               </div>
             ) : null}
+            {isAssistantThread ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "购买月卡", hint: "解锁更多同频相遇权益" },
+                  { label: "个性商城", hint: "装扮头像与聊天空间" },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => onToast(`${item.label}稍后开放。`)}
+                    className="rounded-3xl border border-[#f0c6a8]/70 bg-white/76 px-5 py-4 text-left shadow-sm transition hover:-translate-y-1 hover:bg-white"
+                  >
+                    <span className="block text-base font-semibold text-stone-800">{item.label}</span>
+                    <span className="mt-1 block text-sm text-stone-500">{item.hint}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="flex-1 space-y-3 overflow-auto py-4">
               {activeThread.messages.map((message, index) => (
                 <div
                   key={`${message.from}-${index}`}
                   className={`max-w-[72%] rounded-3xl px-4 py-3 text-sm ${
-                    message.from === "them"
-                      ? "bg-white text-stone-700"
-                      : "ml-auto bg-[#f06f52] text-white"
+                    message.from === "me"
+                      ? "ml-auto bg-[#f06f52] text-white"
+                      : "mr-auto border border-[#f0c6a8]/60 bg-[#fff4e8] text-stone-700"
                   }`}
                 >
                   {message.type === "image" ? (
@@ -267,27 +285,29 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                 className="hidden"
                 onChange={uploadImage}
               />
-              <div className="mb-3 flex flex-wrap gap-2">
-                <button
-                  onClick={() => setGamePicker(activeThread)}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#fff0d7] px-4 py-2.5 text-sm font-semibold text-[#b66a32] transition hover:bg-[#ffe4b8]"
-                >
-                  <Gamepad2 size={16} />
-                  双人游戏
-                </button>
-                <button
-                  onClick={openTextGame}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
-                    textGameUnlocked
-                      ? "bg-[#ffe0ce] text-[#b85e46] hover:bg-[#ffd0bb]"
-                      : "bg-stone-100 text-stone-400"
-                  }`}
-                  title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
-                >
-                  {textGameUnlocked ? <PenLine size={16} /> : <Lock size={16} />}
-                  互动文游
-                </button>
-              </div>
+              {!isAssistantThread ? (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setGamePicker(activeThread)}
+                    className="inline-flex items-center gap-2 rounded-full bg-[#fff0d7] px-4 py-2.5 text-sm font-semibold text-[#b66a32] transition hover:bg-[#ffe4b8]"
+                  >
+                    <Gamepad2 size={16} />
+                    双人游戏
+                  </button>
+                  <button
+                    onClick={openTextGame}
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                      textGameUnlocked
+                        ? "bg-[#ffe0ce] text-[#b85e46] hover:bg-[#ffd0bb]"
+                        : "bg-stone-100 text-stone-400"
+                    }`}
+                    title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
+                  >
+                    {textGameUnlocked ? <PenLine size={16} /> : <Lock size={16} />}
+                    互动文游
+                  </button>
+                </div>
+              ) : null}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onToast("按住说话功能稍后开放。")}

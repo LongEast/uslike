@@ -307,8 +307,13 @@ export function getInitialMessages() {
       friendId: "system",
       name: "相遇小助手",
       avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=helper",
-      subtitle: "今晚也会有柔软的新连接。",
-      messages: [{ from: "system", text: "欢迎来到 Uslike。" }],
+      subtitle: "智能 AI agent · 随时为你解答",
+      messages: [
+        {
+          from: "system",
+          text: "[同频相遇，互像欢喜]，我是你的智能小助手，有任何问题欢迎直接问我哦！",
+        },
+      ],
       decorHint: false,
     },
   ];
