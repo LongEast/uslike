@@ -12,14 +12,15 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
 import Avatar from "./Avatar.jsx";
 import Modal from "./Modal.jsx";
 
-const INITIAL_PAN = { x: 0, y: 0 };
-const PAN_LIMIT = { x: 520, y: 380 };
-const INITIAL_ZOOM = 1;
-const MIN_ZOOM = 0.72;
-const MAX_ZOOM = 1.46;
+const INITIAL_CAMERA = { yaw: -0.38, pitch: 0.58, distance: 120, targetX: 0, targetZ: 0 };
+const MIN_DISTANCE = 72;
+const MAX_DISTANCE = 178;
+const PAN_LIMIT = 92;
+const ROOM_SPACE_SCALE = 8.5;
 
 const getRoomPosition = (room) => ({
   mapX: room.mapX ?? (room.x - 50) * 12,
@@ -56,16 +57,71 @@ const getRoomTypeStyle = (type) => {
   };
 };
 
-const clampPan = (pan, zoom = INITIAL_ZOOM) => ({
-  x: Math.max(-PAN_LIMIT.x * zoom, Math.min(PAN_LIMIT.x * zoom, pan.x)),
-  y: Math.max(-PAN_LIMIT.y * zoom, Math.min(PAN_LIMIT.y * zoom, pan.y)),
-});
-
 const formatElapsed = (seconds) => {
   const minutes = Math.floor(seconds / 60);
   const restSeconds = seconds % 60;
   if (minutes <= 0) return `${restSeconds} 秒`;
   return `${minutes} 分 ${String(restSeconds).padStart(2, "0")} 秒`;
+};
+
+const hashString = (value) =>
+  [...String(value)].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 9973, 17);
+
+const getRoomVector = (room) => {
+  const seed = hashString(room.id);
+  return new THREE.Vector3(
+    room.mapX / ROOM_SPACE_SCALE,
+    ((seed % 15) - 7) * 0.88,
+    room.mapY / ROOM_SPACE_SCALE,
+  );
+};
+
+const updateCamera = (camera, cameraState) => {
+  const { yaw, pitch, distance, targetX, targetZ } = cameraState.current;
+  const target = new THREE.Vector3(targetX, 0, targetZ);
+  const y = Math.sin(pitch) * distance;
+  const radius = Math.cos(pitch) * distance;
+  camera.position.set(target.x + Math.sin(yaw) * radius, y, target.z + Math.cos(yaw) * radius);
+  camera.lookAt(target);
+};
+
+const createRingPoints = (radius, y = 0, segments = 160) => {
+  const points = [];
+  for (let index = 0; index <= segments; index += 1) {
+    const angle = (index / segments) * Math.PI * 2;
+    points.push(new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius));
+  }
+  return points;
+};
+
+const buildStarField = (count, radius, palette, spiral = false) => {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+
+  for (let index = 0; index < count; index += 1) {
+    const branch = index % 5;
+    const spin = index * 0.043 + branch * ((Math.PI * 2) / 5);
+    const distance = spiral
+      ? Math.pow((index % 233) / 233, 0.62) * radius
+      : Math.pow(((index * 37) % count) / count, 0.34) * radius;
+    const jitter = spiral ? 7.5 : 42;
+    const x = Math.cos(spin + distance * 0.034) * distance + Math.sin(index * 12.989) * jitter;
+    const y = spiral ? Math.sin(index * 5.318) * 4.8 : (Math.sin(index * 2.37) + Math.cos(index * 0.91)) * 22;
+    const z = Math.sin(spin + distance * 0.034) * distance + Math.cos(index * 78.233) * jitter;
+    const color = new THREE.Color(palette[index % palette.length]);
+
+    positions[index * 3] = x;
+    positions[index * 3 + 1] = y;
+    positions[index * 3 + 2] = z;
+    colors[index * 3] = color.r;
+    colors[index * 3 + 1] = color.g;
+    colors[index * 3 + 2] = color.b;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  return geometry;
 };
 
 export default function RoomDiscovery({
@@ -77,15 +133,17 @@ export default function RoomDiscovery({
   onEnterText,
   onToast,
 }) {
-  const canvasRef = useRef(null);
+  const spaceRef = useRef(null);
+  const sceneCanvasRef = useRef(null);
   const dragRef = useRef(null);
   const listRefs = useRef({});
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const cameraStateRef = useRef({ ...INITIAL_CAMERA });
+  const sceneStateRef = useRef(null);
   const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
-  const [pan, setPan] = useState(INITIAL_PAN);
-  const [zoom, setZoom] = useState(INITIAL_ZOOM);
-  const [isPanning, setIsPanning] = useState(false);
+  const [cameraDistance, setCameraDistance] = useState(INITIAL_CAMERA.distance);
+  const [isExploring, setIsExploring] = useState(false);
+  const [labelPositions, setLabelPositions] = useState({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [waitingCollapsed, setWaitingCollapsed] = useState(false);
   const [closeWaitingConfirmOpen, setCloseWaitingConfirmOpen] = useState(false);
@@ -106,28 +164,258 @@ export default function RoomDiscovery({
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
 
   useEffect(() => {
-    if (!canvasRef.current) return undefined;
-
-    const syncCanvasSize = () => {
-      const bounds = canvasRef.current.getBoundingClientRect();
-      setCanvasSize({ width: bounds.width, height: bounds.height });
-    };
-
-    syncCanvasSize();
-    const observer = new ResizeObserver(syncCanvasSize);
-    observer.observe(canvasRef.current);
-    window.addEventListener("resize", syncCanvasSize);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", syncCanvasSize);
-    };
-  }, []);
-
-  useEffect(() => {
     if (!selectedId) return;
     listRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedId]);
+
+  useEffect(() => {
+    const container = spaceRef.current;
+    const canvas = sceneCanvasRef.current;
+    if (!container || !canvas) return undefined;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0xfff8ee, 0.0065);
+
+    const camera = new THREE.PerspectiveCamera(47, 1, 0.1, 600);
+    updateCamera(camera, cameraStateRef);
+
+    const galaxyGroup = new THREE.Group();
+    galaxyGroup.rotation.y = -0.26;
+    scene.add(galaxyGroup);
+
+    scene.add(new THREE.AmbientLight(0xfff6ec, 1.4));
+    const keyLight = new THREE.PointLight(0xffb392, 12, 260);
+    keyLight.position.set(-34, 44, 58);
+    scene.add(keyLight);
+    const mintLight = new THREE.PointLight(0x9ee5d5, 6, 220);
+    mintLight.position.set(42, 28, -44);
+    scene.add(mintLight);
+
+    const farStars = new THREE.Points(
+      buildStarField(760, 176, ["#ffffff", "#ffd9c7", "#f8b39a", "#bcebdc", "#f7dda6"]),
+      new THREE.PointsMaterial({
+        size: 0.72,
+        transparent: true,
+        opacity: 0.62,
+        vertexColors: true,
+        depthWrite: false,
+      }),
+    );
+    scene.add(farStars);
+
+    const spiral = new THREE.Points(
+      buildStarField(920, 82, ["#fff9ef", "#ffd1bd", "#f6bd60", "#9fe2d4", "#cfc4ff"], true),
+      new THREE.PointsMaterial({
+        size: 1.05,
+        transparent: true,
+        opacity: 0.82,
+        vertexColors: true,
+        depthWrite: false,
+      }),
+    );
+    galaxyGroup.add(spiral);
+
+    [18, 34, 52, 72].forEach((radius, index) => {
+      const ring = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(createRingPoints(radius, -1.2 + index * 0.28)),
+        new THREE.LineBasicMaterial({
+          color: index % 2 ? 0x8dd8c8 : 0xf0a187,
+          transparent: true,
+          opacity: 0.24,
+        }),
+      );
+      ring.rotation.x = Math.PI / 2 + index * 0.015;
+      galaxyGroup.add(ring);
+    });
+
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(2.7, 32, 32),
+      new THREE.MeshStandardMaterial({
+        color: 0xf06f52,
+        emissive: 0xf6bd60,
+        emissiveIntensity: 1.8,
+        roughness: 0.38,
+        metalness: 0.08,
+      }),
+    );
+    galaxyGroup.add(core);
+
+    const coreHalo = new THREE.Mesh(
+      new THREE.SphereGeometry(7.8, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0xf06f52,
+        transparent: true,
+        opacity: 0.11,
+        depthWrite: false,
+      }),
+    );
+    galaxyGroup.add(coreHalo);
+
+    const roomObjects = new Map();
+    roomsWithSignal.forEach((room) => {
+      const position = getRoomVector(room);
+      const color = new THREE.Color(room.color);
+      const roomGroup = new THREE.Group();
+      roomGroup.position.copy(position);
+
+      const line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), position.clone()]),
+        new THREE.LineBasicMaterial({
+          color,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          fog: false,
+          linewidth: 2,
+          transparent: true,
+          opacity: 0.38,
+        }),
+      );
+      galaxyGroup.add(line);
+
+      const star = new THREE.Mesh(
+        new THREE.SphereGeometry(1.95 + room.similarity / 80, 32, 32),
+        new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.8,
+          roughness: 0.44,
+          metalness: 0.04,
+        }),
+      );
+      roomGroup.add(star);
+
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(5.8 + room.similarity / 22, 32, 32),
+        new THREE.MeshBasicMaterial({
+          color,
+          transparent: true,
+          opacity: 0.12,
+          depthWrite: false,
+        }),
+      );
+      roomGroup.add(halo);
+
+      const orbit = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(createRingPoints(5.2 + room.similarity / 24, 0, 96)),
+        new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity: 0.26,
+        }),
+      );
+      orbit.rotation.x = Math.PI / 2.5;
+      orbit.rotation.z = hashString(room.id) * 0.01;
+      roomGroup.add(orbit);
+
+      galaxyGroup.add(roomGroup);
+      roomObjects.set(room.id, { group: roomGroup, star, halo, orbit, line, position });
+    });
+
+    sceneStateRef.current = { camera, core, coreHalo, farStars, galaxyGroup, renderer, roomObjects, spiral };
+
+    const resize = () => {
+      const bounds = container.getBoundingClientRect();
+      const width = Math.max(1, bounds.width);
+      const height = Math.max(1, bounds.height);
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(container);
+
+    let frameId = 0;
+    let lastLabels = "";
+    const projected = new THREE.Vector3();
+
+    const render = () => {
+      frameId = window.requestAnimationFrame(render);
+      const sceneState = sceneStateRef.current;
+      if (!sceneState) return;
+
+      sceneState.spiral.rotation.y += 0.0007;
+      sceneState.farStars.rotation.y -= 0.00016;
+      sceneState.core.rotation.y += 0.008;
+      sceneState.coreHalo.scale.setScalar(1 + Math.sin(performance.now() * 0.0018) * 0.04);
+
+      updateCamera(camera, cameraStateRef);
+      const bounds = container.getBoundingClientRect();
+      const nextLabels = {};
+      sceneState.roomObjects.forEach((object, id) => {
+        projected.copy(object.position).applyMatrix4(sceneState.galaxyGroup.matrixWorld).project(camera);
+        const x = ((projected.x + 1) / 2) * bounds.width;
+        const y = ((-projected.y + 1) / 2) * bounds.height;
+        const visible =
+          projected.z > -1 &&
+          projected.z < 1 &&
+          x > 58 &&
+          x < bounds.width - 58 &&
+          y > 54 &&
+          y < bounds.height - 54;
+        nextLabels[id] = {
+          x,
+          y,
+          visible,
+          scale: THREE.MathUtils.clamp(1.08 - projected.z * 0.18, 0.74, 1.12),
+          z: projected.z,
+        };
+      });
+      const signature = JSON.stringify(nextLabels);
+      if (signature !== lastLabels) {
+        lastLabels = signature;
+        setLabelPositions(nextLabels);
+      }
+
+      renderer.render(scene, camera);
+    };
+
+    render();
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      observer.disconnect();
+      sceneStateRef.current = null;
+      renderer.dispose();
+      farStars.geometry.dispose();
+      farStars.material.dispose();
+      spiral.geometry.dispose();
+      spiral.material.dispose();
+      core.geometry.dispose();
+      core.material.dispose();
+      coreHalo.geometry.dispose();
+      coreHalo.material.dispose();
+      roomObjects.forEach((object) => {
+        object.star.geometry.dispose();
+        object.star.material.dispose();
+        object.halo.geometry.dispose();
+        object.halo.material.dispose();
+        object.orbit.geometry.dispose();
+        object.orbit.material.dispose();
+        object.line.geometry.dispose();
+        object.line.material.dispose();
+      });
+    };
+  }, [roomsWithSignal]);
+
+  useEffect(() => {
+    const sceneState = sceneStateRef.current;
+    if (!sceneState) return;
+
+    sceneState.roomObjects.forEach((object, id) => {
+      const active = id === selectedId;
+      const hovered = id === hoveredId;
+      object.group.scale.setScalar(active ? 1.55 : hovered ? 1.34 : 1);
+      object.halo.material.opacity = active ? 0.32 : hovered ? 0.22 : 0.12;
+      object.orbit.material.opacity = active ? 0.7 : hovered ? 0.5 : 0.26;
+      object.line.material.opacity = active ? 0.88 : hovered ? 0.68 : 0.38;
+    });
+  }, [hoveredId, selectedId]);
 
   useEffect(() => {
     if (!waitingRoom?.startedAt) {
@@ -144,46 +432,50 @@ export default function RoomDiscovery({
     return () => window.clearInterval(timer);
   }, [waitingRoom?.startedAt]);
 
-  const getLineEnd = (room) => ({
-    x: canvasSize.width / 2 + pan.x + room.mapX * zoom,
-    y: canvasSize.height / 2 + pan.y + room.mapY * zoom,
-  });
-
-  const startPanning = (event) => {
+  const startExploring = (event) => {
     if (event.target.closest("[data-stop-pan]")) return;
     dragRef.current = {
       startX: event.clientX,
       startY: event.clientY,
-      originX: pan.x,
-      originY: pan.y,
+      originTargetX: cameraStateRef.current.targetX,
+      originTargetZ: cameraStateRef.current.targetZ,
     };
-    setIsPanning(true);
+    setIsExploring(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const panMap = (event) => {
+  const exploreGalaxy = (event) => {
     if (!dragRef.current) return;
-    const nextPan = clampPan(
-      {
-        x: dragRef.current.originX + event.clientX - dragRef.current.startX,
-        y: dragRef.current.originY + event.clientY - dragRef.current.startY,
-      },
-      zoom,
-    );
-    setPan(nextPan);
+    const deltaX = event.clientX - dragRef.current.startX;
+    const deltaY = event.clientY - dragRef.current.startY;
+    const panSpeed = cameraStateRef.current.distance / 520;
+    const right = new THREE.Vector3(Math.cos(INITIAL_CAMERA.yaw), 0, -Math.sin(INITIAL_CAMERA.yaw));
+    const forward = new THREE.Vector3(-Math.sin(INITIAL_CAMERA.yaw), 0, -Math.cos(INITIAL_CAMERA.yaw));
+    const nextTargetX =
+      dragRef.current.originTargetX - right.x * deltaX * panSpeed + forward.x * deltaY * panSpeed;
+    const nextTargetZ =
+      dragRef.current.originTargetZ - right.z * deltaX * panSpeed + forward.z * deltaY * panSpeed;
+    cameraStateRef.current.targetX = THREE.MathUtils.clamp(nextTargetX, -PAN_LIMIT, PAN_LIMIT);
+    cameraStateRef.current.targetZ = THREE.MathUtils.clamp(nextTargetZ, -PAN_LIMIT, PAN_LIMIT);
   };
 
-  const stopPanning = () => {
+  const stopExploring = () => {
     dragRef.current = null;
-    setIsPanning(false);
+    setIsExploring(false);
   };
 
   const changeZoom = (delta) => {
-    setZoom((current) => {
-      const nextZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Number((current + delta).toFixed(2))));
-      setPan((currentPan) => clampPan(currentPan, nextZoom));
-      return nextZoom;
+    setCameraDistance((current) => {
+      const nextDistance = Math.max(MIN_DISTANCE, Math.min(MAX_DISTANCE, current + delta));
+      cameraStateRef.current.distance = nextDistance;
+      return nextDistance;
     });
+  };
+
+  const focusRoomInGalaxy = (room) => {
+    const position = getRoomVector(room);
+    cameraStateRef.current.targetX = THREE.MathUtils.clamp(position.x, -PAN_LIMIT, PAN_LIMIT);
+    cameraStateRef.current.targetZ = THREE.MathUtils.clamp(position.z, -PAN_LIMIT, PAN_LIMIT);
   };
 
   const viewProfileFeed = (room) => {
@@ -284,33 +576,35 @@ export default function RoomDiscovery({
         </Modal>
       ) : null}
 
-      <section className="mx-auto grid h-[calc(100vh-64px)] w-full max-w-7xl gap-5 pt-16 lg:grid-cols-[1fr_390px]">
+      <section className="mx-auto grid h-[calc(100vh-64px)] w-full min-w-0 max-w-7xl gap-5 pt-16 lg:grid-cols-[minmax(0,1fr)_390px]">
         <div
-          ref={canvasRef}
-          onPointerDown={startPanning}
-          onPointerMove={panMap}
-          onPointerUp={stopPanning}
-          onPointerCancel={stopPanning}
-          className={`semantic-space relative h-full min-h-[620px] overflow-hidden rounded-[36px] border border-white/80 shadow-soft ${
-            isPanning ? "is-panning" : ""
+          ref={spaceRef}
+          onPointerDown={startExploring}
+          onPointerMove={exploreGalaxy}
+          onPointerUp={stopExploring}
+          onPointerCancel={stopExploring}
+          className={`semantic-space relative h-full min-h-[620px] min-w-0 overflow-hidden rounded-[36px] border border-white/80 shadow-soft ${
+            isExploring ? "is-panning" : ""
           }`}
         >
-          <div className="pointer-events-none absolute left-8 top-8 z-10 max-w-xl">
+          <canvas ref={sceneCanvasRef} className="cosmic-canvas absolute inset-0 z-[2] h-full w-full" />
+
+          <div className="pointer-events-none absolute left-8 top-8 z-20 max-w-xl">
             <p className="inline-flex items-center gap-2 rounded-full bg-white/62 px-3 py-2 text-sm font-semibold text-[#af6449] shadow-sm backdrop-blur-xl">
               <Sparkles size={15} />
-              宇宙房间地图
+              3D 宇宙房间地图
             </p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-stone-800">
+            <h1 className="mt-4 max-w-[calc(100vw-96px)] text-3xl font-semibold leading-tight text-stone-800 sm:max-w-2xl sm:text-4xl">
               越靠近我的星系，越可能同频相遇
             </h1>
           </div>
 
           <div
             data-stop-pan
-            className="absolute right-6 top-6 z-30 flex items-center gap-2 rounded-full border border-white/76 bg-white/70 p-2 shadow-sm backdrop-blur-xl"
+            className="absolute bottom-6 right-6 z-30 flex items-center gap-2 rounded-full border border-white/76 bg-white/70 p-2 shadow-sm backdrop-blur-xl sm:bottom-auto sm:top-6"
           >
             <button
-              onClick={() => changeZoom(-0.12)}
+              onClick={() => changeZoom(14)}
               className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white"
               aria-label="缩小星图"
               title="缩小星图"
@@ -318,10 +612,10 @@ export default function RoomDiscovery({
               <ZoomOut size={18} />
             </button>
             <span className="min-w-12 text-center text-xs font-semibold text-stone-500">
-              {Math.round(zoom * 100)}%
+              {Math.round(((MAX_DISTANCE - cameraDistance) / (MAX_DISTANCE - MIN_DISTANCE)) * 100 + 58)}%
             </span>
             <button
-              onClick={() => changeZoom(0.12)}
+              onClick={() => changeZoom(-14)}
               className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white"
               aria-label="放大星图"
               title="放大星图"
@@ -330,44 +624,13 @@ export default function RoomDiscovery({
             </button>
           </div>
 
-          {canvasSize.width && canvasSize.height ? (
-            <svg
-              className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-[0.62]"
-              viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
-              preserveAspectRatio="none"
-            >
-              {roomsWithSignal.map((room) => {
-                const end = getLineEnd(room);
-                return (
-                  <line
-                    key={room.id}
-                    x1={canvasSize.width / 2}
-                    y1={canvasSize.height / 2}
-                    x2={end.x}
-                    y2={end.y}
-                    stroke={room.color}
-                    strokeWidth={selectedId === room.id || hoveredId === room.id ? 1.45 : 1}
-                    strokeDasharray="6 8"
-                    opacity={selectedId === room.id || hoveredId === room.id ? 0.62 : 0.32}
-                  />
-                );
-              })}
-            </svg>
-          ) : null}
-
-          <div className="my-star pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2">
-            <span className="my-star__orbit" />
-            <span className="my-star__core" />
-          </div>
-
-          <div
-            className="galaxy-map absolute inset-0 z-10"
-            style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})` }}
-          >
+          <div className="galaxy-map absolute inset-0 z-20">
             {roomsWithSignal.map((room, index) => {
               const roomTypeStyle = getRoomTypeStyle(room.type);
               const RoomTypeIcon = roomTypeStyle.Icon;
               const isExpanded = selectedId === room.id;
+              const labelPosition = labelPositions[room.id];
+              if (!labelPosition?.visible) return null;
 
               return (
                 <div
@@ -390,12 +653,14 @@ export default function RoomDiscovery({
                   onMouseEnter={() => setHoveredId(room.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   style={{
-                    left: `calc(50% + ${room.mapX}px)`,
-                    top: `calc(50% + ${room.mapY}px)`,
+                    left: `${labelPosition.x}px`,
+                    top: `${labelPosition.y}px`,
                     "--room-color": room.color,
-                    "--halo-size": `${168 + room.similarity * 0.82}px`,
+                    "--halo-size": `${96 + room.similarity * 0.42}px`,
                     "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
                     "--rotate": `${(index - 1.5) * 2}deg`,
+                    "--depth-scale": labelPosition.scale,
+                    zIndex: Math.round((1 - labelPosition.z) * 100),
                   }}
                   className={`galaxy-room absolute z-10 -translate-x-1/2 -translate-y-1/2 text-left transition ${
                     isExpanded || hoveredId === room.id ? "is-active" : ""
@@ -432,7 +697,7 @@ export default function RoomDiscovery({
           </div>
         </div>
 
-        <aside className="glass-panel cosmic-side-panel flex min-h-0 flex-col rounded-[36px] p-5">
+        <aside className="glass-panel cosmic-side-panel flex min-h-0 min-w-0 flex-col rounded-[36px] p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-[#af6449]">附近房间</p>
             <span className="rounded-full bg-white/62 px-3 py-1 text-xs font-semibold text-stone-500">
@@ -453,7 +718,10 @@ export default function RoomDiscovery({
                     ref={(node) => {
                       listRefs.current[room.id] = node;
                     }}
-                    onClick={() => setSelectedId(room.id)}
+                    onClick={() => {
+                      setSelectedId(room.id);
+                      focusRoomInGalaxy(room);
+                    }}
                     onMouseEnter={() => setHoveredId(room.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     className={`cosmic-list-item flex min-w-[250px] items-center gap-3 rounded-3xl border p-3 text-left transition lg:min-w-0 ${
