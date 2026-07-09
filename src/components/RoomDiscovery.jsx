@@ -665,7 +665,6 @@ export default function RoomDiscovery({
                     "--room-color": room.color,
                     "--halo-size": `${96 + room.similarity * 0.42}px`,
                     "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
-                    "--rotate": `${(index - 1.5) * 2}deg`,
                     "--depth-scale": labelPosition.scale,
                     zIndex: Math.round((1 - labelPosition.z) * 100),
                   }}
@@ -685,7 +684,7 @@ export default function RoomDiscovery({
                         <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
                         <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
                         <span className="mt-2 flex flex-wrap gap-1.5">
-                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${roomTypeStyle.badgeClass}`}>
+                          <span className="galaxy-room__type-badge inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold">
                             <RoomTypeIcon size={12} />
                             {room.type}
                           </span>
