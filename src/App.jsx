@@ -36,6 +36,7 @@ export default function App() {
   const [friends, setFriends] = useState([]);
   const [threads, setThreads] = useState(mock.messages);
   const [currentRoom, setCurrentRoom] = useState(null);
+  const [waitingRoom, setWaitingRoom] = useState(null);
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
 
@@ -143,9 +144,15 @@ export default function App() {
       <>
         <RoomDiscovery
           rooms={mock.rooms}
-          onBack={() => setPhase("home")}
+          waitingRoom={waitingRoom}
+          onBack={() => {
+            setWaitingRoom(null);
+            setPhase("home");
+          }}
+          onDismissWaiting={() => setWaitingRoom(null)}
           onToast={showToast}
           onEnterVoice={(room) => {
+            setWaitingRoom(null);
             setCurrentRoom(room);
             setPhase("voice");
           }}
@@ -196,6 +203,7 @@ export default function App() {
           onCreate={() => setModal("create-room")}
           onJoin={() => {
             setModal(null);
+            setWaitingRoom(null);
             setPhase("discover");
           }}
         />
@@ -205,9 +213,11 @@ export default function App() {
         <CreateRoomModal
           user={user}
           onClose={() => setModal(null)}
-          onCreated={() => {
+          onCreated={(roomDraft) => {
             setModal(null);
-            showToast("创建成功，等待玩家加入中。");
+            setWaitingRoom({ ...roomDraft, startedAt: Date.now() });
+            setPhase("discover");
+            showToast("房间已创建，正在等待玩家加入。");
           }}
         />
       ) : null}

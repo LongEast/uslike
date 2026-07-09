@@ -1,6 +1,9 @@
 import {
+  ChevronDown,
   ChevronLeft,
+  ChevronUp,
   Compass,
+  Clock,
   Mic,
   MessageSquareText,
   Move,
@@ -59,7 +62,21 @@ const clampPan = (pan, zoom = INITIAL_ZOOM) => ({
   y: Math.max(-PAN_LIMIT.y * zoom, Math.min(PAN_LIMIT.y * zoom, pan.y)),
 });
 
-export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) {
+const formatElapsed = (seconds) => {
+  const minutes = Math.floor(seconds / 60);
+  const restSeconds = seconds % 60;
+  if (minutes <= 0) return `${restSeconds} 秒`;
+  return `${minutes} 分 ${String(restSeconds).padStart(2, "0")} 秒`;
+};
+
+export default function RoomDiscovery({
+  rooms,
+  waitingRoom,
+  onBack,
+  onDismissWaiting,
+  onEnterVoice,
+  onToast,
+}) {
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
   const listRefs = useRef({});
@@ -71,6 +88,8 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
   const [pan, setPan] = useState(INITIAL_PAN);
   const [zoom, setZoom] = useState(INITIAL_ZOOM);
   const [isPanning, setIsPanning] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [waitingCollapsed, setWaitingCollapsed] = useState(false);
   const selectedRoom = rooms.find((room) => room.id === selectedId);
   const roomsWithSignal = useMemo(
     () =>
@@ -105,6 +124,21 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
     if (!selectedId) return;
     listRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!waitingRoom?.startedAt) {
+      setElapsedSeconds(0);
+      return undefined;
+    }
+
+    const updateElapsed = () => {
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - waitingRoom.startedAt) / 1000)));
+    };
+
+    updateElapsed();
+    const timer = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(timer);
+  }, [waitingRoom?.startedAt]);
 
   const getLineEnd = (room) => ({
     x: canvasSize.width / 2 + pan.x + room.mapX * zoom,
@@ -170,6 +204,56 @@ export default function RoomDiscovery({ rooms, onBack, onEnterVoice, onToast }) 
         <ChevronLeft size={18} />
         返回首页
       </button>
+
+      {waitingRoom ? (
+        waitingCollapsed ? (
+          <button
+            onClick={() => setWaitingCollapsed(false)}
+            className="fixed left-1/2 top-6 z-30 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#f0c6a8]/80 bg-white/92 px-4 py-3 text-sm font-semibold text-stone-700 shadow-[0_18px_48px_rgba(92,55,32,0.18)] backdrop-blur-xl transition hover:bg-white"
+            aria-label="展开等待提示"
+          >
+            <Clock size={16} className="text-[#bc5a42]" />
+            已等待 {formatElapsed(elapsedSeconds)}
+            <ChevronDown size={16} className="text-stone-400" />
+          </button>
+        ) : (
+          <div className="fixed left-1/2 top-6 z-30 w-[min(92vw,560px)] -translate-x-1/2 rounded-[28px] border border-[#f0c6a8]/80 bg-white/90 p-4 shadow-[0_24px_70px_rgba(92,55,32,0.2)] backdrop-blur-xl">
+            <div className="absolute right-3 top-3 flex items-center gap-1">
+              <button
+                onClick={() => setWaitingCollapsed(true)}
+                className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#fff8ee] hover:text-stone-700"
+                aria-label="收起等待提示"
+                title="收起等待提示"
+              >
+                <ChevronUp size={16} />
+              </button>
+              <button
+                onClick={onDismissWaiting}
+                className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#fff8ee] hover:text-stone-700"
+                aria-label="关闭等待提示"
+                title="关闭等待提示"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="pr-20">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#ffe0ce] px-3 py-1.5 text-sm font-semibold text-[#bc5a42]">
+                  <Clock size={15} />
+                  正在等待玩家加入
+                </span>
+                <span className="rounded-full bg-[#fff8ee] px-3 py-1.5 text-sm font-semibold text-stone-600">
+                  已等待 {formatElapsed(elapsedSeconds)}
+                </span>
+              </div>
+              <h2 className="mt-3 text-xl font-semibold text-stone-800">{waitingRoom.name}</h2>
+              <p className="mt-1 text-sm leading-6 text-stone-500">
+                等待过程中你也可以继续浏览星系，选择下方已有房间直接加入。
+              </p>
+            </div>
+          </div>
+        )
+      ) : null}
 
       <section className="mx-auto grid h-[calc(100vh-64px)] w-full max-w-7xl gap-5 pt-16 lg:grid-cols-[1fr_390px]">
         <div
