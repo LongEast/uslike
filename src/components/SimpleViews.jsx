@@ -421,11 +421,11 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                   title="更多"
                   className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border transition ${
                     toolPanelOpen
-                      ? "glass-choice-active"
-                      : "glass-choice"
+                      ? "border-[#8b82e8]/55 bg-[#8b82e8]/18 text-[#312f68] shadow-[0_0_0_2px_rgba(139,130,232,0.12)]"
+                      : "border-stone-300 bg-white/42 text-stone-700 hover:bg-white/70 hover:text-stone-950"
                   }`}
                 >
-                  <Plus size={24} />
+                  <Plus size={31} strokeWidth={2.4} />
                 </button>
                 <button
                   onClick={submitMessage}
