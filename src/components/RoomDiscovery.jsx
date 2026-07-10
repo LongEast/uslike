@@ -6,6 +6,7 @@ import {
   Mic,
   MessageSquareText,
   Newspaper,
+  RefreshCw,
   Sparkles,
   X,
   ZoomIn,
@@ -21,6 +22,7 @@ const MIN_DISTANCE = 72;
 const MAX_DISTANCE = 178;
 const PAN_LIMIT = 92;
 const ROOM_SPACE_SCALE = 8.5;
+const MAX_ROOM_BATCH_SIZE = 5;
 
 const getRoomPosition = (room) => ({
   mapX: room.mapX ?? (room.x - 50) * 12,
@@ -212,8 +214,9 @@ export default function RoomDiscovery({
   const [waitingCollapsed, setWaitingCollapsed] = useState(false);
   const [closeWaitingConfirmOpen, setCloseWaitingConfirmOpen] = useState(false);
   const [avatarColors, setAvatarColors] = useState({});
-  const selectedRoom = rooms.find((room) => room.id === selectedId);
-  const roomsWithSignal = useMemo(
+  const [roomBatchIndex, setRoomBatchIndex] = useState(0);
+  const batchSize = Math.min(MAX_ROOM_BATCH_SIZE, Math.max(1, Math.floor(rooms.length / 2) || rooms.length));
+  const allRoomsWithSignal = useMemo(
     () =>
       rooms.map((room) => {
         const similarity = getStaticSimilarity(room);
@@ -227,7 +230,24 @@ export default function RoomDiscovery({
       }),
     [avatarColors, rooms],
   );
+  const roomsWithSignal = useMemo(() => {
+    if (allRoomsWithSignal.length <= batchSize) return allRoomsWithSignal;
+
+    const startIndex = (roomBatchIndex * batchSize) % allRoomsWithSignal.length;
+    return Array.from(
+      { length: batchSize },
+      (_, index) => allRoomsWithSignal[(startIndex + index) % allRoomsWithSignal.length],
+    );
+  }, [allRoomsWithSignal, batchSize, roomBatchIndex]);
+  const selectedRoom = roomsWithSignal.find((room) => room.id === selectedId);
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (!roomsWithSignal.some((room) => room.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [roomsWithSignal, selectedId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -597,6 +617,12 @@ export default function RoomDiscovery({
     cameraStateRef.current.targetZ = THREE.MathUtils.clamp(position.z, -PAN_LIMIT, PAN_LIMIT);
   };
 
+  const refreshRoomBatch = () => {
+    setSelectedId(null);
+    setHoveredId(null);
+    setRoomBatchIndex((current) => current + 1);
+  };
+
   const viewProfileFeed = (room) => {
     onToast(`${room.hostName} 的动态页稍后开放，先从这张星系卡片认识 TA。`);
   };
@@ -821,9 +847,20 @@ export default function RoomDiscovery({
         <aside className="glass-panel cosmic-side-panel flex min-h-0 min-w-0 flex-col rounded-[36px] p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-[#6b5ee7]">附近房间</p>
-            <span className="rounded-full bg-white/62 px-3 py-1 text-xs font-semibold text-stone-500">
-              以我的坐标排序
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="hidden rounded-full bg-white/62 px-3 py-1 text-xs font-semibold text-stone-500 sm:inline-flex">
+                以我的坐标排序
+              </span>
+              <button
+                onClick={refreshRoomBatch}
+                disabled={allRoomsWithSignal.length <= batchSize}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/68 px-3 py-1 text-xs font-semibold text-[#6b5ee7] shadow-sm backdrop-blur-xl transition hover:bg-white disabled:pointer-events-none disabled:opacity-45"
+                title="换一批房间"
+              >
+                <RefreshCw size={13} />
+                换一批
+              </button>
+            </div>
           </div>
           <div className="card-scroll mb-5 flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
             {[...roomsWithSignal]
