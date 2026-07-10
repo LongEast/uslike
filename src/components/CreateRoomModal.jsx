@@ -18,14 +18,14 @@ const roomTypeOptions = [
   {
     label: "语音房",
     icon: Mic,
-    selectedClass: "bg-[#f06f52] text-white shadow-glow",
-    idleClass: "bg-[#fff0d7] text-[#b66a32] hover:bg-[#ffe4b8]",
+    selectedClass: "glass-choice-active",
+    idleClass: "glass-choice",
   },
   {
     label: "打字房",
     icon: MessageCircle,
-    selectedClass: "bg-[#50bfa5] text-white shadow-[0_18px_40px_rgba(80,191,165,0.26)]",
-    idleClass: "bg-[#e6f7f2] text-[#2d8c77] hover:bg-[#d8f4ec]",
+    selectedClass: "glass-choice-active",
+    idleClass: "glass-choice",
   },
 ];
 
@@ -121,8 +121,8 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
                 onClick={() => toggleTrait(trait)}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   selectedTraits.includes(trait)
-                    ? "bg-[#ffe0ce] text-[#bc5a42]"
-                    : "bg-white/74 text-stone-600 hover:bg-white"
+                    ? "glass-choice-active"
+                    : "glass-choice"
                 }`}
               >
                 {trait}
@@ -141,7 +141,7 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
               type="button"
               onMouseDown={(event) => event.preventDefault()}
               onClick={addCustomTrait}
-              className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-[#f06f52] text-white shadow-glow transition hover:bg-[#e45f47]"
+              className="aurora-dark flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl text-white shadow-glow transition hover:brightness-110"
               aria-label="添加玩家特质"
             >
               <Plus size={22} />
@@ -159,7 +159,7 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
         </label>
         <button
           onClick={createRoom}
-          className="w-full rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+          className="aurora-dark w-full rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
         >
           创建
         </button>

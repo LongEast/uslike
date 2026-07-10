@@ -45,7 +45,7 @@ export function RegisterModal({ onSuccess, onClose }) {
         </label>
         <button
           onClick={onSuccess}
-          className="w-full rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+          className="aurora-dark w-full rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
         >
           注册
         </button>
@@ -129,8 +129,8 @@ export function ProfileModal({ defaultUser, onSave }) {
                 onClick={() => setProfile({ ...profile, gender })}
                 className={`rounded-2xl px-4 py-3 font-semibold transition ${
                   profile.gender === gender
-                    ? "bg-[#f06f52] text-white shadow-glow"
-                    : "bg-white/72 text-stone-600 hover:bg-white"
+                    ? "glass-choice-active"
+                    : "glass-choice"
                 }`}
               >
                 {gender}
@@ -149,8 +149,8 @@ export function ProfileModal({ defaultUser, onSave }) {
               onClick={() => toggleInterest(interest)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 profile.interests.includes(interest)
-                  ? "bg-[#ffe0ce] text-[#bc5a42]"
-                  : "bg-white/74 text-stone-600 hover:bg-white"
+                  ? "glass-choice-active"
+                  : "glass-choice"
               }`}
             >
               {interest}
@@ -170,7 +170,7 @@ export function ProfileModal({ defaultUser, onSave }) {
             type="button"
             onMouseDown={(event) => event.preventDefault()}
             onClick={addCustomInterest}
-            className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-[#f06f52] text-white shadow-glow transition hover:bg-[#e45f47]"
+            className="aurora-dark flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl text-white shadow-glow transition hover:brightness-110"
             aria-label="添加自定义兴趣"
           >
             <Plus size={22} />
@@ -180,7 +180,7 @@ export function ProfileModal({ defaultUser, onSave }) {
 
       <button
         onClick={() => onSave(profile)}
-        className="mt-6 w-full rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+        className="aurora-dark mt-6 w-full rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
       >
         保存信息
       </button>
@@ -232,7 +232,7 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
               className="block rounded-2xl bg-white/70 p-4 text-sm font-medium text-stone-700 shadow-sm"
             >
               <span className="mb-2 flex items-start gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ffe0ce] text-xs font-bold text-[#bc5a42]">
+                <span className="glass-choice-active flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                   {index + 1}
                 </span>
                 <span className="leading-7">{question.text}</span>
@@ -260,7 +260,7 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
           <button
             type="button"
             onClick={saveAnswers}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+            className="aurora-dark flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
           >
             保存{answeredCount ? ` ${answeredCount} 个回答` : ""}并进入
             <ArrowRight size={18} />

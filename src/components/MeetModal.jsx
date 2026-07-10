@@ -7,9 +7,9 @@ export default function MeetModal({ onClose, onCreate, onJoin }) {
       <div className="grid gap-3">
         <button
           onClick={onCreate}
-          className="flex items-center gap-4 rounded-3xl bg-white/78 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:bg-white"
+          className="glass-choice-active flex items-center gap-4 rounded-3xl p-5 text-left transition hover:-translate-y-1"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ffe0ce] text-[#e76147]">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white/24 text-stone-700 backdrop-blur-xl">
             <PlusCircle size={24} />
           </span>
           <span>
@@ -19,9 +19,9 @@ export default function MeetModal({ onClose, onCreate, onJoin }) {
         </button>
         <button
           onClick={onJoin}
-          className="flex items-center gap-4 rounded-3xl bg-white/78 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:bg-white"
+          className="glass-choice-active flex items-center gap-4 rounded-3xl p-5 text-left transition hover:-translate-y-1"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d8f4ec] text-[#29977e]">
+          <span className="aurora-dark flex h-12 w-12 items-center justify-center rounded-2xl text-white">
             <DoorOpen size={24} />
           </span>
           <span>

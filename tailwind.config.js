@@ -15,8 +15,8 @@ export default {
         ],
       },
       boxShadow: {
-        soft: "0 20px 70px rgba(96, 65, 43, 0.16)",
-        glow: "0 0 36px rgba(244, 169, 128, 0.48)",
+        soft: "0 20px 70px rgba(88, 95, 142, 0.16)",
+        glow: "0 0 36px rgba(126, 133, 255, 0.42)",
       },
       animation: {
         floaty: "floaty 7s ease-in-out infinite",

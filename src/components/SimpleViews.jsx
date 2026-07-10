@@ -38,7 +38,7 @@ export function FeedView({ feed }) {
     <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-3xl font-semibold text-stone-800">空间动态</h2>
-        <span className="rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-[#af6449] shadow-sm">
+        <span className="rounded-full bg-white/58 px-4 py-2 text-sm font-semibold text-[#5d6387] shadow-sm backdrop-blur-xl">
           同频近况
         </span>
       </div>
@@ -51,13 +51,13 @@ export function FeedView({ feed }) {
           />
           <div className="flex shrink-0 border-l border-stone-100/90">
             <button
-              className="grid w-[72px] place-items-center px-5 text-stone-500 transition hover:bg-[#fff8ee] hover:text-[#f06f52]"
+              className="grid w-[72px] place-items-center px-5 text-stone-500 transition hover:bg-white/70 hover:text-[#6966dd]"
               title="添加图片"
             >
               <Camera size={28} />
             </button>
             <button
-              className="grid w-[72px] place-items-center border-l border-stone-100/90 px-5 text-stone-500 transition hover:bg-[#fff8ee] hover:text-[#f06f52]"
+              className="grid w-[72px] place-items-center border-l border-stone-100/90 px-5 text-stone-500 transition hover:bg-white/70 hover:text-[#6966dd]"
               title="添加链接"
             >
               <Link size={28} />
@@ -65,7 +65,7 @@ export function FeedView({ feed }) {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <button className="text-base font-semibold text-stone-800 transition hover:text-[#f06f52]">
+          <button className="text-base font-semibold text-stone-800 transition hover:text-[#6966dd]">
             与我相关
           </button>
           <div className="flex flex-wrap items-center gap-4">
@@ -76,8 +76,8 @@ export function FeedView({ feed }) {
               <span
                 className={`grid h-5 w-5 place-items-center rounded border ${
                   showNonFriendComments
-                    ? "border-[#f06f52] bg-[#f06f52] text-white"
-                    : "border-stone-300 bg-white text-transparent"
+                    ? "glass-choice-active"
+                    : "border-stone-300 bg-white/48 text-transparent backdrop-blur-xl"
                 }`}
               >
                 <Check size={14} />
@@ -85,12 +85,12 @@ export function FeedView({ feed }) {
               显示非好友评论
             </button>
             <button
-              className="rounded-full p-2 text-stone-400 transition hover:bg-[#fff8ee] hover:text-[#f06f52]"
+              className="rounded-full p-2 text-stone-400 transition hover:bg-white/70 hover:text-[#6966dd]"
               title="刷新"
             >
               <RefreshCw size={21} />
             </button>
-            <button className="rounded-full bg-[#f06f52] px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:bg-[#e45f47]">
+            <button className="aurora-dark rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:brightness-110">
               发布
             </button>
           </div>
@@ -108,7 +108,7 @@ export function FeedView({ feed }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-semibold text-stone-800">{item.user}</h3>
                       {item.badge ? (
-                        <span className="rounded-full bg-[#fff0d7] px-2 py-1 text-[11px] font-semibold text-[#b66a32]">
+                        <span className="glass-choice-active rounded-full px-2 py-1 text-[11px] font-semibold">
                           {item.badge}
                         </span>
                       ) : null}
@@ -125,7 +125,7 @@ export function FeedView({ feed }) {
                 {item.tags?.length ? (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {item.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-[#fff8ee] px-3 py-1.5 text-xs font-semibold text-stone-500">
+                      <span key={tag} className="rounded-full bg-white/58 px-3 py-1.5 text-xs font-semibold text-[#5d6387] backdrop-blur-xl">
                         {tag}
                       </span>
                     ))}
@@ -135,13 +135,13 @@ export function FeedView({ feed }) {
                 <div className="mt-4 flex items-center justify-between gap-4 text-sm text-stone-400">
                   <span>{item.time}</span>
                   <div className="flex items-center gap-5 text-stone-700">
-                    <button className="transition hover:text-[#f06f52]" title="赞">
+                    <button className="transition hover:text-[#6966dd]" title="赞">
                       <ThumbsUp size={25} />
                     </button>
-                    <button className="transition hover:text-[#f06f52]" title="评论">
+                    <button className="transition hover:text-[#6966dd]" title="评论">
                       <MessageCircle size={25} />
                     </button>
-                    <button className="transition hover:text-[#f06f52]" title="分享">
+                    <button className="transition hover:text-[#6966dd]" title="分享">
                       <Share2 size={25} />
                     </button>
                   </div>
@@ -272,13 +272,17 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
               key={thread.id}
               onClick={() => setActiveThreadId(thread.id)}
               className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
-                activeThreadId === thread.id ? "bg-[#fff0d7]" : "bg-white/68 hover:bg-white"
+                activeThreadId === thread.id ? "ink-glass" : "glass-choice"
               }`}
             >
               <Avatar src={thread.avatar} name={thread.name} />
               <span>
-                <span className="block font-semibold text-stone-800">{thread.name}</span>
-                <span className="mt-1 block text-xs text-stone-500">{thread.subtitle}</span>
+                <span className="block font-semibold text-stone-800">
+                  {thread.name}
+                </span>
+                <span className="mt-1 block text-xs text-stone-500">
+                  {thread.subtitle}
+                </span>
               </span>
             </button>
           ))}
@@ -299,7 +303,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
             </div>
 
             {activeThread.decorHint ? (
-              <div className="mb-4 flex h-24 items-center justify-center rounded-[28px] border border-dashed border-[#e3b494] bg-white/48 text-sm text-stone-500">
+              <div className="mb-4 flex h-24 items-center justify-center rounded-[28px] border border-dashed border-[#9ca3d6]/60 bg-white/42 text-sm text-stone-500">
                 开始装点属于你们的空间吧！
               </div>
             ) : null}
@@ -312,7 +316,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                   <button
                     key={item.label}
                     onClick={() => onToast(`${item.label}稍后开放。`)}
-                    className="rounded-3xl border border-[#f0c6a8]/70 bg-white/76 px-5 py-4 text-left shadow-sm transition hover:-translate-y-1 hover:bg-white"
+                    className="ink-glass rounded-3xl px-5 py-4 text-left transition hover:-translate-y-1 hover:brightness-110"
                   >
                     <span className="block text-base font-semibold text-stone-800">{item.label}</span>
                     <span className="mt-1 block text-sm text-stone-500">{item.hint}</span>
@@ -338,8 +342,8 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                     key={`${message.from}-${index}`}
                     className={`max-w-[72%] rounded-3xl px-4 py-3 text-sm ${
                       message.from === "me"
-                        ? "ml-auto bg-[#f06f52] text-white"
-                        : "mr-auto border border-[#f0c6a8]/60 bg-[#fff4e8] text-stone-700"
+                        ? "aurora-dark ml-auto text-white shadow-glow"
+                        : "mr-auto border border-white/70 bg-white/58 text-stone-700 backdrop-blur-xl"
                     }`}
                   >
                     {message.type === "image" ? (
@@ -369,7 +373,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                 <div className="mb-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => setGamePicker(activeThread)}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#fff0d7] px-4 py-2.5 text-sm font-semibold text-[#b66a32] transition hover:bg-[#ffe4b8]"
+                    className="glass-choice-active inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition"
                   >
                     <Gamepad2 size={16} />
                     双人游戏
@@ -378,8 +382,8 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                     onClick={openTextGame}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
                       textGameUnlocked
-                        ? "bg-[#ffe0ce] text-[#b85e46] hover:bg-[#ffd0bb]"
-                        : "bg-stone-100 text-stone-400"
+                        ? "glass-choice-active"
+                        : "glass-choice text-stone-400"
                     }`}
                     title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
                   >
@@ -417,15 +421,15 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                   title="更多"
                   className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border transition ${
                     toolPanelOpen
-                      ? "border-[#f06f52]/40 bg-[#fff0d7] text-[#b7664d]"
-                      : "border-stone-200 bg-white/76 text-stone-600 hover:bg-white"
+                      ? "glass-choice-active"
+                      : "glass-choice"
                   }`}
                 >
                   <Plus size={24} />
                 </button>
                 <button
                   onClick={submitMessage}
-                  className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#f06f52] text-white shadow-glow transition hover:bg-[#e45f47]"
+                  className="aurora-dark grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-glow transition hover:brightness-110"
                   title="发送"
                 >
                   <Send size={20} />
@@ -433,7 +437,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
               </div>
 
               {toolPanelOpen ? (
-                <div className="mt-4 rounded-[28px] bg-stone-100/64 p-5">
+                <div className="mt-4 rounded-[28px] border border-white/60 bg-white/36 p-5 backdrop-blur-xl">
                   {callOptionsOpen ? (
                     <div className="mb-5 grid gap-3 sm:grid-cols-2">
                       <button
@@ -442,7 +446,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                           setToolPanelOpen(false);
                           startCall("视频通话");
                         }}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#eef5ff] px-5 py-3 text-sm font-semibold text-[#4070b8] transition hover:bg-[#e1eeff]"
+                        className="glass-choice-active inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition"
                       >
                         <Video size={17} />
                         视频通话
@@ -453,7 +457,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                           setToolPanelOpen(false);
                           startCall("语音通话");
                         }}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#e6f7f2] px-5 py-3 text-sm font-semibold text-[#247e68] transition hover:bg-[#d7f2ea]"
+                        className="glass-choice-active inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition"
                       >
                         <Mic size={17} />
                         语音通话
@@ -465,9 +469,9 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                       <button
                         key={label}
                         onClick={action}
-                        className="group flex flex-col items-center gap-2 text-sm font-semibold text-stone-500 transition hover:text-stone-800"
+                        className="group flex flex-col items-center gap-2 text-sm font-semibold text-stone-500 transition hover:text-stone-900"
                       >
-                        <span className="grid h-20 w-20 place-items-center rounded-[26px] bg-white text-stone-600 shadow-sm transition group-hover:-translate-y-1 group-hover:bg-white">
+                        <span className="glass-choice-active grid h-20 w-20 place-items-center rounded-[26px] transition group-hover:-translate-y-1">
                           <Icon size={30} />
                         </span>
                         {label}
@@ -489,7 +493,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
         <Modal title={`${friendActions.name} 的操作`} onClose={() => setFriendActions(null)} width="max-w-sm">
           <div className="grid gap-2">
             {["查看好友信息", "设置好友备注", "查看 TA 的动态", "举报好友", "删除好友"].map((action) => (
-              <button key={action} className="rounded-2xl bg-white/72 px-4 py-3 text-left font-semibold text-stone-700 hover:bg-white">
+              <button key={action} className="glass-choice-active rounded-2xl px-4 py-3 text-left font-semibold transition">
                 {action}
               </button>
             ))}
@@ -507,7 +511,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                   setGamePicker(null);
                   onToast(`${game} 双人局稍后开放。`);
                 }}
-                className="rounded-3xl bg-white/76 px-5 py-6 text-lg font-semibold text-stone-800 shadow-sm hover:bg-white"
+                className="glass-choice-active rounded-3xl px-5 py-6 text-lg font-semibold transition"
               >
                 {game}
               </button>
@@ -545,12 +549,12 @@ export function FriendsView({ friends }) {
 export function SettingsView({ user }) {
   const menuGroups = [
     [
-      { label: "收藏", icon: Box, color: "text-[#f0a33b]" },
-      { label: "动态", icon: Bell, color: "text-[#2d9cdb]" },
-      { label: "商城", icon: Store, color: "text-[#f06f52]", badge: "推荐" },
-      { label: "表情商店", icon: Smile, color: "text-[#f0c23b]" },
+      { label: "收藏", icon: Box, color: "text-[#6b73ff]" },
+      { label: "动态", icon: Bell, color: "text-[#4267d5]" },
+      { label: "商城", icon: Store, color: "text-[#b85cff]", badge: "推荐" },
+      { label: "表情商店", icon: Smile, color: "text-[#d757c8]" },
     ],
-    [{ label: "设置", icon: Settings, color: "text-[#2d9cdb]" }],
+    [{ label: "设置", icon: Settings, color: "text-[#4267d5]" }],
   ];
 
   return (
@@ -566,7 +570,7 @@ export function SettingsView({ user }) {
                 + 状态
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
-                <Star size={15} className="text-[#f06f52]" />
+                <Star size={15} className="text-[#6b73ff]" />
                 同频好友 6
                 <span className="h-2 w-2 rounded-full bg-[#f25d5d]" />
               </span>
@@ -588,12 +592,12 @@ export function SettingsView({ user }) {
             {group.map(({ label, icon: Icon, color, badge }) => (
               <button
                 key={label}
-                className="flex w-full items-center gap-4 border-b border-stone-100/90 px-6 py-5 text-left transition last:border-b-0 hover:bg-[#fff8ee]"
+                className="flex w-full items-center gap-4 border-b border-stone-100/90 px-6 py-5 text-left transition last:border-b-0 hover:bg-white/62"
               >
                 <Icon size={27} className={color} />
                 <span className="min-w-0 flex-1 text-xl font-semibold text-stone-800">{label}</span>
                 {badge ? (
-                  <span className="rounded-full bg-[#fff0d7] px-2.5 py-1 text-xs font-semibold text-[#b66a32]">
+                  <span className="glass-choice-active rounded-full px-2.5 py-1 text-xs font-semibold">
                     {badge}
                   </span>
                 ) : null}

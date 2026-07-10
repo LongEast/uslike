@@ -33,14 +33,15 @@ export default function AppShell({
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#fff8ee] px-6">
+    <main className="main-wash relative min-h-screen overflow-hidden px-6">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-5%] top-[10%] h-72 w-72 animate-floaty rounded-full bg-[#ffb7a4]/32 blur-3xl" />
-        <div className="absolute right-[-8%] top-[22%] h-80 w-80 animate-floaty rounded-full bg-[#8dd8c8]/26 blur-3xl [animation-delay:1s]" />
-        <div className="absolute bottom-[9%] left-[35%] h-72 w-72 animate-floaty rounded-full bg-[#ffd37d]/28 blur-3xl [animation-delay:2s]" />
+        <div className="absolute left-[-8%] top-[6%] h-[30rem] w-[30rem] animate-floaty rounded-full bg-[#d7e3ff]/48 blur-3xl" />
+        <div className="absolute right-[-10%] top-[18%] h-[34rem] w-[34rem] animate-floaty rounded-full bg-[#e6d8ff]/38 blur-3xl [animation-delay:1s]" />
+        <div className="absolute bottom-[-8%] left-[34%] h-[32rem] w-[32rem] animate-floaty rounded-full bg-[#eadcff]/44 blur-3xl [animation-delay:2s]" />
+        <div className="absolute bottom-[5%] right-[7%] h-44 w-44 rotate-12 rounded-[28px] bg-white/34 blur-sm" />
       </div>
 
-      <header className="fixed left-6 top-5 z-30 flex items-center gap-3 rounded-full bg-white/78 px-3 py-2 shadow-soft backdrop-blur-xl">
+      <header className="fixed left-6 top-5 z-30 flex items-center gap-3 rounded-full border border-white/70 bg-white/56 px-3 py-2 shadow-soft backdrop-blur-xl">
         <Avatar src={user.avatar} name={user.nickname} size="sm" />
         <span className="pr-2 font-semibold text-stone-800">{user.nickname}</span>
       </header>
