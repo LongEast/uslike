@@ -124,6 +124,69 @@ const buildStarField = (count, radius, palette, spiral = false) => {
   return geometry;
 };
 
+const normalizeHexColor = (value) => {
+  if (!value?.startsWith("#")) return null;
+  const hex = value.slice(1);
+  if (hex.length === 3) {
+    return `#${hex.split("").map((char) => `${char}${char}`).join("")}`.toLowerCase();
+  }
+  if (hex.length === 6 || hex.length === 8) {
+    return `#${hex.slice(0, 6)}`.toLowerCase();
+  }
+  return null;
+};
+
+const getRgbFromHex = (hex) => {
+  const normalized = normalizeHexColor(hex);
+  if (!normalized) return null;
+  const value = Number.parseInt(normalized.slice(1), 16);
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255,
+  };
+};
+
+const getColorSignal = (hex) => {
+  const rgb = getRgbFromHex(hex);
+  if (!rgb) return null;
+  const max = Math.max(rgb.r, rgb.g, rgb.b) / 255;
+  const min = Math.min(rgb.r, rgb.g, rgb.b) / 255;
+  const lightness = (max + min) / 2;
+  const saturation = max === min ? 0 : (max - min) / (1 - Math.abs(2 * lightness - 1));
+  return { lightness, saturation };
+};
+
+const extractDominantAvatarColor = (svgText) => {
+  const colorCounts = new Map();
+  const attributePattern = /(?:fill|stroke|stop-color)=["'](#[0-9a-fA-F]{3,8})["']/g;
+  const stylePattern = /(?:fill|stroke|stop-color):\s*(#[0-9a-fA-F]{3,8})/g;
+
+  [attributePattern, stylePattern].forEach((pattern) => {
+    for (const match of svgText.matchAll(pattern)) {
+      const color = normalizeHexColor(match[1]);
+      if (!color) continue;
+      const signal = getColorSignal(color);
+      if (!signal || signal.saturation < 0.22 || signal.lightness < 0.18 || signal.lightness > 0.9) continue;
+      colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+    }
+  });
+
+  let bestColor = null;
+  let bestScore = 0;
+  colorCounts.forEach((count, color) => {
+    const signal = getColorSignal(color);
+    const lightnessBias = 1 - Math.abs(signal.lightness - 0.56);
+    const score = count * (0.6 + signal.saturation) * lightnessBias;
+    if (score > bestScore) {
+      bestScore = score;
+      bestColor = color;
+    }
+  });
+
+  return bestColor;
+};
+
 export default function RoomDiscovery({
   rooms,
   waitingRoom,
@@ -148,6 +211,7 @@ export default function RoomDiscovery({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [waitingCollapsed, setWaitingCollapsed] = useState(false);
   const [closeWaitingConfirmOpen, setCloseWaitingConfirmOpen] = useState(false);
+  const [avatarColors, setAvatarColors] = useState({});
   const selectedRoom = rooms.find((room) => room.id === selectedId);
   const roomsWithSignal = useMemo(
     () =>
@@ -156,13 +220,44 @@ export default function RoomDiscovery({
         return {
           ...room,
           ...getRoomPosition(room),
+          color: avatarColors[room.id] || room.color,
           matchLabel: getMatchTone(similarity),
           similarity,
         };
       }),
-    [rooms],
+    [avatarColors, rooms],
   );
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAvatarColors = async () => {
+      const entries = await Promise.all(
+        rooms.map(async (room) => {
+          try {
+            const response = await fetch(room.hostAvatar);
+            if (!response.ok) return null;
+            const svgText = await response.text();
+            const color = extractDominantAvatarColor(svgText);
+            return color ? [room.id, color] : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      if (cancelled) return;
+      const nextColors = Object.fromEntries(entries.filter(Boolean));
+      setAvatarColors((current) => ({ ...current, ...nextColors }));
+    };
+
+    loadAvatarColors();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [rooms]);
 
   useEffect(() => {
     if (!selectedId) return;
