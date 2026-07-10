@@ -1,21 +1,53 @@
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Plus, SkipForward } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import Modal from "./Modal.jsx";
 
 const baseInterests = ["书籍", "电影", "旅行", "音乐", "游戏", "美食"];
 const normalizeInterest = (interest) => interest.trim();
 const getInterestOptions = (interests) => Array.from(new Set([...baseInterests, ...interests]));
 const onboardingQuestions = [
-  { id: "onboarding-1", text: "你最近最常反复想起的一件小事是什么？" },
-  { id: "onboarding-2", text: "认识新朋友时，什么样的相处方式会让你觉得舒服？" },
-  { id: "onboarding-3", text: "你最喜欢和别人一起完成哪类事？" },
-  { id: "onboarding-4", text: "什么时候你会觉得自己被理解了？" },
-  { id: "onboarding-5", text: "你希望对方先了解你的哪个习惯或边界？" },
-  { id: "onboarding-6", text: "如果给最近的生活选一个关键词，你会选什么？" },
-  { id: "onboarding-7", text: "你更喜欢热闹的烟火气，还是安静的氛围？" },
-  { id: "onboarding-8", text: "你最近在听、看、玩或研究什么？" },
-  { id: "onboarding-9", text: "什么话题会让你愿意继续聊下去？" },
-  { id: "onboarding-10", text: "你期待在 Uslike 遇见什么样的人？" },
+  {
+    id: "onboarding-1",
+    text: "你最想遇见哪种相处气质的人？",
+    options: ["温柔稳定", "有趣外向", "安静真诚", "思想开放"],
+  },
+  {
+    id: "onboarding-2",
+    text: "你希望对方在聊天里更像哪一种？",
+    options: ["主动开启话题", "认真接住情绪", "轻松玩梗", "愿意深聊"],
+  },
+  {
+    id: "onboarding-3",
+    text: "你更想和对方一起做什么？",
+    options: ["看电影听歌", "一起玩游戏", "散步聊天", "学习或创作"],
+  },
+  {
+    id: "onboarding-4",
+    text: "哪种默契最容易让你想继续靠近？",
+    options: ["价值观相近", "情绪频率相近", "兴趣爱好相近", "生活节奏相近"],
+  },
+  {
+    id: "onboarding-5",
+    text: "你希望对方尊重你的哪种边界？",
+    options: ["回复节奏", "独处时间", "玩笑尺度", "隐私空间"],
+  },
+  {
+    id: "onboarding-6",
+    text: "你希望这次相遇更偏向哪种关系期待？",
+    options: ["轻松聊天", "长期朋友", "同好搭子", "认真了解"],
+  },
+  {
+    id: "onboarding-7",
+    text: "你更适合遇见哪种能量状态的人？",
+    options: ["热闹一点", "安静一点", "稳定陪伴", "一起探索"],
+  },
+  {
+    id: "onboarding-8",
+    text: "你暂时想避开哪种相处模式？",
+    options: ["太急着推进", "只聊表面", "情绪消耗", "边界不清"],
+  },
+  { id: "onboarding-9", text: "有没有一个你特别想聊的话题？" },
+  { id: "onboarding-10", text: "用自己的话描述一下：你想遇见什么样的人？" },
 ];
 
 export function RegisterModal({ onSuccess, onClose }) {
@@ -312,6 +344,8 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
   const [answers, setAnswers] = useState(() =>
     onboardingQuestions.reduce((result, question) => ({ ...result, [question.id]: "" }), {}),
   );
+  const [customOptionDrafts, setCustomOptionDrafts] = useState({});
+  const [customOptions, setCustomOptions] = useState({});
 
   const answeredCount = Object.values(answers).filter((answer) => String(answer || "").trim()).length;
 
@@ -320,6 +354,29 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
       ...current,
       [questionId]: answer,
     }));
+  };
+
+  const addCustomOption = (questionId) => {
+    const option = normalizeInterest(customOptionDrafts[questionId] || "");
+    if (!option) return;
+
+    setCustomOptions((current) => {
+      const existingOptions = current[questionId] || [];
+      if (existingOptions.includes(option)) return current;
+      return {
+        ...current,
+        [questionId]: [...existingOptions, option],
+      };
+    });
+    setCustomOptionDrafts((current) => ({ ...current, [questionId]: "" }));
+    updateAnswer(questionId, option);
+  };
+
+  const handleCustomOptionKeyDown = (event, questionId) => {
+    if (event.key !== "Enter" && event.key !== "，" && event.key !== ",") return;
+
+    event.preventDefault();
+    addCustomOption(questionId);
   };
 
   const saveAnswers = () => {
@@ -347,7 +404,7 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
 
         <div className="max-h-[48vh] space-y-3 overflow-y-auto pr-1">
           {onboardingQuestions.map((question, index) => (
-            <label
+            <div
               key={question.id}
               className="block rounded-2xl bg-white/70 p-4 text-sm font-medium text-stone-700 shadow-sm"
             >
@@ -357,32 +414,68 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
                 </span>
                 <span className="leading-7">{question.text}</span>
               </span>
-              <textarea
-                value={answers[question.id] || ""}
-                onChange={(event) => updateAnswer(question.id, event.target.value)}
-                rows={2}
-                placeholder="想写多少都可以"
-                className="warm-field mt-2 w-full resize-none rounded-2xl px-4 py-3 text-stone-700"
-              />
-            </label>
+              {question.options ? (
+                <div className="mt-3 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {[...question.options, ...(customOptions[question.id] || [])].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => updateAnswer(question.id, option)}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          answers[question.id] === option
+                            ? "glass-choice-active"
+                            : "glass-choice"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={customOptionDrafts[question.id] || ""}
+                      onChange={(event) =>
+                        setCustomOptionDrafts((current) => ({
+                          ...current,
+                          [question.id]: event.target.value,
+                        }))
+                      }
+                      onKeyDown={(event) => handleCustomOptionKeyDown(event, question.id)}
+                      placeholder="自定义选项"
+                      className="warm-field min-w-0 flex-1 rounded-2xl px-4 py-3"
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => addCustomOption(question.id)}
+                      className="aurora-dark flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl text-white shadow-glow transition hover:brightness-110"
+                      aria-label="添加自定义选项"
+                    >
+                      <Plus size={22} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <textarea
+                  value={answers[question.id] || ""}
+                  onChange={(event) => updateAnswer(question.id, event.target.value)}
+                  rows={2}
+                  placeholder="想写多少都可以"
+                  className="warm-field mt-2 w-full resize-none rounded-2xl px-4 py-3 text-stone-700"
+                />
+              )}
+            </div>
           ))}
         </div>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex justify-end">
           <button
             type="button"
-            onClick={onSkip}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-white/78 px-5 py-3 font-semibold text-stone-600 transition hover:bg-white"
-          >
-            <SkipForward size={18} />
-            跳过，直接进入
-          </button>
-          <button
-            type="button"
-            onClick={saveAnswers}
+            onClick={answeredCount ? saveAnswers : onSkip}
             className="aurora-dark flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
           >
-            保存{answeredCount ? ` ${answeredCount} 个回答` : ""}并进入
+            {answeredCount ? `保存 ${answeredCount} 个回答并进入` : "跳过，直接进入"}
             <ArrowRight size={18} />
           </button>
         </div>
