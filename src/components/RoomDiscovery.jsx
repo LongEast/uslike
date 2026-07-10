@@ -52,8 +52,8 @@ const getRoomTypeStyle = (type) => {
 
   return {
     Icon: Mic,
-    badgeClass: "border-[#f4b598]/70 bg-[#ffe0ce] text-[#bc5a42]",
-    dotColor: "#f06f52",
+    badgeClass: "border-[#bdb8ff]/70 bg-[#eeeaff] text-[#6b5ee7]",
+    dotColor: "#8b82e8",
   };
 };
 
@@ -179,7 +179,7 @@ export default function RoomDiscovery({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x070a1a, 0.0048);
+    scene.fog = new THREE.FogExp2(0xf4f6ff, 0.0038);
 
     const camera = new THREE.PerspectiveCamera(47, 1, 0.1, 600);
     updateCamera(camera, cameraStateRef);
@@ -188,23 +188,23 @@ export default function RoomDiscovery({
     galaxyGroup.rotation.y = -0.26;
     scene.add(galaxyGroup);
 
-    scene.add(new THREE.AmbientLight(0xbfd2ff, 1.05));
-    const keyLight = new THREE.PointLight(0xffd36f, 16, 280);
+    scene.add(new THREE.AmbientLight(0xf6f8ff, 1.6));
+    const keyLight = new THREE.PointLight(0xc8d2ff, 9, 280);
     keyLight.position.set(-34, 44, 58);
     scene.add(keyLight);
-    const mintLight = new THREE.PointLight(0x74f1df, 10, 240);
+    const mintLight = new THREE.PointLight(0xbdeee8, 7, 240);
     mintLight.position.set(42, 28, -44);
     scene.add(mintLight);
-    const violetLight = new THREE.PointLight(0xa78bfa, 7, 260);
+    const violetLight = new THREE.PointLight(0xd8c7ff, 8, 260);
     violetLight.position.set(-64, 18, -38);
     scene.add(violetLight);
 
     const farStars = new THREE.Points(
-      buildStarField(840, 176, ["#ffffff", "#c9d7ff", "#8ff7e9", "#ffd36f", "#c4b5fd"]),
+      buildStarField(420, 176, ["#ffffff", "#d8e2ff", "#c8fff5", "#eadcff", "#c4b5fd"]),
       new THREE.PointsMaterial({
-        size: 0.82,
+        size: 0.72,
         transparent: true,
-        opacity: 0.78,
+        opacity: 0.42,
         vertexColors: true,
         depthWrite: false,
       }),
@@ -212,27 +212,27 @@ export default function RoomDiscovery({
     scene.add(farStars);
 
     const spiral = new THREE.Points(
-      buildStarField(980, 86, ["#f8fbff", "#91f7e5", "#ffd36f", "#f0abfc", "#a5b4fc"], true),
+      buildStarField(560, 86, ["#ffffff", "#bdeee8", "#d8e2ff", "#eadcff", "#a5b4fc"], true),
       new THREE.PointsMaterial({
-        size: 1.12,
+        size: 0.94,
         transparent: true,
-        opacity: 0.92,
+        opacity: 0.58,
         vertexColors: true,
         depthWrite: false,
       }),
     );
     galaxyGroup.add(spiral);
 
-    [18, 34, 52, 72].forEach((radius, index) => {
+    [18, 30, 42, 56, 72, 88].forEach((radius, index) => {
       const ring = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints(createRingPoints(radius, -1.2 + index * 0.28)),
         new THREE.LineBasicMaterial({
-          color: index % 2 ? 0x74f1df : 0xffd36f,
+          color: index % 2 ? 0x8dd8c8 : 0x9ca3ff,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
           fog: false,
           transparent: true,
-          opacity: 0.3,
+          opacity: index % 2 ? 0.34 : 0.28,
         }),
       );
       ring.rotation.x = Math.PI / 2 + index * 0.015;
@@ -242,9 +242,9 @@ export default function RoomDiscovery({
     const core = new THREE.Mesh(
       new THREE.SphereGeometry(2.7, 32, 32),
       new THREE.MeshStandardMaterial({
-        color: 0xffdf7a,
-        emissive: 0xffb84f,
-        emissiveIntensity: 2.4,
+        color: 0x9ca3ff,
+        emissive: 0xc7d2fe,
+        emissiveIntensity: 1.4,
         roughness: 0.38,
         metalness: 0.08,
       }),
@@ -254,9 +254,9 @@ export default function RoomDiscovery({
     const coreHalo = new THREE.Mesh(
       new THREE.SphereGeometry(7.8, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0xffd36f,
+        color: 0xc7d2fe,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.14,
         depthWrite: false,
       }),
     );
@@ -278,7 +278,7 @@ export default function RoomDiscovery({
           fog: false,
           linewidth: 2,
           transparent: true,
-          opacity: 0.38,
+          opacity: 0.54,
         }),
       );
       galaxyGroup.add(line);
@@ -311,7 +311,7 @@ export default function RoomDiscovery({
         new THREE.LineBasicMaterial({
           color,
           transparent: true,
-          opacity: 0.26,
+          opacity: 0.46,
         }),
       );
       orbit.rotation.x = Math.PI / 2.5;
@@ -516,7 +516,7 @@ export default function RoomDiscovery({
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#fff8ee] px-6 py-8">
+    <main className="main-wash relative min-h-screen overflow-hidden px-6 py-8">
       <button
         onClick={onBack}
         className="fixed left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
@@ -529,19 +529,19 @@ export default function RoomDiscovery({
         waitingCollapsed ? (
           <button
             onClick={() => setWaitingCollapsed(false)}
-            className="fixed left-1/2 top-6 z-30 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#f0c6a8]/80 bg-white/92 px-4 py-3 text-sm font-semibold text-stone-700 shadow-[0_18px_48px_rgba(92,55,32,0.18)] backdrop-blur-xl transition hover:bg-white"
+            className="fixed left-1/2 top-6 z-30 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 py-3 text-sm font-semibold text-stone-700 shadow-soft backdrop-blur-xl transition hover:bg-white/90"
             aria-label="展开等待提示"
           >
-            <Clock size={16} className="text-[#bc5a42]" />
+            <Clock size={16} className="text-[#6b5ee7]" />
             已等待 {formatElapsed(elapsedSeconds)}
             <ChevronDown size={16} className="text-stone-400" />
           </button>
         ) : (
-          <div className="fixed left-1/2 top-6 z-30 w-[min(92vw,560px)] -translate-x-1/2 rounded-[28px] border border-[#f0c6a8]/80 bg-white/90 p-4 shadow-[0_24px_70px_rgba(92,55,32,0.2)] backdrop-blur-xl">
+          <div className="fixed left-1/2 top-6 z-30 w-[min(92vw,560px)] -translate-x-1/2 rounded-[28px] border border-white/70 bg-white/88 p-4 shadow-soft backdrop-blur-xl">
             <div className="absolute right-3 top-3 flex items-center gap-1">
               <button
                 onClick={() => setWaitingCollapsed(true)}
-                className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#fff8ee] hover:text-stone-700"
+                className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#eef2ff] hover:text-stone-700"
                 aria-label="收起等待提示"
                 title="收起等待提示"
               >
@@ -549,7 +549,7 @@ export default function RoomDiscovery({
               </button>
               <button
                 onClick={() => setCloseWaitingConfirmOpen(true)}
-                className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#fff8ee] hover:text-stone-700"
+                className="grid h-8 w-8 place-items-center rounded-full text-stone-400 transition hover:bg-[#eef2ff] hover:text-stone-700"
                 aria-label="关闭等待提示"
                 title="关闭等待提示"
               >
@@ -558,17 +558,17 @@ export default function RoomDiscovery({
             </div>
             <div className="pr-20">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#ffe0ce] px-3 py-1.5 text-sm font-semibold text-[#bc5a42]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#eeeaff] px-3 py-1.5 text-sm font-semibold text-[#6b5ee7]">
                   <Clock size={15} />
                   正在等待玩家加入
                 </span>
-                <span className="rounded-full bg-[#fff8ee] px-3 py-1.5 text-sm font-semibold text-stone-600">
+                <span className="rounded-full bg-[#f4f6ff] px-3 py-1.5 text-sm font-semibold text-stone-600">
                   已等待 {formatElapsed(elapsedSeconds)}
                 </span>
               </div>
               <h2 className="mt-3 text-xl font-semibold text-stone-800">{waitingRoom.name}</h2>
               <p className="mt-1 text-sm leading-6 text-stone-500">
-                等待过程中你也可以继续浏览星系，选择下方已有房间直接加入。
+                等待过程中你也可以继续浏览同频空间，选择下方已有房间直接加入。
               </p>
             </div>
           </div>
@@ -592,7 +592,7 @@ export default function RoomDiscovery({
                 setCloseWaitingConfirmOpen(false);
                 onDismissWaiting();
               }}
-              className="rounded-2xl bg-[#f06f52] px-5 py-3 font-semibold text-white shadow-glow transition hover:bg-[#e45f47]"
+              className="aurora-dark rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
             >
               确认
             </button>
@@ -615,33 +615,33 @@ export default function RoomDiscovery({
           <canvas ref={sceneCanvasRef} className="cosmic-canvas absolute inset-0 z-[2] h-full w-full" />
 
           <div className="pointer-events-none absolute left-8 top-8 z-20 max-w-xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[#111634]/64 px-3 py-2 text-sm font-semibold text-[#f7c96d] shadow-sm backdrop-blur-xl">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/64 px-3 py-2 text-sm font-semibold text-[#6b5ee7] shadow-sm backdrop-blur-xl">
               <Sparkles size={15} />
-              3D 宇宙房间地图
+              同频房间地图
             </p>
-            <h1 className="mt-4 max-w-[calc(100vw-96px)] text-3xl font-semibold leading-tight text-[#fff6df] drop-shadow-[0_8px_26px_rgba(0,0,0,0.42)] sm:max-w-2xl sm:text-4xl">
-              越靠近我的星系，越可能同频相遇
+            <h1 className="mt-4 max-w-[calc(100vw-96px)] text-3xl font-semibold leading-tight text-stone-900 drop-shadow-[0_8px_26px_rgba(255,255,255,0.45)] sm:max-w-2xl sm:text-4xl">
+              越靠近我的坐标，越可能同频相遇
             </h1>
           </div>
 
           <div
             data-stop-pan
-            className="absolute bottom-6 right-6 z-30 flex items-center gap-2 rounded-full border border-white/18 bg-[#101631]/72 p-2 shadow-[0_18px_44px_rgba(0,0,0,0.26)] backdrop-blur-xl sm:bottom-auto sm:top-6"
+            className="absolute bottom-6 right-6 z-30 flex items-center gap-2 rounded-full border border-white/70 bg-white/64 p-2 shadow-soft backdrop-blur-xl sm:bottom-auto sm:top-6"
           >
             <button
               onClick={() => changeZoom(14)}
-              className="grid h-10 w-10 place-items-center rounded-full text-[#e9efff] transition hover:bg-white/14"
+              className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white/70"
               aria-label="缩小星图"
               title="缩小星图"
             >
               <ZoomOut size={18} />
             </button>
-            <span className="min-w-12 text-center text-xs font-semibold text-[#f4d991]">
+            <span className="min-w-12 text-center text-xs font-semibold text-[#6b5ee7]">
               {Math.round(((MAX_DISTANCE - cameraDistance) / (MAX_DISTANCE - MIN_DISTANCE)) * 100 + 58)}%
             </span>
             <button
               onClick={() => changeZoom(-14)}
-              className="grid h-10 w-10 place-items-center rounded-full text-[#e9efff] transition hover:bg-white/14"
+              className="grid h-10 w-10 place-items-center rounded-full text-stone-600 transition hover:bg-white/70"
               aria-label="放大星图"
               title="放大星图"
             >
@@ -725,7 +725,7 @@ export default function RoomDiscovery({
 
         <aside className="glass-panel cosmic-side-panel flex min-h-0 min-w-0 flex-col rounded-[36px] p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-[#af6449]">附近房间</p>
+            <p className="text-sm font-semibold text-[#6b5ee7]">附近房间</p>
             <span className="rounded-full bg-white/62 px-3 py-1 text-xs font-semibold text-stone-500">
               以我的坐标排序
             </span>
@@ -752,7 +752,7 @@ export default function RoomDiscovery({
                     onMouseLeave={() => setHoveredId(null)}
                     className={`cosmic-list-item flex min-w-[250px] items-center gap-3 rounded-3xl border p-3 text-left transition lg:min-w-0 ${
                       selectedId === room.id
-                        ? "border-[#f06f52]/45 bg-[#fff0d7]"
+                        ? "border-[#8b82e8]/45 bg-[#eeeaff]"
                         : "border-white/70 bg-white/62 hover:border-white hover:bg-white"
                     }`}
                   >
@@ -780,7 +780,7 @@ export default function RoomDiscovery({
           {selectedRoom && selectedSignal ? (
             <div
               className="selected-galaxy-card mt-auto rounded-[30px] border border-white/76 bg-white/76 p-5 shadow-sm"
-              style={{ "--room-color": selectedSignal.color || "#f06f52" }}
+              style={{ "--room-color": selectedSignal.color || "#8b82e8" }}
             >
               <button
                 onClick={() => setSelectedId(null)}
@@ -794,18 +794,18 @@ export default function RoomDiscovery({
               <div className="mb-4 flex items-center gap-4 pr-9">
                 <Avatar src={selectedRoom.hostAvatar} name={selectedRoom.hostName} size="lg" glow />
                 <div className="min-w-0">
-                  <p className="mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold text-[#af6449]">
-                    选中的星系 · {selectedSignal.matchLabel}
+                  <p className="mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold text-[#6b5ee7]">
+                    选中的房间 · {selectedSignal.matchLabel}
                   </p>
                   <h2 className="text-2xl font-semibold text-stone-800">{selectedRoom.name}</h2>
                   <p className="mt-1 text-sm text-stone-500">房主 {selectedRoom.hostName}</p>
                 </div>
               </div>
-              <p className="mb-4 rounded-2xl bg-[#fff8ee] px-4 py-3 text-sm leading-6 text-stone-600">
+              <p className="mb-4 rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm leading-6 text-stone-600">
                 {selectedRoom.vibe}
               </p>
               <div className="mb-4 rounded-[24px] bg-white/70 p-4">
-                <p className="mb-3 text-xs font-semibold text-[#af6449]">TA 的个人信息</p>
+                <p className="mb-3 text-xs font-semibold text-[#6b5ee7]">TA 的个人信息</p>
                 <div className="grid grid-cols-2 gap-3 text-xs text-stone-500">
                   <span>
                     <strong className="block text-sm text-stone-800">{selectedRoom.nickname || selectedRoom.hostName}</strong>
@@ -830,7 +830,7 @@ export default function RoomDiscovery({
                   {(selectedRoom.interests || []).map((interest) => (
                     <span
                       key={interest}
-                      className="rounded-full bg-[#fff8ee] px-3 py-1.5 text-xs font-semibold text-stone-600"
+                      className="rounded-full bg-[#f4f6ff] px-3 py-1.5 text-xs font-semibold text-stone-600"
                     >
                       {interest}
                     </span>
@@ -838,7 +838,7 @@ export default function RoomDiscovery({
                 </div>
                 <button
                   onClick={() => viewProfileFeed(selectedRoom)}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#fff8ee] px-4 py-3 text-sm font-semibold text-[#af6449] transition hover:bg-white"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-semibold text-[#6b5ee7] transition hover:bg-white"
                 >
                   <Newspaper size={16} />
                   查看TA的动态
@@ -866,7 +866,7 @@ export default function RoomDiscovery({
                 className={`w-full rounded-2xl px-5 py-3 font-semibold text-white transition ${
                   selectedRoom.type === "打字房"
                     ? "bg-[#50bfa5] shadow-[0_18px_40px_rgba(80,191,165,0.26)] hover:bg-[#42aa92]"
-                    : "bg-[#f06f52] shadow-glow hover:bg-[#e45f47]"
+                    : "aurora-dark shadow-glow hover:brightness-110"
                 }`}
               >
                 相遇
@@ -874,9 +874,9 @@ export default function RoomDiscovery({
             </div>
           ) : (
             <div className="selected-galaxy-card mt-auto rounded-[30px] border border-white/76 bg-white/66 p-5 text-center shadow-sm">
-              <p className="text-sm font-semibold text-[#af6449]">未选中星系</p>
+              <p className="text-sm font-semibold text-[#6b5ee7]">未选中房间</p>
               <p className="mt-2 text-sm leading-6 text-stone-500">
-                点击左侧星系卡片或附近房间列表，查看 TA 的资料与房间信息。
+                点击左侧房间卡片或附近房间列表，查看 TA 的资料与房间信息。
               </p>
             </div>
           )}

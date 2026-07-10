@@ -122,12 +122,11 @@ button.ink-glass {
   user-select: none;
   -webkit-user-select: none;
   background:
-    radial-gradient(circle at 50% 48%, rgba(255, 210, 104, .22) 0 5%, transparent 18%),
-    radial-gradient(circle at 28% 34%, rgba(244, 98, 142, .28) 0 12%, transparent 34%),
-    radial-gradient(circle at 72% 28%, rgba(80, 201, 211, .26) 0 12%, transparent 34%),
-    radial-gradient(circle at 66% 72%, rgba(143, 112, 245, .3) 0 13%, transparent 36%),
-    radial-gradient(ellipse at 54% 56%, rgba(245, 232, 196, .16), transparent 56%),
-    linear-gradient(145deg, #070a1a 0%, #101436 36%, #2a1945 66%, #081424 100%);
+    radial-gradient(circle at 50% 48%, rgba(205, 213, 255, .4) 0 8%, transparent 24%),
+    radial-gradient(circle at 28% 34%, rgba(215, 227, 255, .48) 0 13%, transparent 36%),
+    radial-gradient(circle at 72% 28%, rgba(230, 216, 255, .42) 0 14%, transparent 38%),
+    radial-gradient(circle at 66% 72%, rgba(189, 238, 232, .3) 0 13%, transparent 36%),
+    linear-gradient(145deg, rgba(244, 247, 255, .98), rgba(241, 234, 255, .96));
 }
 
 .semantic-space.is-panning {
@@ -144,11 +143,11 @@ button.ink-glass {
 
 .semantic-space::before {
   z-index: 0;
-  opacity: .8;
+  opacity: .34;
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, .72) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgba(117, 232, 223, .52) 0 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(255, 199, 106, .58) 0 1.2px, transparent 1.7px);
+    radial-gradient(circle, rgba(139, 130, 232, .32) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(141, 216, 200, .28) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(199, 210, 254, .34) 0 1.2px, transparent 1.7px);
   background-position: 0 0, 34px 28px, 18px 56px;
   background-size: 86px 86px, 118px 118px, 152px 152px;
 }
@@ -156,14 +155,14 @@ button.ink-glass {
 .semantic-space::after {
   z-index: 1;
   background:
-    radial-gradient(ellipse at 52% 48%, rgba(255, 238, 189, .18), transparent 40%),
-    linear-gradient(120deg, transparent 0 22%, rgba(145, 236, 228, .12) 42%, rgba(255, 197, 104, .1) 56%, transparent 76%),
-    radial-gradient(ellipse at 50% 50%, transparent 0 58%, rgba(2, 6, 23, .56) 92%);
+    radial-gradient(ellipse at 52% 48%, rgba(255, 255, 255, .42), transparent 42%),
+    linear-gradient(120deg, transparent 0 24%, rgba(139, 130, 232, .08) 44%, rgba(189, 238, 232, .08) 58%, transparent 78%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 62%, rgba(255, 255, 255, .48) 94%);
 }
 
 .cosmic-canvas {
   display: block;
-  opacity: .98;
+  opacity: .48;
 }
 
 .galaxy-map {
@@ -198,25 +197,18 @@ button.ink-glass {
   width: var(--halo-size);
   height: var(--halo-size);
   transform: translate(-50%, -50%);
-  border: 1px solid color-mix(in srgb, var(--room-color) 58%, transparent);
+  border: 0;
   border-radius: 999px;
   background:
-    radial-gradient(circle, color-mix(in srgb, var(--room-color) 34%, transparent), transparent 58%),
-    radial-gradient(circle, rgba(255, 255, 255, .16), transparent 68%);
-  filter: blur(.1px);
-  opacity: .52;
+    radial-gradient(circle, color-mix(in srgb, var(--room-color) 22%, transparent), transparent 62%),
+    radial-gradient(circle, rgba(255, 255, 255, .12), transparent 72%);
+  filter: blur(10px);
+  opacity: .46;
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
 }
 
 .galaxy-room__dust {
-  position: absolute;
-  border-radius: 999px;
-  background: var(--room-color);
-  box-shadow:
-    24px 12px 0 -2px color-mix(in srgb, var(--room-color) 52%, transparent),
-    -18px 18px 0 -3px rgba(255, 255, 255, .74),
-    8px -20px 0 -3px color-mix(in srgb, var(--room-color) 42%, transparent);
-  opacity: .68;
+  display: none;
 }
 
 .galaxy-room__dust--one {
@@ -236,21 +228,17 @@ button.ink-glass {
 .galaxy-room__card {
   position: relative;
   overflow: visible;
-  width: var(--planet-size);
-  min-height: var(--planet-size);
-  border: 1px solid rgba(255, 255, 255, .5);
+  width: 58px;
+  min-height: 58px;
+  border: 0;
   border-radius: 999px;
-  padding: 8px;
+  padding: 0;
   justify-content: center;
-  background:
-    radial-gradient(circle at 34% 27%, rgba(255, 255, 255, .94), rgba(255, 255, 255, .42) 24%, transparent 42%),
-    radial-gradient(circle at 62% 66%, color-mix(in srgb, var(--room-color) 72%, #0f172a), color-mix(in srgb, var(--room-color) 36%, #070a1a) 66%, #070a1a);
+  background: transparent;
   box-shadow:
-    inset -12px -16px 24px rgba(0, 0, 0, .42),
-    inset 8px 8px 18px rgba(255, 255, 255, .22),
-    0 0 0 7px color-mix(in srgb, var(--room-color) 16%, transparent),
-    0 18px 54px color-mix(in srgb, var(--room-color) 46%, rgba(0, 0, 0, .32));
-  backdrop-filter: blur(18px);
+    0 0 24px color-mix(in srgb, var(--room-color) 42%, transparent),
+    0 0 64px color-mix(in srgb, var(--room-color) 24%, transparent);
+  backdrop-filter: none;
   transition: width 180ms ease, min-height 180ms ease, padding 180ms ease, border-radius 180ms ease, transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
@@ -261,8 +249,8 @@ button.ink-glass {
   padding: 12px 14px 12px 12px;
   justify-content: flex-start;
   background:
-    radial-gradient(circle at 30px 28px, rgba(255, 255, 255, .74), color-mix(in srgb, var(--room-color) 44%, rgba(9, 14, 35, .86)) 46%, transparent 58%),
-    linear-gradient(90deg, rgba(11, 18, 43, .94), rgba(18, 24, 58, .9));
+    radial-gradient(circle at 30px 28px, rgba(255, 255, 255, .86), color-mix(in srgb, var(--room-color) 22%, rgba(255, 255, 255, .9)) 46%, transparent 58%),
+    linear-gradient(90deg, rgba(255, 255, 255, .9), rgba(244, 247, 255, .84));
 }
 
 .galaxy-room__avatar-star {
@@ -273,34 +261,19 @@ button.ink-glass {
   flex: 0 0 58px;
   place-items: center;
   border-radius: 999px;
-  background:
-    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .95), transparent 30%),
-    radial-gradient(circle, color-mix(in srgb, var(--room-color) 72%, #ffffff), color-mix(in srgb, var(--room-color) 58%, #071124));
+  background: transparent;
   box-shadow:
-    0 0 0 7px color-mix(in srgb, var(--room-color) 18%, transparent),
-    0 0 28px color-mix(in srgb, var(--room-color) 58%, transparent),
-    inset -8px -10px 16px rgba(0, 0, 0, .34);
+    0 0 18px color-mix(in srgb, var(--room-color) 52%, transparent),
+    0 0 46px color-mix(in srgb, var(--room-color) 34%, transparent),
+    0 0 86px color-mix(in srgb, var(--room-color) 18%, transparent);
 }
 
 .galaxy-room__avatar-star::before {
-  position: absolute;
-  inset: -8px -12px;
-  content: "";
-  border: 1px solid color-mix(in srgb, var(--room-color) 64%, rgba(255, 255, 255, .2));
-  border-radius: 50%;
-  transform: rotate(-16deg);
+  display: none;
 }
 
 .galaxy-room__avatar-star::after {
-  position: absolute;
-  left: 14px;
-  top: 10px;
-  width: 14px;
-  height: 9px;
-  content: "";
-  border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  filter: blur(.2px);
+  display: none;
 }
 
 .galaxy-room__avatar-star > div {
@@ -308,29 +281,33 @@ button.ink-glass {
   z-index: 1;
   width: 48px;
   height: 48px;
-  box-shadow: none;
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--room-color) 20%, transparent),
+    0 0 22px color-mix(in srgb, var(--room-color) 58%, transparent),
+    0 0 54px color-mix(in srgb, var(--room-color) 26%, transparent);
 }
 
 .galaxy-room__details {
   position: relative;
   z-index: 1;
-  color: #f8fbff;
-  text-shadow: 0 3px 14px rgba(0, 0, 0, .38);
+  color: #1f2937;
+  text-shadow: none;
 }
 
 .galaxy-room__details .text-stone-800 {
-  color: #ffffff;
+  color: #1f2937;
 }
 
 .galaxy-room__details .text-stone-500 {
-  color: rgba(191, 219, 254, .82);
+  color: rgba(87, 91, 112, .86);
 }
 
 .galaxy-room__type-badge {
-  border-color: rgba(148, 163, 184, .34);
-  background: rgba(15, 23, 42, .76);
-  color: #bae6fd;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+  border-color: rgba(139, 130, 232, .26);
+  background: rgba(255, 255, 255, .72);
+  color: #6b5ee7;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4);
 }
 
 .galaxy-room__match {
@@ -339,19 +316,19 @@ button.ink-glass {
   bottom: -1px;
   z-index: 2;
   border: 1px solid color-mix(in srgb, var(--room-color) 54%, rgba(255, 255, 255, .54));
-  background: rgba(6, 10, 28, .82) !important;
+  background: rgba(255, 255, 255, .82) !important;
   box-shadow:
     0 0 0 3px rgba(255, 255, 255, .12),
-    0 10px 28px color-mix(in srgb, var(--room-color) 46%, rgba(0, 0, 0, .34));
-  color: #fff8da !important;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, .5);
+    0 10px 28px color-mix(in srgb, var(--room-color) 34%, rgba(88, 95, 142, .16));
+  color: #1f2937 !important;
+  text-shadow: none;
   white-space: nowrap;
 }
 
 .galaxy-room__match--inline {
   position: static;
   border-color: color-mix(in srgb, var(--room-color) 54%, rgba(255, 255, 255, .28));
-  box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+  box-shadow: 0 8px 20px rgba(88, 95, 142, .14);
 }
 
 .galaxy-room:hover .galaxy-room__card,
@@ -359,10 +336,19 @@ button.ink-glass {
   transform: translateY(-6px) scale(1.02);
   border-color: color-mix(in srgb, var(--room-color) 68%, white);
   box-shadow:
-    inset -12px -16px 24px rgba(0, 0, 0, .36),
-    inset 8px 8px 18px rgba(255, 255, 255, .24),
+    inset -12px -16px 24px rgba(92, 95, 142, .14),
+    inset 8px 8px 18px rgba(255, 255, 255, .46),
     0 0 0 8px color-mix(in srgb, var(--room-color) 18%, transparent),
-    0 26px 78px color-mix(in srgb, var(--room-color) 54%, rgba(0, 0, 0, .3));
+    0 26px 78px color-mix(in srgb, var(--room-color) 34%, rgba(88, 95, 142, .2));
+}
+
+.galaxy-room:not([data-expanded="true"]):hover .galaxy-room__card,
+.galaxy-room:not([data-expanded="true"]).is-active .galaxy-room__card {
+  border-color: transparent;
+  background: transparent;
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--room-color) 52%, transparent),
+    0 0 78px color-mix(in srgb, var(--room-color) 34%, transparent);
 }
 
 .galaxy-room:hover .galaxy-room__halo,
@@ -381,15 +367,19 @@ button.ink-glass {
   pointer-events: none;
 }
 
+.galaxy-room:not([data-expanded="true"]).is-active .galaxy-room__card::after {
+  display: none;
+}
+
 .cosmic-side-panel {
   background:
-    radial-gradient(circle at 72% 12%, rgba(80, 191, 165, .16), transparent 28%),
-    radial-gradient(circle at 16% 88%, rgba(240, 111, 82, .16), transparent 30%),
+    radial-gradient(circle at 72% 12%, rgba(139, 130, 232, .14), transparent 28%),
+    radial-gradient(circle at 16% 88%, rgba(189, 238, 232, .16), transparent 30%),
     rgba(255, 255, 255, .74);
 }
 
 .cosmic-list-item {
-  box-shadow: 0 12px 34px rgba(96, 65, 43, .08);
+  box-shadow: 0 12px 34px rgba(88, 95, 142, .1);
 }
 
 .selected-galaxy-card {
