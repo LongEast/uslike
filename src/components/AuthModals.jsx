@@ -356,6 +356,13 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
     }));
   };
 
+  const toggleOptionAnswer = (questionId, option) => {
+    setAnswers((current) => ({
+      ...current,
+      [questionId]: current[questionId] === option ? "" : option,
+    }));
+  };
+
   const addCustomOption = (questionId) => {
     const option = normalizeInterest(customOptionDrafts[questionId] || "");
     if (!option) return;
@@ -421,7 +428,7 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
                       <button
                         key={option}
                         type="button"
-                        onClick={() => updateAnswer(question.id, option)}
+                      onClick={() => toggleOptionAnswer(question.id, option)}
                         className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                           answers[question.id] === option
                             ? "glass-choice-active"
