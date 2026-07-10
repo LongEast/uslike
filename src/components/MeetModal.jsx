@@ -9,7 +9,7 @@ export default function MeetModal({ onClose, onCreate, onJoin }) {
           onClick={onCreate}
           className="glass-choice-active flex items-center gap-4 rounded-3xl p-5 text-left transition hover:-translate-y-1"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white/24 text-stone-700 backdrop-blur-xl">
+          <span className="aurora-dark flex h-12 w-12 items-center justify-center rounded-2xl text-stone-950">
             <PlusCircle size={24} />
           </span>
           <span>
@@ -21,7 +21,7 @@ export default function MeetModal({ onClose, onCreate, onJoin }) {
           onClick={onJoin}
           className="glass-choice-active flex items-center gap-4 rounded-3xl p-5 text-left transition hover:-translate-y-1"
         >
-          <span className="aurora-dark flex h-12 w-12 items-center justify-center rounded-2xl text-white">
+          <span className="aurora-dark flex h-12 w-12 items-center justify-center rounded-2xl text-stone-950">
             <DoorOpen size={24} />
           </span>
           <span>
