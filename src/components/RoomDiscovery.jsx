@@ -23,6 +23,8 @@ const MAX_DISTANCE = 178;
 const PAN_LIMIT = 92;
 const ROOM_SPACE_SCALE = 8.5;
 const MAX_ROOM_BATCH_SIZE = 10;
+const COMPACT_LABEL_SIZE = { width: 104, height: 76 };
+const EXPANDED_LABEL_SIZE = { width: 304, height: 104 };
 const ROOM_SPREAD_LAYOUTS = {
   1: [{ x: 84, y: -82 }],
   2: [
@@ -48,16 +50,16 @@ const ROOM_SPREAD_LAYOUTS = {
     { x: 476, y: -226 },
   ],
   10: [
-    { x: -470, y: -190 },
-    { x: -154, y: -328 },
-    { x: 214, y: -302 },
-    { x: 492, y: -126 },
-    { x: 450, y: 178 },
-    { x: 128, y: 318 },
-    { x: -226, y: 292 },
-    { x: -502, y: 92 },
-    { x: -66, y: -74 },
-    { x: 252, y: 86 },
+    { x: -560, y: -238 },
+    { x: -250, y: -390 },
+    { x: 150, y: -382 },
+    { x: 520, y: -226 },
+    { x: 596, y: 92 },
+    { x: 338, y: 338 },
+    { x: -64, y: 404 },
+    { x: -448, y: 254 },
+    { x: -616, y: 18 },
+    { x: 108, y: -26 },
   ],
 };
 
@@ -121,7 +123,7 @@ const getSpreadRoomPosition = (room, index, total, batchIndex) => {
   const layout = ROOM_SPREAD_LAYOUTS[Math.min(total, MAX_ROOM_BATCH_SIZE)] || ROOM_SPREAD_LAYOUTS[MAX_ROOM_BATCH_SIZE];
   const slot = layout[index % layout.length];
   const closeness = Math.max(0, Math.min(1, (room.similarity - 35) / 55));
-  const distanceScale = 1.08 - closeness * 0.24;
+  const distanceScale = 1.06 - closeness * 0.08;
   const seed = hashString(`${room.id}-${batchIndex}`);
   const jitterX = ((seed % 17) - 8) * 2.2;
   const jitterY = ((Math.floor(seed / 17) % 17) - 8) * 2.2;
@@ -130,6 +132,83 @@ const getSpreadRoomPosition = (room, index, total, batchIndex) => {
     displayMapX: slot.x * distanceScale + jitterX,
     displayMapY: slot.y * distanceScale + jitterY,
   };
+};
+
+const clampLabelToBounds = (label, bounds, minLabelY, selected) => {
+  const size = selected ? EXPANDED_LABEL_SIZE : COMPACT_LABEL_SIZE;
+  return {
+    ...label,
+    x: THREE.MathUtils.clamp(label.x, size.width / 2 + 10, bounds.width - size.width / 2 - 10),
+    y: THREE.MathUtils.clamp(label.y, minLabelY + size.height / 2, bounds.height - size.height / 2 - 12),
+  };
+};
+
+const separateProjectedLabels = (labels, bounds, minLabelY, selectedId) => {
+  const adjusted = Object.fromEntries(
+    Object.entries(labels).map(([id, label]) => [
+      id,
+      label.visible ? clampLabelToBounds(label, bounds, minLabelY, id === selectedId) : label,
+    ]),
+  );
+  const visibleIds = Object.keys(adjusted).filter((id) => adjusted[id].visible);
+
+  for (let iteration = 0; iteration < 8; iteration += 1) {
+    let moved = false;
+
+    for (let index = 0; index < visibleIds.length; index += 1) {
+      for (let nextIndex = index + 1; nextIndex < visibleIds.length; nextIndex += 1) {
+        const firstId = visibleIds[index];
+        const secondId = visibleIds[nextIndex];
+        const first = adjusted[firstId];
+        const second = adjusted[secondId];
+        const firstSize = firstId === selectedId ? EXPANDED_LABEL_SIZE : COMPACT_LABEL_SIZE;
+        const secondSize = secondId === selectedId ? EXPANDED_LABEL_SIZE : COMPACT_LABEL_SIZE;
+        const minX = (firstSize.width + secondSize.width) / 2 + 14;
+        const minY = (firstSize.height + secondSize.height) / 2 + 12;
+        const deltaX = second.x - first.x || 1;
+        const deltaY = second.y - first.y || 1;
+        const overlapX = minX - Math.abs(deltaX);
+        const overlapY = minY - Math.abs(deltaY);
+
+        if (overlapX <= 0 || overlapY <= 0) continue;
+
+        if (overlapX < overlapY) {
+          const push = (overlapX / 2 + 1) * Math.sign(deltaX);
+          adjusted[firstId] = clampLabelToBounds(
+            { ...first, x: first.x - push },
+            bounds,
+            minLabelY,
+            firstId === selectedId,
+          );
+          adjusted[secondId] = clampLabelToBounds(
+            { ...second, x: second.x + push },
+            bounds,
+            minLabelY,
+            secondId === selectedId,
+          );
+        } else {
+          const push = (overlapY / 2 + 1) * Math.sign(deltaY);
+          adjusted[firstId] = clampLabelToBounds(
+            { ...first, y: first.y - push },
+            bounds,
+            minLabelY,
+            firstId === selectedId,
+          );
+          adjusted[secondId] = clampLabelToBounds(
+            { ...second, y: second.y + push },
+            bounds,
+            minLabelY,
+            secondId === selectedId,
+          );
+        }
+        moved = true;
+      }
+    }
+
+    if (!moved) break;
+  }
+
+  return adjusted;
 };
 
 const updateCamera = (camera, cameraState) => {
@@ -260,6 +339,7 @@ export default function RoomDiscovery({
   const listRefs = useRef({});
   const cameraStateRef = useRef({ ...INITIAL_CAMERA });
   const sceneStateRef = useRef(null);
+  const selectedIdRef = useRef(null);
   const syncSourceRef = useRef(null);
   const syncResetTimerRef = useRef(null);
   const listScrollFrameRef = useRef(0);
@@ -307,6 +387,10 @@ export default function RoomDiscovery({
   const listedRooms = useMemo(() => [...roomsWithSignal].sort((a, b) => b.similarity - a.similarity), [roomsWithSignal]);
   const selectedRoom = roomsWithSignal.find((room) => room.id === selectedId);
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -565,10 +649,11 @@ export default function RoomDiscovery({
           z: projected.z,
         };
       });
-      const signature = JSON.stringify(nextLabels);
+      const separatedLabels = separateProjectedLabels(nextLabels, bounds, minLabelY, selectedIdRef.current);
+      const signature = JSON.stringify(separatedLabels);
       if (signature !== lastLabels) {
         lastLabels = signature;
-        setLabelPositions(nextLabels);
+        setLabelPositions(separatedLabels);
       }
 
       renderer.render(scene, camera);
