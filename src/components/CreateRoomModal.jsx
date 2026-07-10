@@ -35,7 +35,8 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
   const [roomType, setRoomType] = useState("语音房");
   const [selectedTraits, setSelectedTraits] = useState(["愿意慢慢聊天", "边界感舒服"]);
   const [customTrait, setCustomTrait] = useState("");
-  const [avoid, setAvoid] = useState("");
+  const [avoidTraits, setAvoidTraits] = useState([]);
+  const [customAvoidTrait, setCustomAvoidTrait] = useState("");
 
   const toggleTrait = (trait) => {
     setSelectedTraits((current) =>
@@ -58,13 +59,34 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
     addCustomTrait();
   };
 
+  const toggleAvoidTrait = (trait) => {
+    setAvoidTraits((current) =>
+      current.includes(trait) ? current.filter((item) => item !== trait) : [...current, trait],
+    );
+  };
+
+  const addCustomAvoidTrait = () => {
+    const trait = customAvoidTrait.trim();
+    if (!trait) return;
+
+    setAvoidTraits((current) => (current.includes(trait) ? current : [...current, trait]));
+    setCustomAvoidTrait("");
+  };
+
+  const handleCustomAvoidTraitKeyDown = (event) => {
+    if (event.key !== "Enter" && event.key !== "，" && event.key !== ",") return;
+
+    event.preventDefault();
+    addCustomAvoidTrait();
+  };
+
   const createRoom = () => {
     onCreated({
       name: roomName.trim() || `${user.nickname}的房间`,
       description: description.trim(),
       type: roomType,
       traits: selectedTraits,
-      avoid: avoid.trim(),
+      avoid: avoidTraits.join("、"),
     });
   };
 
@@ -148,15 +170,42 @@ export default function CreateRoomModal({ user, onClose, onCreated }) {
             </button>
           </div>
         </div>
-        <label className="block text-sm font-medium text-stone-600">
-          你想暂时避开的玩家特质
-          <textarea
-            value={avoid}
-            onChange={(event) => setAvoid(event.target.value)}
-            placeholder="例如：太急、只想玩竞技、深夜高强度输出"
-            className="warm-field mt-2 min-h-24 w-full resize-none rounded-2xl px-4 py-3"
-          />
-        </label>
+        <div>
+          <p className="mb-3 text-sm font-medium text-stone-600">你想暂时避开的玩家特质</p>
+          {avoidTraits.length ? (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {avoidTraits.map((trait) => (
+                <button
+                  key={trait}
+                  type="button"
+                  onClick={() => toggleAvoidTrait(trait)}
+                  className="glass-choice-active rounded-full px-4 py-2 text-sm font-semibold transition"
+                  title="点击取消"
+                >
+                  {trait}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex gap-2">
+            <input
+              value={customAvoidTrait}
+              onChange={(event) => setCustomAvoidTrait(event.target.value)}
+              onKeyDown={handleCustomAvoidTraitKeyDown}
+              placeholder="自定义玩家特质"
+              className="warm-field min-w-0 flex-1 rounded-2xl px-4 py-3"
+            />
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={addCustomAvoidTrait}
+              className="aurora-dark flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl text-white shadow-glow transition hover:brightness-110"
+              aria-label="添加想避开的玩家特质"
+            >
+              <Plus size={22} />
+            </button>
+          </div>
+        </div>
         <button
           onClick={createRoom}
           className="aurora-dark w-full rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
