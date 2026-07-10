@@ -354,6 +354,7 @@ export default function RoomDiscovery({
   const [closeWaitingConfirmOpen, setCloseWaitingConfirmOpen] = useState(false);
   const [avatarColors, setAvatarColors] = useState({});
   const [roomBatchIndex, setRoomBatchIndex] = useState(0);
+  const [detailRoomId, setDetailRoomId] = useState(null);
   const batchSize = Math.min(MAX_ROOM_BATCH_SIZE, Math.max(1, rooms.length));
   const allRoomsWithSignal = useMemo(
     () =>
@@ -387,6 +388,10 @@ export default function RoomDiscovery({
   const listedRooms = useMemo(() => [...roomsWithSignal].sort((a, b) => b.similarity - a.similarity), [roomsWithSignal]);
   const selectedRoom = roomsWithSignal.find((room) => room.id === selectedId);
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
+  const detailRoom = roomsWithSignal.find((room) => room.id === detailRoomId);
+  const detailSignal = roomsWithSignal.find((room) => room.id === detailRoomId);
+  const detailRoomTypeStyle = detailRoom ? getRoomTypeStyle(detailRoom.type) : null;
+  const DetailRoomTypeIcon = detailRoomTypeStyle?.Icon;
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
@@ -396,8 +401,16 @@ export default function RoomDiscovery({
     if (!selectedId) return;
     if (!roomsWithSignal.some((room) => room.id === selectedId)) {
       setSelectedId(null);
+      setDetailRoomId(null);
     }
   }, [roomsWithSignal, selectedId]);
+
+  useEffect(() => {
+    if (!detailRoomId) return;
+    if (!roomsWithSignal.some((room) => room.id === detailRoomId)) {
+      setDetailRoomId(null);
+    }
+  }, [detailRoomId, roomsWithSignal]);
 
   useEffect(() => {
     let cancelled = false;
@@ -758,6 +771,10 @@ export default function RoomDiscovery({
 
   const closeSelectedFromSpace = (event) => {
     if (event.target.closest("[data-stop-pan]")) return;
+    if (detailRoomId) {
+      setDetailRoomId(null);
+      return;
+    }
     if (suppressNextSpaceClickRef.current) {
       suppressNextSpaceClickRef.current = false;
       return;
@@ -870,6 +887,7 @@ export default function RoomDiscovery({
   const refreshRoomBatch = () => {
     setSelectedId(null);
     setHoveredId(null);
+    setDetailRoomId(null);
     setRoomBatchIndex((current) => current + 1);
   };
 
@@ -1039,12 +1057,22 @@ export default function RoomDiscovery({
                   aria-label={`${room.hostName}，匹配度 ${room.similarity}%，点击查看详情`}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelectedId((currentId) => (currentId === room.id ? null : room.id));
+                    if (selectedIdRef.current === room.id) {
+                      setDetailRoomId(room.id);
+                      return;
+                    }
+                    setDetailRoomId(null);
+                    setSelectedId(room.id);
                   }}
                   onKeyDown={(event) => {
                     if (event.key !== "Enter" && event.key !== " ") return;
                     event.preventDefault();
-                    setSelectedId((currentId) => (currentId === room.id ? null : room.id));
+                    if (selectedIdRef.current === room.id) {
+                      setDetailRoomId(room.id);
+                      return;
+                    }
+                    setDetailRoomId(null);
+                    setSelectedId(room.id);
                   }}
                   onMouseEnter={() => setHoveredId(room.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -1092,6 +1120,132 @@ export default function RoomDiscovery({
               );
             })}
           </div>
+
+          {detailRoom && detailSignal && detailRoomTypeStyle && DetailRoomTypeIcon ? (
+            <div
+              data-stop-pan
+              className="absolute inset-0 z-40 bg-[#eef2ff]/50 p-3 backdrop-blur-md sm:p-6"
+              onClick={() => setDetailRoomId(null)}
+            >
+              <article
+                className="selected-galaxy-card flex h-full min-h-0 flex-col overflow-hidden rounded-[32px] border border-white/78 bg-white/84 p-5 shadow-[0_28px_90px_rgba(88,95,142,0.22)] backdrop-blur-2xl sm:p-7"
+                style={{ "--room-color": detailSignal.color || "#8b82e8" }}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  onClick={() => setDetailRoomId(null)}
+                  className="absolute right-5 top-5 z-20 grid h-10 w-10 place-items-center rounded-full bg-white/78 text-stone-500 shadow-sm transition hover:bg-white hover:text-stone-900"
+                  aria-label="关闭用户详情"
+                  title="关闭用户详情"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+                  <div className="flex flex-wrap items-start gap-5 pr-12">
+                    <Avatar src={detailRoom.hostAvatar} name={detailRoom.hostName} size="xl" glow />
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${detailRoomTypeStyle.badgeClass}`}>
+                          <DetailRoomTypeIcon size={14} />
+                          {detailRoom.type}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-600">
+                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: detailSignal.color }} />
+                          同频 {detailSignal.similarity}%
+                        </span>
+                      </div>
+                      <h2 className="truncate text-3xl font-semibold leading-tight text-stone-900">
+                        {detailRoom.hostName}
+                      </h2>
+                      <p className="mt-1 text-base font-medium text-stone-600">{detailRoom.name}</p>
+                      <p className="mt-4 max-w-2xl rounded-[22px] bg-[#f4f6ff]/78 px-4 py-3 text-sm leading-6 text-stone-600">
+                        {detailRoom.vibe}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid min-h-0 flex-1 gap-4 overflow-y-auto pr-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,.9fr)]">
+                    <section className="rounded-[26px] bg-white/68 p-5">
+                      <p className="text-sm font-semibold text-[#6b5ee7]">TA 的个人信息</p>
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {[
+                          ["昵称", detailRoom.nickname || detailRoom.hostName],
+                          ["年龄", detailRoom.age ? `${detailRoom.age} 岁` : "选填"],
+                          ["性别", detailRoom.gender || "神秘"],
+                          ["地域", detailRoom.region || "未填写"],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-2xl bg-[#f4f6ff]/82 px-4 py-3">
+                            <strong className="block text-lg font-semibold text-stone-800">{value}</strong>
+                            <span className="mt-1 block text-xs font-medium text-stone-500">{label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-5">
+                        <p className="mb-3 text-xs font-semibold text-stone-500">兴趣标签</p>
+                        <div className="flex flex-wrap gap-2">
+                          {(detailRoom.interests || []).map((interest) => (
+                            <span
+                              key={interest}
+                              className="rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-600 shadow-sm"
+                            >
+                              {interest}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="flex flex-col rounded-[26px] bg-white/68 p-5">
+                      <p className="text-sm font-semibold text-[#6b5ee7]">房间信息</p>
+                      <div className="mt-4 space-y-3 text-sm text-stone-600">
+                        <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f4f6ff]/82 px-4 py-3">
+                          <span>匹配状态</span>
+                          <strong className="text-stone-800">{detailSignal.matchLabel}</strong>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f4f6ff]/82 px-4 py-3">
+                          <span>房主</span>
+                          <strong className="text-stone-800">{detailRoom.hostName}</strong>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f4f6ff]/82 px-4 py-3">
+                          <span>房间类型</span>
+                          <strong className="text-stone-800">{detailRoom.type}</strong>
+                        </div>
+                      </div>
+
+                      <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                        <button
+                          onClick={() => viewProfileFeed(detailRoom)}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-semibold text-[#6b5ee7] transition hover:bg-white"
+                        >
+                          <Newspaper size={16} />
+                          查看TA的动态
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedId(detailRoom.id);
+                            if (detailRoom.type === "语音房") {
+                              onEnterVoice(detailRoom);
+                              return;
+                            }
+                            onEnterText(detailRoom);
+                          }}
+                          className={`rounded-2xl px-5 py-3 font-semibold text-white transition ${
+                            detailRoom.type === "打字房"
+                              ? "bg-[#50bfa5] shadow-[0_18px_40px_rgba(80,191,165,0.26)] hover:bg-[#42aa92]"
+                              : "aurora-dark shadow-glow hover:brightness-110"
+                          }`}
+                        >
+                          相遇
+                        </button>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </article>
+            </div>
+          ) : null}
         </div>
 
         <aside className="glass-panel cosmic-side-panel flex min-h-0 min-w-0 flex-col rounded-[36px] p-5">
@@ -1131,6 +1285,7 @@ export default function RoomDiscovery({
                     onClick={() => {
                       markSyncSource("list");
                       lastSyncedRoomRef.current = room.id;
+                      setDetailRoomId(null);
                       setSelectedId(room.id);
                       setHoveredId(room.id);
                       focusRoomInGalaxy(room);
@@ -1170,7 +1325,10 @@ export default function RoomDiscovery({
               style={{ "--room-color": selectedSignal.color || "#8b82e8" }}
             >
               <button
-                onClick={() => setSelectedId(null)}
+                onClick={() => {
+                  setDetailRoomId(null);
+                  setSelectedId(null);
+                }}
                 className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/74 text-stone-500 shadow-sm transition hover:bg-white hover:text-stone-800"
                 aria-label="关闭房间详情"
                 title="关闭房间详情"
