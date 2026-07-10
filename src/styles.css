@@ -186,8 +186,8 @@ button.ink-glass {
 }
 
 .galaxy-room[data-expanded="true"] {
-  width: min(248px, 32vw);
-  min-width: 208px;
+  width: min(286px, 36vw);
+  min-width: 248px;
 }
 
 .galaxy-room__halo {
@@ -244,12 +244,13 @@ button.ink-glass {
 
 .galaxy-room[data-expanded="true"] .galaxy-room__card {
   width: 100%;
-  min-height: 84px;
-  border-radius: 999px 28px 28px 999px;
-  padding: 12px 14px 12px 12px;
+  min-height: 92px;
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 14px 18px 14px 14px;
   justify-content: flex-start;
   background:
-    radial-gradient(circle at 30px 28px, rgba(255, 255, 255, .86), color-mix(in srgb, var(--room-color) 22%, rgba(255, 255, 255, .9)) 46%, transparent 58%),
+    radial-gradient(circle at 42px 46px, rgba(255, 255, 255, .9), color-mix(in srgb, var(--room-color) 22%, rgba(255, 255, 255, .9)) 48%, transparent 62%),
     linear-gradient(90deg, rgba(255, 255, 255, .9), rgba(244, 247, 255, .84));
 }
 
@@ -360,7 +361,7 @@ button.ink-glass {
 
 .galaxy-room.is-active .galaxy-room__card::after {
   position: absolute;
-  inset: -5px;
+  inset: 0;
   content: "";
   border: 1px solid color-mix(in srgb, var(--room-color) 45%, transparent);
   border-radius: inherit;
