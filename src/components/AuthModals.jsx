@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Plus, SkipForward } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, SkipForward } from "lucide-react";
 import Modal from "./Modal.jsx";
 
 const baseInterests = ["书籍", "电影", "旅行", "音乐", "游戏", "美食"];
@@ -55,6 +55,7 @@ export function RegisterModal({ onSuccess, onClose }) {
 }
 
 export function ProfileModal({ defaultUser, onSave }) {
+  const [stepIndex, setStepIndex] = useState(0);
   const [profile, setProfile] = useState({
     nickname: defaultUser.nickname,
     age: "",
@@ -93,41 +94,119 @@ export function ProfileModal({ defaultUser, onSave }) {
     addCustomInterest();
   };
 
-  return (
-    <Modal title="补充基础信息" width="max-w-2xl">
-      <div className="grid gap-4 sm:grid-cols-2">
+  const steps = [
+    {
+      key: "nickname",
+      eyebrow: "第 1 步",
+      title: "你想怎么被称呼？",
+      detail: "昵称之后还可以再改。",
+    },
+    {
+      key: "age",
+      eyebrow: "第 2 步",
+      title: "年龄要不要填一下？",
+      detail: "这是选填项，也可以直接下一步。",
+    },
+    {
+      key: "region",
+      eyebrow: "第 3 步",
+      title: "你现在在哪个城市？",
+      detail: "填一个你觉得舒服的地域范围就好。",
+    },
+    {
+      key: "gender",
+      eyebrow: "第 4 步",
+      title: "选择一个展示方式",
+      detail: "不想公开的话，选神秘就可以。",
+    },
+    {
+      key: "interests",
+      eyebrow: "第 5 步",
+      title: "选几个你喜欢的兴趣",
+      detail: "这会帮你遇到更同频的人。",
+    },
+  ];
+  const currentStep = steps[stepIndex];
+  const isLastStep = stepIndex === steps.length - 1;
+  const progress = ((stepIndex + 1) / steps.length) * 100;
+
+  const saveProfile = () => {
+    const customInterest = normalizeInterest(profile.customInterest);
+    const interests = customInterest
+      ? Array.from(new Set([...profile.interests, customInterest]))
+      : profile.interests;
+
+    onSave({
+      ...profile,
+      interests,
+      customInterest: "",
+    });
+  };
+
+  const goNext = () => {
+    if (isLastStep) {
+      saveProfile();
+      return;
+    }
+
+    setStepIndex((current) => Math.min(current + 1, steps.length - 1));
+  };
+
+  const renderStep = () => {
+    if (currentStep.key === "nickname") {
+      return (
         <label className="block text-sm font-medium text-stone-600">
           昵称
           <input
             value={profile.nickname}
             onChange={(event) => setProfile({ ...profile, nickname: event.target.value })}
-            className="warm-field mt-2 w-full rounded-2xl px-4 py-3"
+            className="warm-field mt-3 w-full rounded-2xl px-4 py-3"
+            autoFocus
           />
         </label>
+      );
+    }
+
+    if (currentStep.key === "age") {
+      return (
         <label className="block text-sm font-medium text-stone-600">
           年龄（选填）
           <input
             value={profile.age}
             onChange={(event) => setProfile({ ...profile, age: event.target.value })}
-            className="warm-field mt-2 w-full rounded-2xl px-4 py-3"
+            inputMode="numeric"
+            className="warm-field mt-3 w-full rounded-2xl px-4 py-3"
+            autoFocus
           />
         </label>
+      );
+    }
+
+    if (currentStep.key === "region") {
+      return (
         <label className="block text-sm font-medium text-stone-600">
           地域（选填）
           <input
             value={profile.region}
             onChange={(event) => setProfile({ ...profile, region: event.target.value })}
-            className="warm-field mt-2 w-full rounded-2xl px-4 py-3"
+            className="warm-field mt-3 w-full rounded-2xl px-4 py-3"
+            autoFocus
           />
         </label>
+      );
+    }
+
+    if (currentStep.key === "gender") {
+      return (
         <div className="text-sm font-medium text-stone-600">
           性别
-          <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-3 gap-3">
             {["男", "女", "神秘"].map((gender) => (
               <button
                 key={gender}
+                type="button"
                 onClick={() => setProfile({ ...profile, gender })}
-                className={`rounded-2xl px-4 py-3 font-semibold transition ${
+                className={`rounded-full px-4 py-3 font-semibold transition ${
                   profile.gender === gender
                     ? "glass-choice-active"
                     : "glass-choice"
@@ -138,14 +217,17 @@ export function ProfileModal({ defaultUser, onSave }) {
             ))}
           </div>
         </div>
-      </div>
+      );
+    }
 
-      <div className="mt-5">
+    return (
+      <div>
         <p className="mb-3 text-sm font-medium text-stone-600">兴趣标签</p>
         <div className="flex flex-wrap gap-2">
           {getInterestOptions(profile.interests).map((interest) => (
             <button
               key={interest}
+              type="button"
               onClick={() => toggleInterest(interest)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 profile.interests.includes(interest)
@@ -177,13 +259,51 @@ export function ProfileModal({ defaultUser, onSave }) {
           </button>
         </div>
       </div>
+    );
+  };
 
-      <button
-        onClick={() => onSave(profile)}
-        className="aurora-dark mt-6 w-full rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
-      >
-        保存信息
-      </button>
+  return (
+    <Modal title="补充基础信息" width="max-w-xl">
+      <div className="space-y-6">
+        <div>
+          <div className="mb-3 flex items-center justify-between text-xs font-semibold text-stone-500">
+            <span>{currentStep.eyebrow}</span>
+            <span>{stepIndex + 1}/{steps.length}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/55">
+            <div
+              className="h-full rounded-full bg-[#7a73e8] transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="min-h-[230px]">
+          <p className="text-2xl font-semibold text-stone-900">{currentStep.title}</p>
+          <p className="mt-2 text-sm leading-6 text-stone-500">{currentStep.detail}</p>
+          <div className="mt-7">{renderStep()}</div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setStepIndex((current) => Math.max(current - 1, 0))}
+            disabled={stepIndex === 0}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/60 px-5 py-3 font-semibold text-stone-600 transition hover:bg-white/80 disabled:pointer-events-none disabled:opacity-0"
+          >
+            <ArrowLeft size={18} />
+            上一步
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            className="aurora-dark inline-flex min-w-[136px] items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
+          >
+            {isLastStep ? "保存信息" : "下一步"}
+            <ArrowRight size={18} />
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 }
