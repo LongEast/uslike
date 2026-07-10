@@ -22,7 +22,7 @@ const MIN_DISTANCE = 72;
 const MAX_DISTANCE = 178;
 const PAN_LIMIT = 92;
 const ROOM_SPACE_SCALE = 8.5;
-const MAX_ROOM_BATCH_SIZE = 5;
+const MAX_ROOM_BATCH_SIZE = 10;
 const ROOM_SPREAD_LAYOUTS = {
   1: [{ x: 84, y: -82 }],
   2: [
@@ -46,6 +46,18 @@ const ROOM_SPREAD_LAYOUTS = {
     { x: 340, y: 36 },
     { x: -236, y: 290 },
     { x: 476, y: -226 },
+  ],
+  10: [
+    { x: -470, y: -190 },
+    { x: -154, y: -328 },
+    { x: 214, y: -302 },
+    { x: 492, y: -126 },
+    { x: 450, y: 178 },
+    { x: 128, y: 318 },
+    { x: -226, y: 292 },
+    { x: -502, y: 92 },
+    { x: -66, y: -74 },
+    { x: 252, y: 86 },
   ],
 };
 
@@ -106,7 +118,7 @@ const getRoomVector = (room) => {
 };
 
 const getSpreadRoomPosition = (room, index, total, batchIndex) => {
-  const layout = ROOM_SPREAD_LAYOUTS[Math.min(total, MAX_ROOM_BATCH_SIZE)] || ROOM_SPREAD_LAYOUTS[5];
+  const layout = ROOM_SPREAD_LAYOUTS[Math.min(total, MAX_ROOM_BATCH_SIZE)] || ROOM_SPREAD_LAYOUTS[MAX_ROOM_BATCH_SIZE];
   const slot = layout[index % layout.length];
   const closeness = Math.max(0, Math.min(1, (room.similarity - 35) / 55));
   const distanceScale = 1.08 - closeness * 0.24;
@@ -244,9 +256,14 @@ export default function RoomDiscovery({
   const sceneCanvasRef = useRef(null);
   const dragRef = useRef(null);
   const suppressNextSpaceClickRef = useRef(false);
+  const listScrollRef = useRef(null);
   const listRefs = useRef({});
   const cameraStateRef = useRef({ ...INITIAL_CAMERA });
   const sceneStateRef = useRef(null);
+  const syncSourceRef = useRef(null);
+  const syncResetTimerRef = useRef(null);
+  const listScrollFrameRef = useRef(0);
+  const lastSyncedRoomRef = useRef(null);
   const [selectedId, setSelectedId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [cameraDistance, setCameraDistance] = useState(INITIAL_CAMERA.distance);
@@ -257,7 +274,7 @@ export default function RoomDiscovery({
   const [closeWaitingConfirmOpen, setCloseWaitingConfirmOpen] = useState(false);
   const [avatarColors, setAvatarColors] = useState({});
   const [roomBatchIndex, setRoomBatchIndex] = useState(0);
-  const batchSize = Math.min(MAX_ROOM_BATCH_SIZE, Math.max(1, Math.floor(rooms.length / 2) || rooms.length));
+  const batchSize = Math.min(MAX_ROOM_BATCH_SIZE, Math.max(1, rooms.length));
   const allRoomsWithSignal = useMemo(
     () =>
       rooms.map((room) => {
@@ -287,6 +304,7 @@ export default function RoomDiscovery({
       ...getSpreadRoomPosition(room, index, batch.length, roomBatchIndex),
     }));
   }, [allRoomsWithSignal, batchSize, roomBatchIndex]);
+  const listedRooms = useMemo(() => [...roomsWithSignal].sort((a, b) => b.similarity - a.similarity), [roomsWithSignal]);
   const selectedRoom = roomsWithSignal.find((room) => room.id === selectedId);
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
 
@@ -329,8 +347,18 @@ export default function RoomDiscovery({
 
   useEffect(() => {
     if (!selectedId) return;
+    markSyncSource("space");
     listRefs.current[selectedId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    lastSyncedRoomRef.current = selectedId;
   }, [selectedId]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(syncResetTimerRef.current);
+      window.cancelAnimationFrame(listScrollFrameRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const container = spaceRef.current;
@@ -637,6 +665,7 @@ export default function RoomDiscovery({
   const stopExploring = () => {
     if (dragRef.current?.moved) {
       suppressNextSpaceClickRef.current = true;
+      window.requestAnimationFrame(syncGalaxyToList);
     }
     dragRef.current = null;
     setIsExploring(false);
@@ -651,10 +680,98 @@ export default function RoomDiscovery({
     setSelectedId(null);
   };
 
+  const markSyncSource = (source, duration = 560) => {
+    syncSourceRef.current = source;
+    window.clearTimeout(syncResetTimerRef.current);
+    syncResetTimerRef.current = window.setTimeout(() => {
+      if (syncSourceRef.current === source) {
+        syncSourceRef.current = null;
+      }
+    }, duration);
+  };
+
+  const getCenteredListRoom = () => {
+    const container = listScrollRef.current;
+    if (!container) return null;
+
+    const containerBounds = container.getBoundingClientRect();
+    const flexDirection = window.getComputedStyle(container).flexDirection;
+    const isHorizontal = flexDirection.startsWith("row");
+    const center = isHorizontal
+      ? containerBounds.left + containerBounds.width / 2
+      : containerBounds.top + containerBounds.height / 2;
+
+    return listedRooms.reduce(
+      (closest, room) => {
+        const node = listRefs.current[room.id];
+        if (!node) return closest;
+        const bounds = node.getBoundingClientRect();
+        const itemCenter = isHorizontal ? bounds.left + bounds.width / 2 : bounds.top + bounds.height / 2;
+        const distance = Math.abs(itemCenter - center);
+        return distance < closest.distance ? { distance, room } : closest;
+      },
+      { distance: Infinity, room: null },
+    ).room;
+  };
+
+  const getNearestGalaxyRoom = () => {
+    const targetX = cameraStateRef.current.targetX;
+    const targetZ = cameraStateRef.current.targetZ;
+
+    return roomsWithSignal.reduce(
+      (closest, room) => {
+        const position = getRoomVector(room);
+        const distance = Math.hypot(position.x - targetX, position.z - targetZ);
+        return distance < closest.distance ? { distance, room } : closest;
+      },
+      { distance: Infinity, room: null },
+    ).room;
+  };
+
+  const scrollListToRoom = (roomId) => {
+    const node = listRefs.current[roomId];
+    if (!node) return;
+
+    markSyncSource("space");
+    node.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    setHoveredId(roomId);
+    lastSyncedRoomRef.current = roomId;
+  };
+
+  const syncListToGalaxy = () => {
+    if (syncSourceRef.current === "space") return;
+
+    window.cancelAnimationFrame(listScrollFrameRef.current);
+    listScrollFrameRef.current = window.requestAnimationFrame(() => {
+      const room = getCenteredListRoom();
+      if (!room || lastSyncedRoomRef.current === room.id) return;
+
+      markSyncSource("list", 520);
+      lastSyncedRoomRef.current = room.id;
+      setHoveredId(room.id);
+      focusRoomInGalaxy(room);
+      setCameraDistance((current) => {
+        if (current <= 104) return current;
+        const nextDistance = 98;
+        cameraStateRef.current.distance = nextDistance;
+        return nextDistance;
+      });
+    });
+  };
+
+  const syncGalaxyToList = () => {
+    if (syncSourceRef.current === "list") return;
+
+    const room = getNearestGalaxyRoom();
+    if (!room || lastSyncedRoomRef.current === room.id) return;
+    scrollListToRoom(room.id);
+  };
+
   const changeZoom = (delta) => {
     setCameraDistance((current) => {
       const nextDistance = Math.max(MIN_DISTANCE, Math.min(MAX_DISTANCE, current + delta));
       cameraStateRef.current.distance = nextDistance;
+      window.requestAnimationFrame(syncGalaxyToList);
       return nextDistance;
     });
   };
@@ -910,10 +1027,12 @@ export default function RoomDiscovery({
               </button>
             </div>
           </div>
-          <div className="card-scroll mb-5 flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
-            {[...roomsWithSignal]
-              .sort((a, b) => b.similarity - a.similarity)
-              .map((room) => {
+          <div
+            ref={listScrollRef}
+            onScroll={syncListToGalaxy}
+            className="card-scroll mb-5 flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden"
+          >
+            {listedRooms.map((room) => {
                 const roomTypeStyle = getRoomTypeStyle(room.type);
                 const RoomTypeIcon = roomTypeStyle.Icon;
 
@@ -925,7 +1044,10 @@ export default function RoomDiscovery({
                       listRefs.current[room.id] = node;
                     }}
                     onClick={() => {
+                      markSyncSource("list");
+                      lastSyncedRoomRef.current = room.id;
                       setSelectedId(room.id);
+                      setHoveredId(room.id);
                       focusRoomInGalaxy(room);
                     }}
                     onMouseEnter={() => setHoveredId(room.id)}
