@@ -23,6 +23,31 @@ const MAX_DISTANCE = 178;
 const PAN_LIMIT = 92;
 const ROOM_SPACE_SCALE = 8.5;
 const MAX_ROOM_BATCH_SIZE = 5;
+const ROOM_SPREAD_LAYOUTS = {
+  1: [{ x: 84, y: -82 }],
+  2: [
+    { x: -280, y: -118 },
+    { x: 292, y: 138 },
+  ],
+  3: [
+    { x: -330, y: -92 },
+    { x: 88, y: -262 },
+    { x: 336, y: 154 },
+  ],
+  4: [
+    { x: -382, y: -132 },
+    { x: 118, y: -278 },
+    { x: 386, y: 52 },
+    { x: -228, y: 282 },
+  ],
+  5: [
+    { x: -440, y: -150 },
+    { x: 92, y: -270 },
+    { x: 340, y: 36 },
+    { x: -236, y: 290 },
+    { x: 476, y: -226 },
+  ],
+};
 
 const getRoomPosition = (room) => ({
   mapX: room.mapX ?? (room.x - 50) * 12,
@@ -71,11 +96,28 @@ const hashString = (value) =>
 
 const getRoomVector = (room) => {
   const seed = hashString(room.id);
+  const mapX = room.displayMapX ?? room.mapX;
+  const mapY = room.displayMapY ?? room.mapY;
   return new THREE.Vector3(
-    room.mapX / ROOM_SPACE_SCALE,
+    mapX / ROOM_SPACE_SCALE,
     ((seed % 15) - 7) * 0.88,
-    room.mapY / ROOM_SPACE_SCALE,
+    mapY / ROOM_SPACE_SCALE,
   );
+};
+
+const getSpreadRoomPosition = (room, index, total, batchIndex) => {
+  const layout = ROOM_SPREAD_LAYOUTS[Math.min(total, MAX_ROOM_BATCH_SIZE)] || ROOM_SPREAD_LAYOUTS[5];
+  const slot = layout[index % layout.length];
+  const closeness = Math.max(0, Math.min(1, (room.similarity - 35) / 55));
+  const distanceScale = 1.08 - closeness * 0.24;
+  const seed = hashString(`${room.id}-${batchIndex}`);
+  const jitterX = ((seed % 17) - 8) * 2.2;
+  const jitterY = ((Math.floor(seed / 17) % 17) - 8) * 2.2;
+
+  return {
+    displayMapX: slot.x * distanceScale + jitterX,
+    displayMapY: slot.y * distanceScale + jitterY,
+  };
 };
 
 const updateCamera = (camera, cameraState) => {
@@ -231,13 +273,19 @@ export default function RoomDiscovery({
     [avatarColors, rooms],
   );
   const roomsWithSignal = useMemo(() => {
-    if (allRoomsWithSignal.length <= batchSize) return allRoomsWithSignal;
+    const startIndex = (roomBatchIndex * batchSize) % Math.max(1, allRoomsWithSignal.length);
+    const batch =
+      allRoomsWithSignal.length <= batchSize
+        ? allRoomsWithSignal
+        : Array.from(
+            { length: batchSize },
+            (_, index) => allRoomsWithSignal[(startIndex + index) % allRoomsWithSignal.length],
+          );
 
-    const startIndex = (roomBatchIndex * batchSize) % allRoomsWithSignal.length;
-    return Array.from(
-      { length: batchSize },
-      (_, index) => allRoomsWithSignal[(startIndex + index) % allRoomsWithSignal.length],
-    );
+    return batch.map((room, index) => ({
+      ...room,
+      ...getSpreadRoomPosition(room, index, batch.length, roomBatchIndex),
+    }));
   }, [allRoomsWithSignal, batchSize, roomBatchIndex]);
   const selectedRoom = roomsWithSignal.find((room) => room.id === selectedId);
   const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
