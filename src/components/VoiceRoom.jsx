@@ -40,13 +40,16 @@ export default function VoiceRoom({
   const answeredBoth = Boolean(myAnswer && theirAnswer);
 
   useEffect(() => {
-    if (answeredBoth && questionIndex === 0) {
+    if (answeredBoth) {
       setLightGameUnlocked(true);
     }
-  }, [answeredBoth, questionIndex]);
+  }, [answeredBoth]);
 
   const answerQuestion = (answer) => {
     setMyAnswer(answer);
+    if (questionIndex === 0) {
+      setLightGameUnlocked(true);
+    }
     window.setTimeout(() => setTheirAnswer("TA 也回答了"), 650);
   };
 
@@ -141,7 +144,7 @@ export default function VoiceRoom({
             {micOn ? "关闭麦克风" : "打开麦克风"}
           </button>
           <button
-            onClick={() => lightGameUnlocked ? setShowGames(true) : onToast("双方回答第一个问题后解锁。")}
+            onClick={() => lightGameUnlocked ? setShowGames(true) : onToast("双方完成一道问题后解锁。")}
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 font-semibold transition ${
               lightGameUnlocked
                 ? "bg-[#dcf8ee] text-[#247e68] hover:bg-[#c9f2e5]"
