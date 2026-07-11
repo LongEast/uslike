@@ -115,6 +115,11 @@ button.ink-glass {
     radial-gradient(circle at 72% 20%, rgba(91, 115, 255, 0.58), transparent 34%);
 }
 
+.chat-bubble-me {
+  background: linear-gradient(135deg, #8796e7, #c18ae6 54%, #e89ddd);
+  box-shadow: 0 10px 24px rgba(127, 93, 208, 0.12);
+}
+
 .semantic-space {
   isolation: isolate;
   cursor: grab;
