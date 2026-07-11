@@ -343,7 +343,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                     className={`max-w-[72%] rounded-3xl px-4 py-3 text-sm ${
                       message.from === "me"
                         ? "aurora-dark ml-auto text-white shadow-glow"
-                        : "mr-auto border border-white/70 bg-white/58 text-stone-700 backdrop-blur-xl"
+                        : "mr-auto border border-black bg-white/58 text-stone-700 backdrop-blur-xl"
                     }`}
                   >
                     {message.type === "image" ? (
