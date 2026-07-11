@@ -428,7 +428,45 @@ button.ink-glass {
     rgba(244, 246, 255, .76);
 }
 
+.answer-dot {
+  top: 50%;
+  animation-duration: 60s;
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+}
+
+.answer-dot--left {
+  animation-name: meetLeft;
+}
+
+.answer-dot--right {
+  animation-name: meetRight;
+}
+
 .answered .answer-dot {
   opacity: 1;
-  transform: scale(1.05);
+}
+
+@keyframes meetLeft {
+  from {
+    left: 0;
+    transform: translateY(-50%);
+  }
+
+  to {
+    left: calc(50% - 8px);
+    transform: translate(-100%, -50%);
+  }
+}
+
+@keyframes meetRight {
+  from {
+    left: 100%;
+    transform: translate(-100%, -50%);
+  }
+
+  to {
+    left: calc(50% + 8px);
+    transform: translateY(-50%);
+  }
 }

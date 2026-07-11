@@ -270,13 +270,11 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
         <div className="light-track relative h-7 overflow-hidden rounded-full">
           <span
             key={`left-${question.id}`}
-            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#8b82e8] opacity-80 shadow-glow"
-            style={{ animation: "driftLeft 12s linear forwards" }}
+            className="answer-dot answer-dot--left absolute top-1/2 h-4 w-4 rounded-full bg-[#8b82e8] opacity-80 shadow-glow"
           />
           <span
             key={`right-${question.id}`}
-            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#50bfa5] opacity-80 shadow-glow"
-            style={{ animation: "driftRight 12s linear forwards" }}
+            className="answer-dot answer-dot--right absolute top-1/2 h-4 w-4 rounded-full bg-[#50bfa5] opacity-80 shadow-glow"
           />
         </div>
         <div className="mt-3 flex items-center justify-between text-xs font-semibold text-stone-500">
