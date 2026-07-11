@@ -207,27 +207,37 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        {[question.a, question.b].map((answer) => (
+        {[question.a, question.b].map((answer, index) => (
           <button
             key={answer}
             onClick={() => onAnswer(answer)}
-            className={`rounded-2xl px-4 py-3 text-left font-semibold transition ${
-              myAnswer === answer ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-white/78 text-stone-700 hover:bg-white"
+            className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-3 text-left font-semibold transition ${
+              myAnswer === answer
+                ? "border-[#8b82e8]/55 bg-[#eeeaff] text-[#6b5ee7]"
+                : "border-[#d8dcff]/70 bg-white/78 text-stone-700 hover:border-[#bdb8ff] hover:bg-white"
             }`}
           >
-            {answer}
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#bdb8ff]/80 bg-[#eeeaff] text-sm font-bold text-[#6b5ee7] shadow-sm">
+              {String.fromCharCode(65 + index)}
+            </span>
+            <span>{answer}</span>
           </button>
         ))}
-        <input
-          key={question.id}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && event.currentTarget.value.trim()) {
-              onAnswer(event.currentTarget.value.trim());
-            }
-          }}
-          placeholder={question.c}
-          className="warm-field rounded-2xl px-4 py-3"
-        />
+        <div className="warm-field flex items-center gap-3 rounded-2xl border-[#d8dcff]/90 px-4 py-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#bdb8ff]/80 bg-[#eeeaff] text-sm font-bold text-[#6b5ee7] shadow-sm">
+            C
+          </span>
+          <input
+            key={question.id}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && event.currentTarget.value.trim()) {
+                onAnswer(event.currentTarget.value.trim());
+              }
+            }}
+            placeholder={question.c}
+            className="min-w-0 flex-1 bg-transparent font-semibold outline-none placeholder:text-stone-400"
+          />
+        </div>
       </div>
 
       <div className={`mt-5 ${answeredBoth ? "answered" : ""}`}>
