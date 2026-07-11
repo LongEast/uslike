@@ -373,7 +373,11 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                 <div className="mb-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => setGamePicker(activeThread)}
-                    className="glass-choice-active inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition"
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                      gamePicker
+                        ? "glass-choice-active"
+                        : "border border-stone-200 bg-white/82 text-stone-800 shadow-sm hover:bg-white"
+                    }`}
                   >
                     <Gamepad2 size={16} />
                     双人游戏
@@ -383,7 +387,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
                       textGameUnlocked
                         ? "glass-choice-active"
-                        : "glass-choice text-stone-400"
+                        : "border border-stone-200 bg-white/82 text-stone-800 shadow-sm hover:bg-white"
                     }`}
                     title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
                   >
