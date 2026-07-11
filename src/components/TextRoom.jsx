@@ -94,6 +94,7 @@ export default function TextRoom({
         <div className="grid min-h-[calc(100vh-128px)] grid-rows-[auto_1fr_auto] gap-6">
           <QuestionCard
             question={currentQuestion}
+            showTimer={questionIndex === 0}
             ready={skipReady}
             answeredBoth={answeredBoth}
             myAnswer={myAnswer}
@@ -215,12 +216,12 @@ export default function TextRoom({
   );
 }
 
-function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, onAnswer, onSkip }) {
+function QuestionCard({ question, showTimer, ready, answeredBoth, myAnswer, theirAnswer, onAnswer, onSkip }) {
   return (
     <div className="glass-panel mx-auto w-full max-w-3xl rounded-[32px] p-5">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#6b5ee7]">系统生成的问题</p>
+          <p className="text-sm font-semibold text-[#6b5ee7]">电波一下</p>
           <h1 className="mt-2 text-2xl font-semibold leading-snug text-stone-800">{question.text}</h1>
         </div>
         <button
@@ -270,17 +271,19 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
       </div>
 
       <div className={`mt-5 ${answeredBoth ? "answered" : ""}`}>
-        <div className="light-track relative h-7 overflow-hidden rounded-full">
-          <span
-            key={`left-${question.id}`}
-            className="answer-dot answer-dot--left absolute top-1/2 h-4 w-4 rounded-full bg-[#8b82e8] opacity-80 shadow-glow"
-          />
-          <span
-            key={`right-${question.id}`}
-            className="answer-dot answer-dot--right absolute top-1/2 h-4 w-4 rounded-full bg-[#50bfa5] opacity-80 shadow-glow"
-          />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs font-semibold text-stone-500">
+        {showTimer ? (
+          <div className="light-track relative h-7 overflow-hidden rounded-full">
+            <span
+              key={`left-${question.id}`}
+              className="answer-dot answer-dot--left absolute top-1/2 h-4 w-4 rounded-full bg-[#8b82e8] opacity-80 shadow-glow"
+            />
+            <span
+              key={`right-${question.id}`}
+              className="answer-dot answer-dot--right absolute top-1/2 h-4 w-4 rounded-full bg-[#50bfa5] opacity-80 shadow-glow"
+            />
+          </div>
+        ) : null}
+        <div className={`${showTimer ? "mt-3" : ""} flex items-center justify-between text-xs font-semibold text-stone-500`}>
           <span>{myAnswer ? "你已回答" : "等待你的选择"}</span>
           <span>{theirAnswer || "等待对方回答"}</span>
         </div>
