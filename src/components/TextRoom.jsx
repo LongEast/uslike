@@ -16,7 +16,9 @@ export default function TextRoom({
   const [skipReady, setSkipReady] = useState(false);
   const [myAnswer, setMyAnswer] = useState("");
   const [theirAnswer, setTheirAnswer] = useState("");
-  const [lightGameUnlocked, setLightGameUnlocked] = useState(false);
+  const [lightGameUnlocked, setLightGameUnlocked] = useState(() =>
+    room.isFriend ? Boolean(room.friendGameUnlocked) : false,
+  );
   const [messages, setMessages] = useState([
     { from: "them", text: "我已经进来啦，先听一个问题。" },
   ]);
@@ -26,7 +28,9 @@ export default function TextRoom({
 
   const currentQuestion = questions[questionIndex % questions.length];
   const answeredBoth = Boolean(myAnswer && theirAnswer);
-  const textGameUnlocked = messages.filter((message) => message.from === "me" || message.from === "them").length >= 50;
+  const textGameUnlocked = room.isFriend
+    ? Boolean(room.friendTextGameUnlocked)
+    : messages.filter((message) => message.from === "me" || message.from === "them").length >= 50;
 
   useEffect(() => {
     setSkipReady(false);
@@ -37,14 +41,14 @@ export default function TextRoom({
   }, [questionIndex]);
 
   useEffect(() => {
-    if (answeredBoth) {
+    if (answeredBoth && !room.isFriend) {
       setLightGameUnlocked(true);
     }
-  }, [answeredBoth]);
+  }, [answeredBoth, room.isFriend]);
 
   const answerQuestion = (answer) => {
     setMyAnswer(answer);
-    if (questionIndex === 0) {
+    if (questionIndex === 0 && !room.isFriend) {
       setLightGameUnlocked(true);
     }
     window.setTimeout(() => setTheirAnswer("TA 也回答了"), 650);

@@ -110,6 +110,16 @@ export default function App() {
     );
   };
 
+  const getFriendGameState = (thread) => {
+    const conversationCount =
+      thread?.messages.filter((message) => message.from === "me" || message.from === "them").length || 0;
+
+    return {
+      friendGameUnlocked: Boolean(thread),
+      friendTextGameUnlocked: conversationCount >= 50,
+    };
+  };
+
   const startWaveRoom = (thread, type) => {
     setCurrentRoom({
       id: thread.friendId || thread.id,
@@ -121,6 +131,7 @@ export default function App() {
       vibe: thread.subtitle,
       interests: [],
       isFriend: true,
+      ...getFriendGameState(thread),
     });
     setPhase(type === "语音房" ? "voice" : "text");
   };
@@ -164,18 +175,22 @@ export default function App() {
           onDismissWaiting={() => setWaitingRoom(null)}
           onToast={showToast}
           onEnterVoice={(room) => {
+            const friendThread = threads.find((thread) => thread.friendId === room.id);
             setWaitingRoom(null);
             setCurrentRoom({
               ...room,
               isFriend: friends.some((friend) => friend.id === room.id),
+              ...getFriendGameState(friendThread),
             });
             setPhase("voice");
           }}
           onEnterText={(room) => {
+            const friendThread = threads.find((thread) => thread.friendId === room.id);
             setWaitingRoom(null);
             setCurrentRoom({
               ...room,
               isFriend: friends.some((friend) => friend.id === room.id),
+              ...getFriendGameState(friendThread),
             });
             setPhase("text");
           }}
