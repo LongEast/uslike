@@ -405,7 +405,7 @@ button.ink-glass {
 
 .card-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(216, 132, 91, 0.5) transparent;
+  scrollbar-color: rgba(139, 130, 232, 0.48) transparent;
 }
 
 .card-scroll::-webkit-scrollbar {
@@ -415,7 +415,7 @@ button.ink-glass {
 
 .card-scroll::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(216, 132, 91, 0.5);
+  background: rgba(139, 130, 232, 0.48);
 }
 
 .room-card {
@@ -424,8 +424,8 @@ button.ink-glass {
 
 .light-track {
   background:
-    linear-gradient(90deg, transparent, rgba(244, 145, 116, .25), transparent),
-    rgba(255, 255, 255, .62);
+    linear-gradient(90deg, transparent, rgba(139, 130, 232, .22), rgba(80, 191, 165, .18), transparent),
+    rgba(244, 246, 255, .76);
 }
 
 .answered .answer-dot {

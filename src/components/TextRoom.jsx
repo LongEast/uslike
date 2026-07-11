@@ -78,7 +78,7 @@ export default function TextRoom({
   }, [friendState]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#fff8ee] px-6 py-8">
+    <main className="main-wash relative min-h-screen overflow-hidden px-6 py-8">
       <button
         onClick={onExit}
         className="fixed left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
@@ -111,7 +111,7 @@ export default function TextRoom({
                   className={`mt-4 rounded-full px-5 py-3 text-sm font-semibold transition ${
                     friendState === "added"
                       ? "bg-[#dcf8ee] text-[#26866f]"
-                      : "bg-[#f06f52] text-white shadow-glow hover:bg-[#e45f47]"
+                      : "aurora-dark text-white shadow-glow hover:brightness-110"
                   }`}
                 >
                   {friendButtonText}
@@ -135,7 +135,7 @@ export default function TextRoom({
             <button
               onClick={() => onToast(textGameUnlocked ? "双人互动文字游戏已解锁。" : "互发消息超过 50 条后解锁。")}
               className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 font-semibold ${
-                textGameUnlocked ? "bg-[#ffe0ce] text-[#b85e46]" : "bg-stone-100 text-stone-400"
+                textGameUnlocked ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-stone-100 text-stone-400"
               }`}
             >
               {textGameUnlocked ? <PenLine size={18} /> : <Lock size={18} />}
@@ -156,14 +156,14 @@ export default function TextRoom({
             </div>
           ) : null}
 
-          <div className="card-scroll flex-1 space-y-3 overflow-y-auto rounded-[28px] bg-[#fff8ee]/78 p-4">
+          <div className="card-scroll flex-1 space-y-3 overflow-y-auto rounded-[28px] bg-[#f4f6ff]/78 p-4">
             {messages.map((message, index) => (
               <div
                 key={`${message.from}-${index}`}
                 className={`max-w-[82%] rounded-3xl px-4 py-3 text-sm ${
                   message.from === "me"
-                    ? "ml-auto bg-[#f06f52] text-white"
-                    : "mr-auto border border-[#f0c6a8]/60 bg-[#fff4e8] text-stone-700"
+                    ? "aurora-dark ml-auto text-white"
+                    : "mr-auto border border-[#d8dcff]/70 bg-white/82 text-stone-700"
                 }`}
               >
                 {message.text}
@@ -174,7 +174,7 @@ export default function TextRoom({
           <div className="mt-4 flex gap-2">
             <button
               title="发送图片"
-              className="rounded-2xl bg-[#fff0d7] px-4 text-[#bc6b39] transition hover:bg-[#ffe5ba]"
+              className="rounded-2xl bg-[#eeeaff] px-4 text-[#6b5ee7] transition hover:bg-white"
             >
               <ImagePlus size={20} />
             </button>
@@ -189,7 +189,7 @@ export default function TextRoom({
             />
             <button
               onClick={sendMessage}
-              className="rounded-2xl bg-[#f06f52] px-4 text-white shadow-glow transition hover:bg-[#e45f47]"
+              className="aurora-dark rounded-2xl px-4 text-white shadow-glow transition hover:brightness-110"
             >
               <Send size={20} />
             </button>
@@ -217,14 +217,14 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
     <div className="glass-panel mx-auto w-full max-w-3xl rounded-[32px] p-5">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#b7664d]">系统生成的问题</p>
+          <p className="text-sm font-semibold text-[#6b5ee7]">系统生成的问题</p>
           <h1 className="mt-2 text-2xl font-semibold leading-snug text-stone-800">{question.text}</h1>
         </div>
         <button
           onClick={onSkip}
           className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
             ready
-              ? "bg-[#f06f52] text-white shadow-glow hover:bg-[#e45f47]"
+              ? "aurora-dark text-white shadow-glow hover:brightness-110"
               : "bg-stone-100 text-stone-400 hover:bg-stone-200"
           }`}
         >
@@ -238,7 +238,7 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
             key={answer}
             onClick={() => onAnswer(answer)}
             className={`rounded-2xl px-4 py-3 text-left font-semibold transition ${
-              myAnswer === answer ? "bg-[#ffe0ce] text-[#b85e46]" : "bg-white/78 text-stone-700 hover:bg-white"
+              myAnswer === answer ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-white/78 text-stone-700 hover:bg-white"
             }`}
           >
             {answer}
@@ -260,12 +260,12 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
         <div className="light-track relative h-7 overflow-hidden rounded-full">
           <span
             key={`left-${question.id}`}
-            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#ff7f67] opacity-80 shadow-glow"
+            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#8b82e8] opacity-80 shadow-glow"
             style={{ animation: "driftLeft 12s linear forwards" }}
           />
           <span
             key={`right-${question.id}`}
-            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#58c5ad] opacity-80 shadow-glow"
+            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#50bfa5] opacity-80 shadow-glow"
             style={{ animation: "driftRight 12s linear forwards" }}
           />
         </div>
@@ -284,7 +284,7 @@ function UserSeat({ user, label, action }) {
       <Avatar src={user.avatar} name={user.nickname} size="xl" glow />
       <div className="mt-4 flex items-center gap-2 rounded-full bg-white/78 px-4 py-2 shadow-sm">
         <span className="font-semibold text-stone-800">{user.nickname}</span>
-        <span className="h-2.5 w-2.5 rounded-full bg-[#30b883]" title="在线" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#50bfa5]" title="在线" />
       </div>
       <p className="mt-2 text-xs font-semibold text-stone-400">{label}</p>
       {action}

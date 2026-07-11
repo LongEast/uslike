@@ -21,7 +21,7 @@ export default function ChatSidebar({ open, messages, onClose, onSend, textGameU
           <h2 className="text-xl font-semibold text-stone-800">房间聊天</h2>
           <p className="text-xs text-stone-500">{messages.length} 条消息</p>
         </div>
-        <button onClick={onClose} className="rounded-full bg-[#fff3e8] p-2 text-stone-600 hover:bg-white">
+        <button onClick={onClose} className="rounded-full bg-[#eeeaff] p-2 text-[#6b5ee7] hover:bg-white">
           <PanelRightClose size={20} />
         </button>
       </div>
@@ -32,14 +32,14 @@ export default function ChatSidebar({ open, messages, onClose, onSend, textGameU
         </div>
       ) : null}
 
-      <div className="card-scroll flex-1 space-y-3 overflow-y-auto rounded-[24px] bg-[#fff8ee]/78 p-3">
+      <div className="card-scroll flex-1 space-y-3 overflow-y-auto rounded-[24px] bg-[#f4f6ff]/78 p-3">
         {messages.map((message, index) => (
           <div
             key={`${message.from}-${index}`}
             className={`max-w-[78%] rounded-3xl px-4 py-3 text-sm ${
               message.from === "me"
-                ? "ml-auto bg-[#f06f52] text-white"
-                : "bg-white text-stone-700"
+                ? "aurora-dark ml-auto text-white"
+                : "border border-[#d8dcff]/70 bg-white/82 text-stone-700"
             }`}
           >
             {message.text}
@@ -50,7 +50,7 @@ export default function ChatSidebar({ open, messages, onClose, onSend, textGameU
       <div className="mt-4 flex gap-2">
         <button
           title="发送图片"
-          className="rounded-2xl bg-[#fff0d7] px-4 text-[#bc6b39] transition hover:bg-[#ffe5ba]"
+          className="rounded-2xl bg-[#eeeaff] px-4 text-[#6b5ee7] transition hover:bg-white"
         >
           <ImagePlus size={20} />
         </button>
@@ -65,7 +65,7 @@ export default function ChatSidebar({ open, messages, onClose, onSend, textGameU
         />
         <button
           onClick={submit}
-          className="rounded-2xl bg-[#f06f52] px-4 text-white shadow-glow transition hover:bg-[#e45f47]"
+          className="aurora-dark rounded-2xl px-4 text-white shadow-glow transition hover:brightness-110"
         >
           <Send size={20} />
         </button>

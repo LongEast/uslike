@@ -83,7 +83,7 @@ export default function VoiceRoom({
   }, [friendState]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#fff8ee] px-6 py-8">
+    <main className="main-wash relative min-h-screen overflow-hidden px-6 py-8">
       <button
         onClick={onExit}
         className="fixed left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
@@ -123,7 +123,7 @@ export default function VoiceRoom({
                 className={`mt-4 rounded-full px-5 py-3 text-sm font-semibold transition ${
                   friendState === "added"
                     ? "bg-[#dcf8ee] text-[#26866f]"
-                    : "bg-[#f06f52] text-white shadow-glow hover:bg-[#e45f47]"
+                    : "aurora-dark text-white shadow-glow hover:brightness-110"
                 }`}
               >
                 {friendButtonText}
@@ -135,7 +135,7 @@ export default function VoiceRoom({
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-[28px] bg-white/70 p-3 shadow-soft backdrop-blur-xl">
           <button
             onClick={() => setMicOn((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-[#fff3e8] px-4 py-3 font-semibold text-stone-700 hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#f4f6ff] px-4 py-3 font-semibold text-stone-700 hover:bg-white"
           >
             {micOn ? <Mic size={18} /> : <MicOff size={18} />}
             {micOn ? "关闭麦克风" : "打开麦克风"}
@@ -154,7 +154,7 @@ export default function VoiceRoom({
           <button
             onClick={() => onToast(textGameUnlocked ? "双人互动文字游戏已解锁。" : "互发消息超过 50 条后解锁。")}
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 font-semibold ${
-              textGameUnlocked ? "bg-[#ffe0ce] text-[#b85e46]" : "bg-stone-100 text-stone-400"
+              textGameUnlocked ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-stone-100 text-stone-400"
             }`}
           >
             {textGameUnlocked ? <PenLine size={18} /> : <Lock size={18} />}
@@ -191,14 +191,14 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
     <div className="glass-panel mx-auto w-full max-w-3xl rounded-[32px] p-5">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#b7664d]">系统生成的问题</p>
+          <p className="text-sm font-semibold text-[#6b5ee7]">系统生成的问题</p>
           <h1 className="mt-2 text-2xl font-semibold leading-snug text-stone-800">{question.text}</h1>
         </div>
         <button
           onClick={onSkip}
           className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
             ready
-              ? "bg-[#f06f52] text-white shadow-glow hover:bg-[#e45f47]"
+              ? "aurora-dark text-white shadow-glow hover:brightness-110"
               : "bg-stone-100 text-stone-400 hover:bg-stone-200"
           }`}
         >
@@ -212,7 +212,7 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
             key={answer}
             onClick={() => onAnswer(answer)}
             className={`rounded-2xl px-4 py-3 text-left font-semibold transition ${
-              myAnswer === answer ? "bg-[#ffe0ce] text-[#b85e46]" : "bg-white/78 text-stone-700 hover:bg-white"
+              myAnswer === answer ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-white/78 text-stone-700 hover:bg-white"
             }`}
           >
             {answer}
@@ -234,12 +234,12 @@ function QuestionCard({ question, ready, answeredBoth, myAnswer, theirAnswer, on
         <div className="light-track relative h-7 overflow-hidden rounded-full">
           <span
             key={`left-${question.id}`}
-            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#ff7f67] opacity-80 shadow-glow"
+            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#8b82e8] opacity-80 shadow-glow"
             style={{ animation: "driftLeft 12s linear forwards" }}
           />
           <span
             key={`right-${question.id}`}
-            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#58c5ad] opacity-80 shadow-glow"
+            className="answer-dot absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-[#50bfa5] opacity-80 shadow-glow"
             style={{ animation: "driftRight 12s linear forwards" }}
           />
         </div>
@@ -259,7 +259,7 @@ function UserSeat({ user, micOn, label, action }) {
       <div className="mt-4 flex items-center gap-2 rounded-full bg-white/78 px-4 py-2 shadow-sm">
         <span className="font-semibold text-stone-800">{user.nickname}</span>
         <span
-          className={`h-2.5 w-2.5 rounded-full ${micOn ? "bg-[#30b883]" : "bg-[#e6534e]"}`}
+          className={`h-2.5 w-2.5 rounded-full ${micOn ? "bg-[#50bfa5]" : "bg-[#8b82e8]"}`}
           title={micOn ? "麦克风开启" : "麦克风关闭"}
         />
       </div>
