@@ -384,15 +384,20 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                   </button>
                   <button
                     onClick={openTextGame}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                    className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
                       textGameUnlocked
                         ? "glass-choice-active"
                         : "border border-stone-200 bg-white/82 text-stone-800 shadow-sm hover:bg-white"
                     }`}
                     title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
                   >
-                    {textGameUnlocked ? <PenLine size={16} /> : <Lock size={16} />}
+                    <PenLine size={16} />
                     互动文游
+                    {!textGameUnlocked ? (
+                      <span className="pointer-events-none absolute -right-1 -top-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-stone-200 text-stone-500 shadow-sm">
+                        <Lock size={12} strokeWidth={2.4} />
+                      </span>
+                    ) : null}
                   </button>
                 </div>
               ) : null}
