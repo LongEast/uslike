@@ -39,7 +39,7 @@ export default function ChatSidebar({ open, messages, onClose, onSend, textGameU
             className={`max-w-[78%] rounded-3xl px-4 py-3 text-sm ${
               message.from === "me"
                 ? "aurora-dark ml-auto text-white"
-                : "border border-[#d8dcff]/70 bg-white/82 text-stone-700"
+                : "border border-[#bdb8ff]/80 bg-[#eeeaff]/86 text-stone-700 shadow-sm"
             }`}
           >
             {message.text}

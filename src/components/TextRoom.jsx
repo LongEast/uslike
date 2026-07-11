@@ -163,7 +163,7 @@ export default function TextRoom({
                 className={`max-w-[82%] rounded-3xl px-4 py-3 text-sm ${
                   message.from === "me"
                     ? "aurora-dark ml-auto text-white"
-                    : "mr-auto border border-[#d8dcff]/70 bg-white/82 text-stone-700"
+                    : "mr-auto border border-[#bdb8ff]/80 bg-[#eeeaff]/86 text-stone-700 shadow-sm"
                 }`}
               >
                 {message.text}
