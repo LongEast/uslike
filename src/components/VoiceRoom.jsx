@@ -24,7 +24,7 @@ export default function VoiceRoom({
     { from: "them", text: "我已经进来啦，先听一个问题。" },
   ]);
   const [showGames, setShowGames] = useState(false);
-  const [friendState, setFriendState] = useState("idle");
+  const [friendState, setFriendState] = useState(() => (room.isFriend ? "added" : "idle"));
 
   const currentQuestion = questions[questionIndex % questions.length];
   const textGameUnlocked = messages.length > 50;

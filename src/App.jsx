@@ -120,6 +120,7 @@ export default function App() {
       type,
       vibe: thread.subtitle,
       interests: [],
+      isFriend: true,
     });
     setPhase(type === "语音房" ? "voice" : "text");
   };
@@ -164,12 +165,18 @@ export default function App() {
           onToast={showToast}
           onEnterVoice={(room) => {
             setWaitingRoom(null);
-            setCurrentRoom(room);
+            setCurrentRoom({
+              ...room,
+              isFriend: friends.some((friend) => friend.id === room.id),
+            });
             setPhase("voice");
           }}
           onEnterText={(room) => {
             setWaitingRoom(null);
-            setCurrentRoom(room);
+            setCurrentRoom({
+              ...room,
+              isFriend: friends.some((friend) => friend.id === room.id),
+            });
             setPhase("text");
           }}
         />

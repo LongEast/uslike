@@ -22,7 +22,7 @@ export default function TextRoom({
   ]);
   const [draft, setDraft] = useState("");
   const [showGames, setShowGames] = useState(false);
-  const [friendState, setFriendState] = useState("idle");
+  const [friendState, setFriendState] = useState(() => (room.isFriend ? "added" : "idle"));
 
   const currentQuestion = questions[questionIndex % questions.length];
   const answeredBoth = Boolean(myAnswer && theirAnswer);
