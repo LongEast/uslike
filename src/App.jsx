@@ -110,6 +110,20 @@ export default function App() {
     );
   };
 
+  const startWaveRoom = (thread, type) => {
+    setCurrentRoom({
+      id: thread.friendId || thread.id,
+      name: `和 ${thread.name} 的电波房`,
+      hostName: thread.name,
+      hostAvatar: thread.avatar,
+      nickname: thread.name,
+      type,
+      vibe: thread.subtitle,
+      interests: [],
+    });
+    setPhase(type === "语音房" ? "voice" : "text");
+  };
+
   if (phase === "landing") {
     return (
       <>
@@ -216,6 +230,7 @@ export default function App() {
         onNavigate={setActiveView}
         onMeet={() => setModal("meet")}
         onSendMessage={sendFriendMessage}
+        onStartWaveRoom={startWaveRoom}
         onToast={showToast}
       />
 

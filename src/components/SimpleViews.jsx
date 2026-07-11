@@ -17,6 +17,7 @@ import {
   PhoneCall,
   Plus,
   QrCode,
+  Radio,
   RefreshCw,
   Send,
   Settings,
@@ -167,10 +168,11 @@ export function FeedView({ feed }) {
   );
 }
 
-export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
+export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRoom, onToast }) {
   const [activeThreadId, setActiveThreadId] = useState(() => threads[0]?.id || null);
   const [friendActions, setFriendActions] = useState(null);
   const [gamePicker, setGamePicker] = useState(null);
+  const [waveRoomPicker, setWaveRoomPicker] = useState(null);
   const [toolPanelOpen, setToolPanelOpen] = useState(false);
   const [callOptionsOpen, setCallOptionsOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -186,6 +188,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
   useEffect(() => {
     setToolPanelOpen(false);
     setCallOptionsOpen(false);
+    setWaveRoomPicker(null);
     setDraft("");
   }, [activeThreadId]);
 
@@ -399,6 +402,13 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                       </span>
                     ) : null}
                   </button>
+                  <button
+                    onClick={() => setWaveRoomPicker(activeThread)}
+                    className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/82 px-4 py-2.5 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-white"
+                  >
+                    <Radio size={16} />
+                    电波一下
+                  </button>
                 </div>
               ) : null}
               <div className="flex items-center gap-2">
@@ -523,6 +533,29 @@ export function MessagesView({ threads, games = [], onSendMessage, onToast }) {
                 className="glass-choice-active rounded-3xl px-5 py-6 text-lg font-semibold transition"
               >
                 {game}
+              </button>
+            ))}
+          </div>
+        </Modal>
+      ) : null}
+
+      {waveRoomPicker ? (
+        <Modal title={`和 ${waveRoomPicker.name} 电波一下`} onClose={() => setWaveRoomPicker(null)} width="max-w-md">
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { type: "语音房", icon: Mic },
+              { type: "打字房", icon: PenLine },
+            ].map(({ type, icon: Icon }) => (
+              <button
+                key={type}
+                onClick={() => {
+                  setWaveRoomPicker(null);
+                  onStartWaveRoom(waveRoomPicker, type);
+                }}
+                className="glass-choice-active flex-col rounded-3xl px-5 py-6 text-base font-semibold transition hover:-translate-y-0.5"
+              >
+                <Icon size={24} />
+                {type}
               </button>
             ))}
           </div>

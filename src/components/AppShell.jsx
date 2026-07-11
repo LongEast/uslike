@@ -13,6 +13,7 @@ export default function AppShell({
   onMeet,
   onNavigate,
   onSendMessage,
+  onStartWaveRoom,
   onToast,
 }) {
   const renderView = () => {
@@ -23,6 +24,7 @@ export default function AppShell({
           threads={threads}
           games={games}
           onSendMessage={onSendMessage}
+          onStartWaveRoom={onStartWaveRoom}
           onToast={onToast}
         />
       );
