@@ -39,15 +39,16 @@ export default function VoiceRoom({
     setTheirAnswer("");
     if (questionIndex > 0) return undefined;
 
-    const readyTimer = window.setTimeout(() => setSkipReady(true), 8500);
+    const readyTimer = window.setTimeout(() => setSkipReady(true), 60000);
     return () => window.clearTimeout(readyTimer);
   }, [questionIndex]);
 
   const answeredBoth = Boolean(myAnswer && theirAnswer);
 
   useEffect(() => {
-    if (answeredBoth && !room.isFriend) {
-      setLightGameUnlocked(true);
+    if (answeredBoth) {
+      setSkipReady(true);
+      if (!room.isFriend) setLightGameUnlocked(true);
     }
   }, [answeredBoth, room.isFriend]);
 
@@ -206,10 +207,11 @@ function QuestionCard({ question, showTimer, ready, answeredBoth, myAnswer, thei
         </div>
         <button
           onClick={onSkip}
-          className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+          disabled={!ready}
+          className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed ${
             ready
               ? "aurora-dark text-white shadow-glow hover:brightness-110"
-              : "bg-stone-100 text-stone-400 hover:bg-stone-200"
+              : "bg-stone-100 text-stone-400"
           }`}
         >
           下一题
