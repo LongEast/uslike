@@ -34,9 +34,11 @@ export default function VoiceRoom({
     : messages.length > 50;
 
   useEffect(() => {
-    setSkipReady(false);
+    setSkipReady(questionIndex > 0);
     setMyAnswer("");
     setTheirAnswer("");
+    if (questionIndex > 0) return undefined;
+
     const readyTimer = window.setTimeout(() => setSkipReady(true), 8500);
     return () => window.clearTimeout(readyTimer);
   }, [questionIndex]);
