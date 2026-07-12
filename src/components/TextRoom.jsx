@@ -170,8 +170,8 @@ export default function TextRoom({
                 key={`${message.from}-${index}`}
                 className={`max-w-[82%] rounded-3xl px-4 py-3 text-sm ${
                   message.from === "me"
-                    ? "aurora-dark ml-auto text-white"
-                    : "mr-auto border border-[#bdb8ff]/80 bg-[#eeeaff]/86 text-stone-700 shadow-sm"
+                    ? "chat-bubble-me ml-auto text-white"
+                    : "mr-auto border border-black bg-white/58 text-stone-700 backdrop-blur-xl"
                 }`}
               >
                 {message.text}
