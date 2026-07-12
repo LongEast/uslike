@@ -281,7 +281,7 @@ function UserSeat({ user, micOn, label, action }) {
       <div className="mt-4 flex items-center gap-2 rounded-full bg-white/78 px-4 py-2 shadow-sm">
         <span className="font-semibold text-stone-800">{user.nickname}</span>
         <span
-          className={`h-2.5 w-2.5 rounded-full ${micOn ? "bg-[#50bfa5]" : "bg-[#8b82e8]"}`}
+          className={`h-2.5 w-2.5 rounded-full ${micOn ? "bg-[#50bfa5]" : "bg-[#ef4444]"}`}
           title={micOn ? "麦克风开启" : "麦克风关闭"}
         />
       </div>
