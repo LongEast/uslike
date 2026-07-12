@@ -219,7 +219,7 @@ button.ink-glass {
     radial-gradient(circle, color-mix(in srgb, var(--room-color) 22%, transparent), transparent 62%),
     radial-gradient(circle, rgba(255, 255, 255, .12), transparent 72%);
   filter: blur(10px);
-  opacity: .46;
+  opacity: .34;
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
 }
 
@@ -252,8 +252,8 @@ button.ink-glass {
   justify-content: center;
   background: transparent;
   box-shadow:
-    0 0 24px color-mix(in srgb, var(--room-color) 42%, transparent),
-    0 0 64px color-mix(in srgb, var(--room-color) 24%, transparent);
+    0 0 20px color-mix(in srgb, var(--room-color) 36%, transparent),
+    0 0 52px color-mix(in srgb, var(--room-color) 18%, transparent);
   backdrop-filter: none;
   transition: width 180ms ease, min-height 180ms ease, padding 180ms ease, border-radius 180ms ease, transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
 }
@@ -280,9 +280,9 @@ button.ink-glass {
   border-radius: 999px;
   background: transparent;
   box-shadow:
-    0 0 18px color-mix(in srgb, var(--room-color) 52%, transparent),
-    0 0 46px color-mix(in srgb, var(--room-color) 34%, transparent),
-    0 0 86px color-mix(in srgb, var(--room-color) 18%, transparent);
+    0 0 16px color-mix(in srgb, var(--room-color) 46%, transparent),
+    0 0 38px color-mix(in srgb, var(--room-color) 26%, transparent),
+    0 0 68px color-mix(in srgb, var(--room-color) 12%, transparent);
   animation: avatarStarPulse 4.8s ease-in-out var(--drift-delay, 0s) infinite;
 }
 

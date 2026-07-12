@@ -23,45 +23,10 @@ const MAX_DISTANCE = 178;
 const PAN_LIMIT = 92;
 const ROOM_SPACE_SCALE = 8.5;
 const MAX_ROOM_BATCH_SIZE = 10;
+const INNER_MATCH_RADIUS = 150;
+const OUTER_MATCH_RADIUS = 580;
 const COMPACT_LABEL_SIZE = { width: 104, height: 76 };
 const EXPANDED_LABEL_SIZE = { width: 304, height: 104 };
-const ROOM_SPREAD_LAYOUTS = {
-  1: [{ x: 84, y: -82 }],
-  2: [
-    { x: -280, y: -118 },
-    { x: 292, y: 138 },
-  ],
-  3: [
-    { x: -330, y: -92 },
-    { x: 88, y: -262 },
-    { x: 336, y: 154 },
-  ],
-  4: [
-    { x: -382, y: -132 },
-    { x: 118, y: -278 },
-    { x: 386, y: 52 },
-    { x: -228, y: 282 },
-  ],
-  5: [
-    { x: -440, y: -150 },
-    { x: 92, y: -270 },
-    { x: 340, y: 36 },
-    { x: -236, y: 290 },
-    { x: 476, y: -226 },
-  ],
-  10: [
-    { x: -560, y: -238 },
-    { x: -250, y: -390 },
-    { x: 150, y: -382 },
-    { x: 520, y: -226 },
-    { x: 596, y: 92 },
-    { x: 338, y: 338 },
-    { x: -64, y: 404 },
-    { x: -448, y: 254 },
-    { x: -616, y: 18 },
-    { x: 108, y: -26 },
-  ],
-};
 
 const getRoomPosition = (room) => ({
   mapX: room.mapX ?? (room.x - 50) * 12,
@@ -120,17 +85,15 @@ const getRoomVector = (room) => {
 };
 
 const getSpreadRoomPosition = (room, index, total, batchIndex) => {
-  const layout = ROOM_SPREAD_LAYOUTS[Math.min(total, MAX_ROOM_BATCH_SIZE)] || ROOM_SPREAD_LAYOUTS[MAX_ROOM_BATCH_SIZE];
-  const slot = layout[index % layout.length];
   const closeness = Math.max(0, Math.min(1, (room.similarity - 35) / 55));
-  const distanceScale = 1.06 - closeness * 0.08;
   const seed = hashString(`${room.id}-${batchIndex}`);
-  const jitterX = ((seed % 17) - 8) * 2.2;
-  const jitterY = ((Math.floor(seed / 17) % 17) - 8) * 2.2;
+  const angleJitter = ((seed % 17) - 8) * 0.004;
+  const angle = -Math.PI * 0.92 + (index / Math.max(1, total)) * Math.PI * 2 + angleJitter;
+  const radius = OUTER_MATCH_RADIUS - closeness * (OUTER_MATCH_RADIUS - INNER_MATCH_RADIUS);
 
   return {
-    displayMapX: slot.x * distanceScale + jitterX,
-    displayMapY: slot.y * distanceScale + jitterY,
+    displayMapX: Math.cos(angle) * radius,
+    displayMapY: Math.sin(angle) * radius,
   };
 };
 
@@ -566,7 +529,7 @@ export default function RoomDiscovery({
           fog: false,
           linewidth: 2,
           transparent: true,
-          opacity: 0.66,
+          opacity: 0.34,
         }),
       );
       galaxyGroup.add(line);
@@ -599,7 +562,7 @@ export default function RoomDiscovery({
         new THREE.LineBasicMaterial({
           color,
           transparent: true,
-          opacity: 0.62,
+          opacity: 0.34,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
           fog: false,
@@ -712,8 +675,8 @@ export default function RoomDiscovery({
         const hovered = id === hoveredId;
         object.group.scale.setScalar(active ? 1.55 : hovered ? 1.34 : 1);
         object.halo.material.opacity = active ? 0.32 : hovered ? 0.22 : 0.12;
-        object.orbit.material.opacity = active ? 0.9 : hovered ? 0.76 : 0.56;
-        object.line.material.opacity = active ? 0.94 : hovered ? 0.8 : 0.58;
+        object.orbit.material.opacity = active ? 0.72 : hovered ? 0.5 : 0.28;
+        object.line.material.opacity = active ? 0.7 : hovered ? 0.48 : 0.26;
     });
   }, [hoveredId, selectedId]);
 
