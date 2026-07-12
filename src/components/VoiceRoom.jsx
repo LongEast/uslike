@@ -1,4 +1,4 @@
-import { ChevronLeft, Gamepad2, Lock, MessageCircle, Mic, MicOff, PenLine, Users } from "lucide-react";
+import { ChevronLeft, ChevronUp, Gamepad2, Lock, MessageCircle, Mic, MicOff, PenLine, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Avatar from "./Avatar.jsx";
 import ChatSidebar from "./ChatSidebar.jsx";
@@ -144,13 +144,29 @@ export default function VoiceRoom({
         </div>
 
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-[28px] bg-white/70 p-3 shadow-soft backdrop-blur-xl">
-          <button
-            onClick={() => setMicOn((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-[#f4f6ff] px-4 py-3 font-semibold text-stone-700 hover:bg-white"
-          >
-            {micOn ? <Mic size={18} /> : <MicOff size={18} />}
-            {micOn ? "关闭麦克风" : "打开麦克风"}
-          </button>
+          <div className="inline-flex h-12 overflow-hidden rounded-xl bg-[#f1f2f4] text-stone-700 shadow-sm">
+            <button
+              onClick={() => setMicOn((value) => !value)}
+              className="inline-flex items-center gap-2.5 px-4 font-semibold transition hover:bg-white/70"
+              aria-pressed={micOn}
+              title={micOn ? "关闭麦克风" : "打开麦克风"}
+            >
+              {micOn ? (
+                <Mic size={21} className="text-stone-600" />
+              ) : (
+                <MicOff size={21} className="text-[#ef4444]" />
+              )}
+              <span>麦克风</span>
+            </button>
+            <button
+              onClick={() => onToast("麦克风设置稍后开放。")}
+              className="grid w-10 place-items-center border-l border-white/80 text-stone-500 transition hover:bg-white/70 hover:text-stone-800"
+              aria-label="麦克风设置"
+              title="麦克风设置"
+            >
+              <ChevronUp size={16} />
+            </button>
+          </div>
           <button
             onClick={() => lightGameUnlocked ? setShowGames(true) : onToast("双方完成一道问题后解锁。")}
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 font-semibold transition ${
