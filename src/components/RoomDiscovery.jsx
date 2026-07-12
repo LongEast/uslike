@@ -520,7 +520,7 @@ export default function RoomDiscovery({
           depthWrite: false,
           fog: false,
           transparent: true,
-          opacity: index % 2 ? 0.34 : 0.28,
+          opacity: index % 2 ? 0.5 : 0.44,
         }),
       );
       ring.rotation.x = Math.PI / 2 + index * 0.015;
@@ -566,7 +566,7 @@ export default function RoomDiscovery({
           fog: false,
           linewidth: 2,
           transparent: true,
-          opacity: 0.54,
+          opacity: 0.66,
         }),
       );
       galaxyGroup.add(line);
@@ -599,7 +599,10 @@ export default function RoomDiscovery({
         new THREE.LineBasicMaterial({
           color,
           transparent: true,
-          opacity: 0.46,
+          opacity: 0.62,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          fog: false,
         }),
       );
       orbit.rotation.x = Math.PI / 2.5;
@@ -704,13 +707,13 @@ export default function RoomDiscovery({
     const sceneState = sceneStateRef.current;
     if (!sceneState) return;
 
-    sceneState.roomObjects.forEach((object, id) => {
-      const active = id === selectedId;
-      const hovered = id === hoveredId;
-      object.group.scale.setScalar(active ? 1.55 : hovered ? 1.34 : 1);
-      object.halo.material.opacity = active ? 0.32 : hovered ? 0.22 : 0.12;
-      object.orbit.material.opacity = active ? 0.7 : hovered ? 0.5 : 0.26;
-      object.line.material.opacity = active ? 0.88 : hovered ? 0.68 : 0.38;
+      sceneState.roomObjects.forEach((object, id) => {
+        const active = id === selectedId;
+        const hovered = id === hoveredId;
+        object.group.scale.setScalar(active ? 1.55 : hovered ? 1.34 : 1);
+        object.halo.material.opacity = active ? 0.32 : hovered ? 0.22 : 0.12;
+        object.orbit.material.opacity = active ? 0.9 : hovered ? 0.76 : 0.56;
+        object.line.material.opacity = active ? 0.94 : hovered ? 0.8 : 0.58;
     });
   }, [hoveredId, selectedId]);
 
@@ -1083,6 +1086,10 @@ export default function RoomDiscovery({
                     "--halo-size": `${96 + room.similarity * 0.42}px`,
                     "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
                     "--depth-scale": labelPosition.scale,
+                    "--drift-x": `${5 + (index % 3) * 2}px`,
+                    "--drift-y": `${4 + ((index + 1) % 3) * 2}px`,
+                    "--drift-duration": `${14 + (index % 5) * 3}s`,
+                    "--drift-delay": `${index * -1.7}s`,
                     zIndex: Math.round((1 - labelPosition.z) * 100),
                   }}
                   className={`galaxy-room absolute z-10 -translate-x-1/2 -translate-y-1/2 text-left transition ${

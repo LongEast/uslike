@@ -132,6 +132,9 @@ button.ink-glass {
     radial-gradient(circle at 72% 28%, rgba(230, 216, 255, .42) 0 14%, transparent 38%),
     radial-gradient(circle at 66% 72%, rgba(189, 238, 232, .3) 0 13%, transparent 36%),
     linear-gradient(145deg, rgba(244, 247, 255, .98), rgba(241, 234, 255, .96));
+  background-position: 50% 48%, 28% 34%, 72% 28%, 66% 72%, 50% 50%;
+  background-size: 118% 118%, 126% 126%, 132% 132%, 124% 124%, 100% 100%;
+  animation: cosmicBackgroundFlow 22s ease-in-out infinite alternate;
 }
 
 .semantic-space.is-panning {
@@ -148,13 +151,14 @@ button.ink-glass {
 
 .semantic-space::before {
   z-index: 0;
-  opacity: .34;
+  opacity: .46;
   background-image:
     radial-gradient(circle, rgba(139, 130, 232, .32) 0 1px, transparent 1.5px),
     radial-gradient(circle, rgba(141, 216, 200, .28) 0 1px, transparent 1.6px),
     radial-gradient(circle, rgba(199, 210, 254, .34) 0 1.2px, transparent 1.7px);
   background-position: 0 0, 34px 28px, 18px 56px;
   background-size: 86px 86px, 118px 118px, 152px 152px;
+  animation: cosmicStarfieldDrift 34s linear infinite;
 }
 
 .semantic-space::after {
@@ -163,11 +167,14 @@ button.ink-glass {
     radial-gradient(ellipse at 52% 48%, rgba(255, 255, 255, .42), transparent 42%),
     linear-gradient(120deg, transparent 0 24%, rgba(139, 130, 232, .08) 44%, rgba(189, 238, 232, .08) 58%, transparent 78%),
     radial-gradient(ellipse at 50% 50%, transparent 0 62%, rgba(255, 255, 255, .48) 94%);
+  background-position: 50% 50%, 0% 50%, 50% 50%;
+  background-size: 120% 120%, 190% 190%, 100% 100%;
+  animation: cosmicNebulaFlow 18s ease-in-out infinite alternate;
 }
 
 .cosmic-canvas {
   display: block;
-  opacity: .48;
+  opacity: .7;
 }
 
 .galaxy-map {
@@ -188,11 +195,15 @@ button.ink-glass {
   outline: none;
   transform: translate(calc(-50% + var(--offset)), -50%) scale(var(--depth-scale, 1));
   transform-origin: center;
+  animation: galaxyRoomDrift var(--drift-duration, 18s) ease-in-out var(--drift-delay, 0s) infinite;
+  will-change: translate;
 }
 
 .galaxy-room[data-expanded="true"] {
   width: min(286px, 36vw);
   min-width: 248px;
+  animation: none;
+  translate: 0 0;
 }
 
 .galaxy-room__halo {
@@ -272,14 +283,38 @@ button.ink-glass {
     0 0 18px color-mix(in srgb, var(--room-color) 52%, transparent),
     0 0 46px color-mix(in srgb, var(--room-color) 34%, transparent),
     0 0 86px color-mix(in srgb, var(--room-color) 18%, transparent);
+  animation: avatarStarPulse 4.8s ease-in-out var(--drift-delay, 0s) infinite;
 }
 
 .galaxy-room__avatar-star::before {
-  display: none;
+  position: absolute;
+  inset: -8px;
+  display: block;
+  content: "";
+  border: 1px solid color-mix(in srgb, var(--room-color) 58%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--room-color) 20%, transparent);
+  border-right-color: transparent;
+  border-radius: 50%;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--room-color) 26%, transparent);
+  opacity: .72;
+  animation: avatarOrbitSpin 12s linear infinite;
 }
 
 .galaxy-room__avatar-star::after {
-  display: none;
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  z-index: 2;
+  display: block;
+  width: 5px;
+  height: 5px;
+  content: "";
+  border-radius: 50%;
+  background: white;
+  box-shadow:
+    0 0 6px 2px white,
+    0 0 14px 5px color-mix(in srgb, var(--room-color) 58%, transparent);
+  animation: avatarStarTwinkle 3.6s ease-in-out var(--drift-delay, 0s) infinite;
 }
 
 .galaxy-room__avatar-star > div {
@@ -425,6 +460,97 @@ button.ink-glass {
 
 .room-card {
   transform: translateX(var(--offset)) rotate(var(--rotate));
+}
+
+@keyframes cosmicBackgroundFlow {
+  0% {
+    background-position: 46% 44%, 22% 30%, 78% 24%, 60% 76%, 50% 50%;
+  }
+
+  100% {
+    background-position: 55% 54%, 34% 40%, 64% 35%, 74% 64%, 50% 50%;
+  }
+}
+
+@keyframes cosmicStarfieldDrift {
+  from {
+    background-position: 0 0, 34px 28px, 18px 56px;
+  }
+
+  to {
+    background-position: 86px 43px, -84px 87px, 94px -20px;
+  }
+}
+
+@keyframes cosmicNebulaFlow {
+  from {
+    background-position: 48% 46%, 0% 44%, 50% 50%;
+  }
+
+  to {
+    background-position: 56% 54%, 100% 58%, 50% 50%;
+  }
+}
+
+@keyframes galaxyRoomDrift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  28% {
+    translate: var(--drift-x, 6px) calc(-1 * var(--drift-y, 5px));
+  }
+
+  58% {
+    translate: calc(-0.65 * var(--drift-x, 6px)) var(--drift-y, 5px);
+  }
+
+  82% {
+    translate: calc(-0.35 * var(--drift-x, 6px)) calc(-0.45 * var(--drift-y, 5px));
+  }
+}
+
+@keyframes avatarStarPulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.14);
+  }
+}
+
+@keyframes avatarOrbitSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes avatarStarTwinkle {
+  0%,
+  100% {
+    opacity: .38;
+    transform: scale(.72);
+  }
+
+  48% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .semantic-space,
+  .semantic-space::before,
+  .semantic-space::after,
+  .galaxy-room,
+  .galaxy-room__avatar-star,
+  .galaxy-room__avatar-star::before,
+  .galaxy-room__avatar-star::after {
+    animation: none;
+  }
 }
 
 .light-track {
