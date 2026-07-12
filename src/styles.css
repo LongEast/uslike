@@ -431,6 +431,19 @@ button.ink-glass {
     rgba(255, 255, 255, .76);
 }
 
+.galaxy-detail-overlay {
+  animation: galaxyDetailBackdropIn 360ms ease-out both;
+}
+
+.galaxy-detail-card {
+  transform-origin: right center;
+  animation: galaxyDetailCardIn 520ms cubic-bezier(.2, .78, .24, 1) both;
+}
+
+.galaxy-list-return {
+  animation: galaxyListReturn 420ms 120ms ease-out both;
+}
+
 .selected-galaxy-card::before {
   position: absolute;
   top: -60px;
@@ -460,6 +473,47 @@ button.ink-glass {
 
 .room-card {
   transform: translateX(var(--offset)) rotate(var(--rotate));
+}
+
+@keyframes galaxyDetailBackdropIn {
+  from {
+    background-color: rgba(238, 242, 255, 0);
+    backdrop-filter: blur(0);
+  }
+
+  to {
+    background-color: rgba(238, 242, 255, .5);
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes galaxyDetailCardIn {
+  0% {
+    opacity: .35;
+    transform: translateX(76%) scale(.46, .72);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translateX(-1.5%) scale(1.01, 1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes galaxyListReturn {
+  from {
+    opacity: .45;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes cosmicBackgroundFlow {
@@ -548,7 +602,10 @@ button.ink-glass {
   .galaxy-room,
   .galaxy-room__avatar-star,
   .galaxy-room__avatar-star::before,
-  .galaxy-room__avatar-star::after {
+  .galaxy-room__avatar-star::after,
+  .galaxy-detail-overlay,
+  .galaxy-detail-card,
+  .galaxy-list-return {
     animation: none;
   }
 }

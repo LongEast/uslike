@@ -1094,11 +1094,12 @@ export default function RoomDiscovery({
           {detailRoom && detailSignal && detailRoomTypeStyle && DetailRoomTypeIcon ? (
             <div
               data-stop-pan
-              className="absolute inset-0 z-40 bg-[#eef2ff]/50 p-3 backdrop-blur-md sm:p-6"
+              className="galaxy-detail-overlay absolute inset-0 z-40 bg-[#eef2ff]/50 p-3 backdrop-blur-md sm:p-6"
               onClick={() => setDetailRoomId(null)}
             >
               <article
-                className="selected-galaxy-card flex h-full min-h-0 flex-col overflow-hidden rounded-[32px] border border-white/78 bg-white/84 p-5 shadow-[0_28px_90px_rgba(88,95,142,0.22)] backdrop-blur-2xl sm:p-7"
+                key={detailRoom.id}
+                className="galaxy-detail-card selected-galaxy-card flex h-full min-h-0 flex-col overflow-hidden rounded-[32px] border border-white/78 bg-white/84 p-5 shadow-[0_28px_90px_rgba(88,95,142,0.22)] backdrop-blur-2xl sm:p-7"
                 style={{ "--room-color": detailSignal.color || "#8b82e8" }}
                 onClick={(event) => event.stopPropagation()}
               >
@@ -1239,7 +1240,9 @@ export default function RoomDiscovery({
           <div
             ref={listScrollRef}
             onScroll={syncListToGalaxy}
-            className="card-scroll mb-5 flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden"
+            className={`card-scroll flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden ${
+              detailRoom ? "galaxy-list-return" : "mb-5"
+            }`}
           >
             {listedRooms.map((room) => {
                 const roomTypeStyle = getRoomTypeStyle(room.type);
@@ -1289,7 +1292,7 @@ export default function RoomDiscovery({
               })}
           </div>
 
-          {selectedRoom && selectedSignal ? (
+          {detailRoom ? null : selectedRoom && selectedSignal ? (
             <div
               className="selected-galaxy-card mt-auto rounded-[30px] border border-white/76 bg-white/76 p-5 shadow-sm"
               style={{ "--room-color": selectedSignal.color || "#8b82e8" }}
