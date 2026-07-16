@@ -1,55 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
+import { getRandomOnboardingQuestions } from "../data/mockData.js";
 import Modal from "./Modal.jsx";
 
 const baseInterests = ["书籍", "电影", "旅行", "音乐", "游戏", "美食"];
 const normalizeInterest = (interest) => interest.trim();
 const getInterestOptions = (interests) => Array.from(new Set([...baseInterests, ...interests]));
-const onboardingQuestions = [
-  {
-    id: "onboarding-1",
-    text: "你最想遇见哪种相处气质的人？",
-    options: ["温柔稳定", "有趣外向", "安静真诚", "思想开放"],
-  },
-  {
-    id: "onboarding-2",
-    text: "你希望对方在聊天里更像哪一种？",
-    options: ["主动开启话题", "认真接住情绪", "轻松玩梗", "愿意深聊"],
-  },
-  {
-    id: "onboarding-3",
-    text: "你更想和对方一起做什么？",
-    options: ["看电影听歌", "一起玩游戏", "散步聊天", "学习或创作"],
-  },
-  {
-    id: "onboarding-4",
-    text: "哪种默契最容易让你想继续靠近？",
-    options: ["价值观相近", "情绪频率相近", "兴趣爱好相近", "生活节奏相近"],
-  },
-  {
-    id: "onboarding-5",
-    text: "你希望对方尊重你的哪种边界？",
-    options: ["回复节奏", "独处时间", "玩笑尺度", "隐私空间"],
-  },
-  {
-    id: "onboarding-6",
-    text: "你希望这次相遇更偏向哪种关系期待？",
-    options: ["轻松聊天", "长期朋友", "同好搭子", "认真了解"],
-  },
-  {
-    id: "onboarding-7",
-    text: "你更适合遇见哪种能量状态的人？",
-    options: ["热闹一点", "安静一点", "稳定陪伴", "一起探索"],
-  },
-  {
-    id: "onboarding-8",
-    text: "你暂时想避开哪种相处模式？",
-    options: ["太急着推进", "只聊表面", "情绪消耗", "边界不清"],
-  },
-  { id: "onboarding-9", text: "有没有一个你特别想聊的话题？" },
-  { id: "onboarding-10", text: "用自己的话描述一下：你想遇见什么样的人？" },
-];
-
 export function RegisterModal({ onSuccess, onClose }) {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -341,6 +297,7 @@ export function ProfileModal({ defaultUser, onSave }) {
 }
 
 export function OnboardingQuestionsModal({ onSkip, onSave }) {
+  const onboardingQuestions = useMemo(() => getRandomOnboardingQuestions(10), []);
   const [answers, setAnswers] = useState(() =>
     onboardingQuestions.reduce((result, question) => ({ ...result, [question.id]: "" }), {}),
   );

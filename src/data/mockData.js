@@ -222,30 +222,199 @@ export function getMockRooms() {
   ];
 }
 
+const conversationQuestionPool = [
+  {
+    id: "values-family-public",
+    text: "家人在公开场合发表了一个你认为明显错误、也可能伤害在场的人的观点。你会：",
+    a: "当场表达不同意见，避免沉默被理解为认同",
+    b: "当时不让家人难堪，之后私下沟通",
+  },
+  {
+    id: "values-public-event",
+    text: "你非常认同一场合法、和平的公共活动，但家人强烈反对你参加。你会：",
+    a: "仍然参加，因为最终应由自己决定相信和支持什么",
+    b: "暂时不参加，先考虑这件事会给家庭关系带来的影响",
+  },
+  {
+    id: "values-city-care",
+    text: "你获得了去理想城市发展的机会，但家里有人正处在人生中很需要陪伴的阶段。你会：",
+    a: "接受机会，并寻找远程支持家人的方式",
+    b: "暂时留下，机会以后还可能出现",
+  },
+  {
+    id: "values-career-risk",
+    text: "家人为你准备了一条稳定、风险低的职业道路，但你真正想做的方向不稳定、收入也不确定。你会：",
+    a: "选择自己的方向，承担选择带来的风险",
+    b: "先走稳定道路，在有保障的情况下再尝试喜欢的事",
+  },
+  {
+    id: "values-late-assignment",
+    text: "一名平时很认真的学生因为严重的家庭问题迟交作业，但规定写明迟交不得评分。你认为老师应该：",
+    a: "破例接受，因为公平也应考虑不同处境",
+    b: "执行统一规定，但通过其他方式提供帮助",
+  },
+  {
+    id: "values-queue-friend",
+    text: "朋友赶时间，希望加入你已经排了很久的队伍。你会：",
+    a: "让 TA 进来，偶尔帮助具体的人并不过分",
+    b: "拒绝，因为这会让后面所有人承担代价",
+  },
+  {
+    id: "values-truth-peace",
+    text: "你知道一件事的真相，但告诉当事人不会改变任何结果，只会让 TA 难过。你会：",
+    a: "告诉 TA，因为一个人有权知道与自己有关的事实",
+    b: "不主动说，因为真相并不总比平静更有价值",
+  },
+  {
+    id: "play-private-room",
+    text: "你更愿意拥有：",
+    a: "一座私人电影院",
+    b: "一座私人游戏厅",
+  },
+  {
+    id: "play-funny-voice",
+    text: "你更愿意：",
+    a: "每次生气时都用米妮老鼠的声音说话",
+    b: "每次大笑时都发出海绵宝宝的笑声",
+  },
+  {
+    id: "play-dreams",
+    text: "你更愿意：",
+    a: "永远做非常奇怪的梦",
+    b: "从此再也不做梦",
+  },
+  {
+    id: "life-clothes-chair",
+    text: "房间里有一把专门堆衣服的椅子。你的态度更接近：",
+    a: "只要自己知道每件衣服在哪，它就是一个正常系统",
+    b: "即使不影响使用，看见它还是会想尽快清空",
+  },
+  {
+    id: "life-message-energy",
+    text: "你看到了朋友的消息，但当时没有精力认真回复。你更可能：",
+    a: "先发一句“我看到了，晚点认真回你”",
+    b: "等状态合适时再完整回复，即使可能隔几个小时",
+  },
+  {
+    id: "life-day-together",
+    text: "和很喜欢的人连续相处了一整天，晚上分别后，你更希望：",
+    a: "回家以后还可以断断续续继续聊天",
+    b: "安静一阵，等自己的注意力重新充满再联系",
+  },
+  {
+    id: "life-weekend-late",
+    text: "周末没有任何安排，你自然醒来已经 11 点。你更可能：",
+    a: "觉得一天才刚刚开始，慢慢吃点东西再决定做什么",
+    b: "有一点“上午已经没了”的感觉，想赶快把一天拉回正轨",
+  },
+  {
+    id: "life-travel-packing",
+    text: "准备去旅行。你更容易：",
+    a: "提前好几天把行李基本收好",
+    b: "出发当天或者前一晚极限整理",
+  },
+  {
+    id: "life-fridge",
+    text: "冰箱里的东西。你更容易：",
+    a: "快过期之前主动处理",
+    b: "发现的时候再说",
+  },
+  {
+    id: "relationship-reply-gap",
+    text: "对方平时回复很快，这次半天没有出现。你更可能：",
+    a: "发一条轻松的消息，确认对方是不是在忙",
+    b: "默认对方有自己的事情，等对方回来再说",
+  },
+  {
+    id: "relationship-awkward-photo",
+    text: "对方想看你小时候最尴尬的一张照片，你更接近：",
+    a: "可以给 TA 看，但 TA 也必须交换一张",
+    b: "关系再熟一点以后也许可以，现在先保留",
+  },
+  {
+    id: "relationship-cold-nothing",
+    text: "你察觉对方突然比平时冷淡，但 TA 说“没什么”。你更可能：",
+    a: "希望现在稍微说清楚，否则会一直惦记",
+    b: "接受 TA 现在不想说，等 TA 准备好再谈",
+  },
+  {
+    id: "relationship-hard-accept",
+    text: "比起一次明显的争吵，你更难接受：",
+    a: "很多小事一直没有兑现",
+    b: "重要的事情一直不愿意推进",
+  },
+  {
+    id: "relationship-care-sign",
+    text: "你觉得哪一点更能体现对方真的在乎你：",
+    a: "TA 主动腾出时间策划两个人的纪念日",
+    b: "TA 记得很多关于你的细节",
+  },
+  {
+    id: "relationship-speed-quality",
+    text: "如果有人一直回复很慢，但每次都很认真。你更在意：",
+    a: "回复速度",
+    b: "回复质量",
+  },
+  {
+    id: "memory-old-photo",
+    text: "你偶然翻到一张和已经不再联系的人拍的照片，你更可能：",
+    a: "停下来想一会儿，回忆当时为什么会慢慢走散",
+    b: "看一眼，觉得那段时间真实存在过就已经很好",
+  },
+  {
+    id: "memory-missed-chance",
+    text: "很久以后想起一次错过的机会，你更容易觉得：",
+    a: "如果当时勇敢一点，人生可能真的会不一样",
+    b: "当时的自己已经用拥有的信息做了能做的选择",
+  },
+  {
+    id: "memory-no-result",
+    text: "你曾经认真准备一件事，最后却没有结果。多年后更想把它讲成：",
+    a: "一个有点荒唐但很适合拿来自嘲的故事",
+    b: "一段虽然失败、却确实改变了自己的经历",
+  },
+  {
+    id: "memory-five-minutes",
+    text: "假如可以回到过去五分钟，但不能改变任何事，你会选择：",
+    a: "回到一次重要告别，重新看清当时对方的表情",
+    b: "回到一个普通但快乐的下午，再感受一次当时的空气",
+  },
+  {
+    id: "memory-unsaid-words",
+    text: "如果只能补说一句多年以前没说出口的话，你更想说：",
+    a: "一句道歉",
+    b: "一句感谢",
+  },
+];
+
+const shuffleQuestions = (questions) => {
+  const shuffled = [...questions];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
+
+const getRandomQuestions = (count = conversationQuestionPool.length) =>
+  shuffleQuestions(conversationQuestionPool).slice(0, count);
+
+export function getRandomOnboardingQuestions(count = 10) {
+  return getRandomQuestions(count).map((question, index) => ({
+    id: `onboarding-${index + 1}-${question.id}`,
+    text: question.text,
+    options: [question.a, question.b],
+  }));
+}
+
 export function getMockQuestions() {
-  return [
-    {
-      id: "q-1",
-      text: "如果今晚可以把一个城市变成你的秘密基地，你会选择哪里？",
-      a: "有海风的城市",
-      b: "凌晨还亮着灯的城市",
-      c: "写下你的答案",
-    },
-    {
-      id: "q-2",
-      text: "你更想和刚认识的人一起完成哪件小事？",
-      a: "交换一首歌",
-      b: "计划一次随机散步",
-      c: "写下你的答案",
-    },
-    {
-      id: "q-3",
-      text: "如果你们的友情有一种味道，它会是什么？",
-      a: "热可可",
-      b: "柑橘汽水",
-      c: "写下你的答案",
-    },
-  ];
+  return getRandomQuestions().map((question, index) => ({
+    ...question,
+    id: `q-${index + 1}-${question.id}`,
+    c: "写下你的答案",
+  }));
 }
 
 export function getMockFeed() {
