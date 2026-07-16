@@ -26,7 +26,8 @@ export default function TextRoom({
   const [showGames, setShowGames] = useState(false);
   const [friendState, setFriendState] = useState(() => (room.isFriend ? "added" : "idle"));
 
-  const currentQuestion = questions[questionIndex % questions.length];
+  const hasNextQuestion = questionIndex < questions.length - 1;
+  const currentQuestion = questions[Math.min(questionIndex, questions.length - 1)];
   const answeredBoth = Boolean(myAnswer && theirAnswer);
   const textGameUnlocked = room.isFriend
     ? Boolean(room.friendTextGameUnlocked)
@@ -106,8 +107,11 @@ export default function TextRoom({
             answeredBoth={answeredBoth}
             myAnswer={myAnswer}
             theirAnswer={theirAnswer}
+            hasNextQuestion={hasNextQuestion}
             onAnswer={answerQuestion}
-            onSkip={() => setQuestionIndex((index) => index + 1)}
+            onSkip={() => {
+              if (hasNextQuestion) setQuestionIndex((index) => index + 1);
+            }}
           />
 
           <div className="flex items-start justify-center gap-12 md:gap-28">
@@ -223,7 +227,7 @@ export default function TextRoom({
   );
 }
 
-function QuestionCard({ question, showTimer, ready, answeredBoth, myAnswer, theirAnswer, onAnswer, onSkip }) {
+function QuestionCard({ question, showTimer, ready, answeredBoth, myAnswer, theirAnswer, hasNextQuestion, onAnswer, onSkip }) {
   return (
     <div className="glass-panel mx-auto w-full max-w-3xl rounded-[32px] p-5">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
@@ -233,14 +237,14 @@ function QuestionCard({ question, showTimer, ready, answeredBoth, myAnswer, thei
         </div>
         <button
           onClick={onSkip}
-          disabled={!ready}
+          disabled={!ready || !hasNextQuestion}
           className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed ${
-            ready
+            ready && hasNextQuestion
               ? "aurora-dark text-white shadow-glow hover:brightness-110"
               : "bg-stone-100 text-stone-400"
           }`}
         >
-          下一题
+          {hasNextQuestion ? "下一题" : "已是最后一题"}
         </button>
       </div>
 
