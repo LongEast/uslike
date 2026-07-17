@@ -1,4 +1,4 @@
-import { Radio } from "lucide-react";
+import BrandMark from "./BrandMark.jsx";
 
 export default function MvpSplash({ onStart }) {
   return (
@@ -11,10 +11,8 @@ export default function MvpSplash({ onStart }) {
       </div>
 
       <section className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center">
-        <div className="aurora-dark mb-8 flex h-20 w-20 animate-bob items-center justify-center rounded-[30px] text-white shadow-glow">
-          <Radio size={34} />
-        </div>
-        <p className="mb-4 rounded-full bg-white/58 px-5 py-2 text-sm font-medium text-[#5d6387] shadow-sm backdrop-blur-xl">
+        <BrandMark size="lg" className="mb-3 animate-bob" />
+        <p className="mb-4 text-xs font-medium text-[#5d6387]">
           Uslike
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-tight text-stone-800 sm:text-7xl">

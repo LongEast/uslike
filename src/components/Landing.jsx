@@ -1,7 +1,6 @@
 import {
   ArrowRight,
   Check,
-  HeartHandshake,
   Lock,
   MessageCircleHeart,
   Radio,
@@ -9,6 +8,7 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
+import BrandMark from "./BrandMark.jsx";
 
 const steps = [
   {
@@ -102,9 +102,7 @@ function PhonePreview() {
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold text-stone-800">同频问题</h2>
               </div>
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-white/70 text-[#6b73ff]">
-                <HeartHandshake size={20} />
-              </span>
+              <BrandMark size="md" />
             </div>
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2 rounded-[18px] bg-white/60 px-3 py-2">
@@ -193,9 +191,7 @@ export default function Landing({ onStart }) {
             className="inline-flex items-center gap-3 text-left"
             aria-label="开始使用 Uslike"
           >
-            <span className="aurora-dark grid h-11 w-11 place-items-center rounded-[16px] text-white shadow-glow">
-              <HeartHandshake size={22} />
-            </span>
+            <BrandMark size="md" />
             <span>
               <span className="block text-lg font-semibold leading-5">Uslike</span>
               <span className="block text-xs font-medium text-stone-500">同频相遇，互像欢喜</span>
