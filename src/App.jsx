@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "./components/AppShell.jsx";
 import { OnboardingQuestionsModal, ProfileModal, RegisterModal } from "./components/AuthModals.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
+import MvpSplash from "./components/MvpSplash.jsx";
 import RoomDiscovery from "./components/RoomDiscovery.jsx";
 import TextRoom from "./components/TextRoom.jsx";
 import VoiceRoom from "./components/VoiceRoom.jsx";
@@ -18,6 +19,9 @@ import {
 } from "./data/mockData.js";
 
 export default function App() {
+  const [route, setRoute] = useState(() =>
+    window.location.pathname.startsWith("/mvp") ? "mvp" : "landing",
+  );
   const mock = useMemo(
     () => ({
       user: getMockUser(),
@@ -30,8 +34,11 @@ export default function App() {
     [],
   );
 
-  const [phase, setPhase] = useState("landing");
+  const [phase, setPhase] = useState(() =>
+    window.location.pathname.startsWith("/mvp") ? "splash" : "home",
+  );
   const [modal, setModal] = useState(null);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [activeView, setActiveView] = useState("messages");
   const [user, setUser] = useState(mock.user);
   const [friends, setFriends] = useState([]);
@@ -41,6 +48,33 @@ export default function App() {
   const [discoverBackView, setDiscoverBackView] = useState("messages");
   const [toast, setToast] = useState("");
   const toastTimer = useRef(null);
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      const nextRoute = window.location.pathname.startsWith("/mvp") ? "mvp" : "landing";
+      setRoute(nextRoute);
+      if (nextRoute === "landing") {
+        setModal(null);
+        setPhase("home");
+      } else if (!hasCompletedOnboarding) {
+        setModal(null);
+        setPhase("splash");
+      } else {
+        setPhase("home");
+      }
+    };
+
+    window.addEventListener("popstate", handleRouteChange);
+    return () => window.removeEventListener("popstate", handleRouteChange);
+  }, [hasCompletedOnboarding]);
+
+  const openMvp = () => {
+    window.history.pushState({}, "", "/mvp");
+    setRoute("mvp");
+    setModal(null);
+    setPhase(hasCompletedOnboarding ? "home" : "splash");
+    setActiveView("messages");
+  };
 
   const showToast = (message) => {
     setToast(message);
@@ -63,11 +97,16 @@ export default function App() {
     showToast("基础信息已保存。");
   };
 
-  const skipOnboardingQuestions = () => {
+  const completeOnboarding = (message) => {
+    setHasCompletedOnboarding(true);
     setModal(null);
     setActiveView("messages");
     setPhase("home");
-    showToast("欢迎进入 Uslike。");
+    showToast(message);
+  };
+
+  const skipOnboardingQuestions = () => {
+    completeOnboarding("欢迎进入 Uslike。");
   };
 
   const saveOnboardingQuestions = (questionAnswers) => {
@@ -75,10 +114,7 @@ export default function App() {
       ...current,
       questionAnswers,
     }));
-    setModal(null);
-    setActiveView("messages");
-    setPhase("home");
-    showToast(questionAnswers.length ? "回答已保存，正在为你优化相遇。" : "欢迎进入 Uslike。");
+    completeOnboarding(questionAnswers.length ? "回答已保存，正在为你优化相遇。" : "欢迎进入 Uslike。");
   };
 
   const addFriendFromRoom = (room) => {
@@ -136,26 +172,36 @@ export default function App() {
     setPhase(type === "语音房" ? "voice" : "text");
   };
 
-  if (phase === "landing") {
+  const onboardingModals = (
+    <>
+      {modal === "register" ? (
+        <RegisterModal
+          onClose={() => setModal(null)}
+          onSuccess={() => {
+            showToast("注册成功。");
+            setModal("profile");
+          }}
+        />
+      ) : null}
+
+      {modal === "profile" ? <ProfileModal defaultUser={user} onSave={saveProfile} /> : null}
+
+      {modal === "onboarding-questions" ? (
+        <OnboardingQuestionsModal
+          onSkip={skipOnboardingQuestions}
+          onSave={saveOnboardingQuestions}
+        />
+      ) : null}
+    </>
+  );
+
+  if (route === "landing") return <Landing onStart={openMvp} />;
+
+  if (phase === "splash") {
     return (
       <>
-        <Landing onStart={() => setModal("register")} />
-        {modal === "register" ? (
-          <RegisterModal
-            onClose={() => setModal(null)}
-            onSuccess={() => {
-              showToast("注册成功。");
-              setModal("profile");
-            }}
-          />
-        ) : null}
-        {modal === "profile" ? <ProfileModal defaultUser={user} onSave={saveProfile} /> : null}
-        {modal === "onboarding-questions" ? (
-          <OnboardingQuestionsModal
-            onSkip={skipOnboardingQuestions}
-            onSave={saveOnboardingQuestions}
-          />
-        ) : null}
+        <MvpSplash onStart={() => setModal("register")} />
+        {onboardingModals}
         <Toast message={toast} />
       </>
     );
@@ -282,6 +328,8 @@ export default function App() {
           }}
         />
       ) : null}
+
+      {onboardingModals}
 
       <Toast message={toast} />
     </>
