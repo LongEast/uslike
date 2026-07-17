@@ -92,27 +92,27 @@ const faqs = [
 function PhonePreview() {
   return (
     <div className="relative mx-auto w-full max-w-[360px]">
-      <div className="rounded-[44px] border border-white/80 bg-[#171821] p-3 shadow-[0_28px_90px_rgba(37,42,85,0.26)]">
-        <div className="min-h-[610px] overflow-hidden rounded-[34px] bg-[#f7f4ed]">
-          <div className="bg-[#ffe9a8] px-5 pb-6 pt-5">
+      <div className="rounded-[44px] border border-white/80 bg-[#171821] p-3 shadow-[0_28px_90px_rgba(88,95,142,0.24)]">
+        <div className="min-h-[610px] overflow-hidden rounded-[34px] bg-[#f6f8ff]">
+          <div className="bg-[linear-gradient(135deg,#dfe8ff_0%,#f1e8ff_58%,#f9fbff_100%)] px-5 pb-6 pt-5">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8c6415]">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#5d6387]">
                   USLIKE 今日
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold text-[#27221a]">同频问题</h2>
+                <h2 className="mt-1 text-2xl font-semibold text-stone-800">同频问题</h2>
               </div>
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-white/70 text-[#8c6415]">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-white/70 text-[#6b73ff]">
                 <HeartHandshake size={20} />
               </span>
             </div>
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2 rounded-[18px] bg-white/60 px-3 py-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#9b6a05]">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#6b73ff]">
                   <Sparkles size={16} />
                 </span>
                 <div>
-                  <p className="text-[10px] font-bold text-[#9b6a05]">匹配度</p>
+                  <p className="text-[10px] font-bold text-[#5d6387]">匹配度</p>
                   <p className="text-sm font-semibold text-stone-900">92%</p>
                 </div>
               </div>
@@ -133,8 +133,8 @@ function PhonePreview() {
                 <p className="text-xs font-semibold leading-4 text-stone-700">3 人已回答</p>
               </div>
             </div>
-            <div className="rounded-[26px] bg-white/74 p-5 shadow-[0_16px_42px_rgba(135,94,28,0.12)]">
-              <p className="text-sm font-semibold text-[#8c6415]">今日问题</p>
+            <div className="rounded-[26px] bg-white/74 p-5 shadow-[0_16px_42px_rgba(88,95,142,0.12)]">
+              <p className="text-sm font-semibold text-[#5d6387]">今日问题</p>
               <p className="mt-3 text-2xl font-semibold leading-tight text-stone-900">
                   家人为你准备了一条稳定、风险低的职业道路，但你真正想做的方向不稳定、收入也不确定。你会：
               </p>
@@ -142,7 +142,7 @@ function PhonePreview() {
           </div>
 
           <div className="space-y-4 px-5 py-5">
-            <div className="rounded-[26px] bg-white p-4 shadow-[0_14px_36px_rgba(64,55,40,0.08)]">
+            <div className="rounded-[26px] bg-white/78 p-4 shadow-[0_14px_36px_rgba(88,95,142,0.1)]">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm font-semibold text-stone-700">双向揭晓</p>
                 <span className="rounded-full bg-[#e3f6ef] px-3 py-1 text-xs font-bold text-[#267a68]">
@@ -154,14 +154,14 @@ function PhonePreview() {
                   <p className="text-xs font-semibold text-[#527599]">你</p>
                   <p className="mt-2 text-sm leading-5 text-stone-700">选择自己的方向，承担选择带来的风险</p>
                 </div>
-                <div className="rounded-[20px] bg-[#fff0ed] p-3">
-                  <p className="text-xs font-semibold text-[#b25b4c]">小鹿</p>
+                <div className="rounded-[20px] bg-[#f3edff] p-3">
+                  <p className="text-xs font-semibold text-[#7a61ca]">小鹿</p>
                   <p className="mt-2 text-sm leading-5 text-stone-700">先走稳定道路，在有保障的情况下再尝试喜欢的事。</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[26px] bg-[#1e2836] p-4 text-white shadow-[0_18px_48px_rgba(30,40,54,0.18)]">
+            <div className="aurora-dark rounded-[26px] p-4 text-white shadow-glow">
               <div className="mb-4 flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-[#3aa99e]">
                   <Radio size={20} />
@@ -185,15 +185,15 @@ function PhonePreview() {
 
 export default function Landing({ onStart }) {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#fbfaf7] text-stone-900">
-      <section className="relative min-h-screen border-b border-stone-200/70 bg-[linear-gradient(135deg,#fff9e9_0%,#f7fbff_42%,#fff2f0_100%)] px-5">
+    <main className="main-wash min-h-screen overflow-hidden text-stone-900">
+      <section className="main-wash relative min-h-screen border-b border-white/70 px-5">
         <nav className="mx-auto flex w-full max-w-6xl items-center justify-between py-6">
           <button
             onClick={onStart}
             className="inline-flex items-center gap-3 text-left"
             aria-label="开始使用 Uslike"
           >
-            <span className="grid h-11 w-11 place-items-center rounded-[16px] bg-[#171821] text-white shadow-[0_10px_24px_rgba(23,24,33,0.18)]">
+            <span className="aurora-dark grid h-11 w-11 place-items-center rounded-[16px] text-white shadow-glow">
               <HeartHandshake size={22} />
             </span>
             <span>
@@ -213,7 +213,7 @@ export default function Landing({ onStart }) {
 
         <div className="mx-auto grid w-full max-w-6xl items-center gap-10 pb-20 pt-8 lg:min-h-[calc(100vh-92px)] lg:grid-cols-[1fr_0.86fr] lg:pb-24">
           <div>
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/76 px-4 py-2 text-sm font-semibold text-[#7b5520] shadow-sm ring-1 ring-stone-200/80 backdrop-blur">
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/76 px-4 py-2 text-sm font-semibold text-[#5d6387] shadow-sm ring-1 ring-white/80 backdrop-blur">
               <Sparkles size={16} />
               用每日问题开启更自然的第一场对话
             </p>
@@ -235,7 +235,7 @@ export default function Landing({ onStart }) {
               </button>
               <a
                 href="#how"
-                className="inline-flex min-h-14 items-center justify-center rounded-full border border-stone-300/80 bg-white/70 px-8 py-4 text-base font-semibold text-stone-800 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:bg-white"
+                className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/80 bg-white/70 px-8 py-4 text-base font-semibold text-stone-800 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:bg-white"
               >
                 了解流程
               </a>
@@ -270,8 +270,8 @@ export default function Landing({ onStart }) {
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {steps.map((step, index) => (
-              <article key={step.title} className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-sm">
-                <span className="grid h-12 w-12 place-items-center rounded-[18px] bg-[#1e2836] text-lg font-bold text-white">
+              <article key={step.title} className="glass-panel rounded-[28px] p-6">
+                <span className="aurora-dark grid h-12 w-12 place-items-center rounded-[18px] text-lg font-bold text-white">
                   {index + 1}
                 </span>
                 <h3 className="mt-8 text-2xl font-semibold text-stone-950">{step.title}</h3>
@@ -282,14 +282,14 @@ export default function Landing({ onStart }) {
         </div>
       </section>
 
-      <section className="bg-[#1e2836] px-5 py-20 text-white sm:py-24">
+      <section className="border-y border-white/70 bg-[linear-gradient(135deg,rgba(238,244,255,0.96),rgba(242,232,255,0.94))] px-5 py-20 sm:py-24">
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#88e0d3]">为什么是 Uslike</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6b73ff]">为什么是 Uslike</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
               为想要更柔和相遇方式的人设计。
             </h2>
-            <p className="mt-5 text-lg leading-8 text-white/70">
+            <p className="mt-5 text-lg leading-8 text-stone-600">
               我们保留每日问题产品的清晰感，并把它延展到 Uslike 的社交流程里：
               发现、进房、互答、交友，以及逐步解锁更深互动。
             </p>
@@ -299,12 +299,12 @@ export default function Landing({ onStart }) {
             {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (
-                <article key={benefit.title} className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6">
-                  <span className="grid h-12 w-12 place-items-center rounded-[18px] bg-white text-[#1e2836]">
+                <article key={benefit.title} className="glass-panel rounded-[28px] p-6">
+                  <span className="grid h-12 w-12 place-items-center rounded-[18px] bg-white/80 text-[#6b73ff]">
                     <Icon size={22} />
                   </span>
-                  <h3 className="mt-6 text-xl font-semibold">{benefit.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/66">{benefit.text}</p>
+                  <h3 className="mt-6 text-xl font-semibold text-stone-900">{benefit.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-stone-600">{benefit.text}</p>
                 </article>
               );
             })}
@@ -316,7 +316,7 @@ export default function Landing({ onStart }) {
         <div className="mx-auto w-full max-w-6xl">
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
             <div className="max-w-2xl">
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#b25b4c]">用户反馈</p>
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#7a61ca]">用户反馈</p>
               <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
                 围绕「对话突然变容易」的那一刻来设计。
               </h2>
@@ -329,10 +329,10 @@ export default function Landing({ onStart }) {
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {testimonials.map((testimonial) => (
-              <article key={testimonial.name} className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-sm">
+              <article key={testimonial.name} className="glass-panel rounded-[28px] p-6">
                 <p className="text-lg leading-8 text-stone-700">"{testimonial.quote}"</p>
                 <div className="mt-8 flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-[#fff1c7] font-bold text-[#8c6415]">
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-[#e7ecff] font-bold text-[#6b73ff]">
                     {testimonial.name.slice(0, 1)}
                   </span>
                   <div>
@@ -346,7 +346,7 @@ export default function Landing({ onStart }) {
         </div>
       </section>
 
-      <section className="border-y border-stone-200 bg-[#f6f8ff] px-5 py-20 sm:py-24">
+      <section className="border-y border-white/70 bg-[linear-gradient(135deg,rgba(246,248,255,0.98),rgba(241,234,255,0.94))] px-5 py-20 sm:py-24">
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6877dd]">常见问题</p>
@@ -357,7 +357,7 @@ export default function Landing({ onStart }) {
 
           <div className="space-y-4">
             {faqs.map((faq) => (
-              <article key={faq.question} className="rounded-[24px] border border-stone-200 bg-white p-6 shadow-sm">
+              <article key={faq.question} className="glass-panel rounded-[24px] p-6">
                 <div className="flex gap-3">
                   <span className="mt-1 grid h-6 w-6 flex-none place-items-center rounded-full bg-[#e3f6ef] text-[#267a68]">
                     <Check size={15} />
@@ -374,16 +374,16 @@ export default function Landing({ onStart }) {
       </section>
 
       <section className="px-5 py-20 sm:py-24">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 rounded-[32px] bg-[#171821] p-8 text-white shadow-[0_28px_90px_rgba(23,24,33,0.22)] sm:p-10 lg:flex-row lg:items-center">
+        <div className="glass-panel mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 rounded-[32px] p-8 sm:p-10 lg:flex-row lg:items-center">
           <div className="max-w-2xl">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#ffe9a8]">现在开始</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6b73ff]">现在开始</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
               一个问题，就足够找到第一根对话线索。
             </h2>
           </div>
           <button
             onClick={onStart}
-            className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-white px-8 py-4 text-base font-semibold text-stone-950 shadow-sm transition hover:-translate-y-1 hover:bg-[#ffe9a8]"
+            className="aurora-dark inline-flex min-h-14 items-center justify-center gap-3 rounded-full px-8 py-4 text-base font-semibold text-white shadow-glow transition hover:-translate-y-1 hover:brightness-110"
           >
             申请体验
             <ArrowRight size={19} />
