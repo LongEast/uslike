@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   ArrowRight,
   Check,
@@ -8,7 +9,9 @@ import {
   Trophy,
   UsersRound,
 } from "lucide-react";
+import AgapeBackgroundLayer from "./AgapeBackgroundLayer.jsx";
 import BrandMark from "./BrandMark.jsx";
+import useScrollProgress from "../hooks/useScrollProgress.js";
 
 const steps = [
   {
@@ -90,91 +93,156 @@ const faqs = [
   },
 ];
 
-function PhonePreview() {
+const storySteps = [
+  {
+    id: "question",
+    eyebrow: "第一步",
+    title: "一个有点荒唐的问题，把开场变轻。",
+    text: "先不用介绍自己，也不用想完美开场白。问题会替你把好奇心摆到桌面上。",
+  },
+  {
+    id: "answer",
+    eyebrow: "第二步",
+    title: "回答出现后，关系开始有了温度。",
+    text: "双方的真实反应会一条条浮现，聊天从选择题变成自然接话。",
+  },
+  {
+    id: "thread",
+    eyebrow: "第三步",
+    title: "一个共同点，会把对话往下推。",
+    text: "当两个人发现都养猫、都在意孤独感，下一句就不再难开口。",
+  },
+].map((step, index, allSteps) => ({
+  ...step,
+  start: index / allSteps.length,
+  end: (index + 1) / allSteps.length,
+}));
+
+const phoneMessages = [
+  {
+    author: "你",
+    side: "right",
+    text: "天哪，不和人交流的日子也太孤单了吧",
+    start: 0.08,
+    end: 0.22,
+  },
+  {
+    author: "小橘",
+    side: "left",
+    text: "但是动物很可爱啊，我想和我家的猫说话呢",
+    start: 0.38,
+    end: 0.52,
+  },
+  {
+    author: "你",
+    side: "right",
+    text: "哦天哪你家也养了猫，什么品种的啊。。。",
+    start: 0.7,
+    end: 0.84,
+  },
+];
+
+function clamp(value, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getRangeProgress(progress, start, end) {
+  return clamp((progress - start) / (end - start));
+}
+
+function getStoryIndex(progress) {
+  return storySteps.reduce((activeIndex, step, index) => (progress >= step.start ? index : activeIndex), 0);
+}
+
+function getNextMessageIndex(progress) {
+  const visibleMessageIndex = phoneMessages.reduce(
+    (latestIndex, message, index) => (progress >= message.start ? index : latestIndex),
+    -1,
+  );
+
+  return visibleMessageIndex < phoneMessages.length - 1 ? visibleMessageIndex + 1 : -1;
+}
+
+function getTimelineState(progress) {
+  const safeProgress = clamp(progress);
+  const messageProgress = phoneMessages.map((message) => getRangeProgress(safeProgress, message.start, message.end));
+
+  return {
+    activeStoryIndex: getStoryIndex(safeProgress),
+    progress: safeProgress,
+    progressBarScale: Math.max(0.04, safeProgress),
+    backgroundX: `${safeProgress * 72}px`,
+    backgroundY: `${safeProgress * 140}px`,
+    messageProgress,
+    conversationShift: `${messageProgress.reduce((total, itemProgress) => total + itemProgress, 0) * -10}px`,
+  };
+}
+
+function ConversationPhonePreview({ timelineState, onContinue, canContinue }) {
   return (
-    <div className="relative mx-auto w-full max-w-[360px]">
-      <div className="rounded-[44px] border border-white/80 bg-[#171821] p-3 shadow-[0_28px_90px_rgba(88,95,142,0.24)]">
-        <div className="min-h-[610px] overflow-hidden rounded-[34px] bg-[#f6f8ff]">
-          <div className="bg-[linear-gradient(135deg,#dfe8ff_0%,#f1e8ff_58%,#f9fbff_100%)] px-5 pb-6 pt-5">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#5d6387]">
-                  USLIKE 今日
-                </p>
-                <h2 className="mt-1 text-2xl font-semibold text-stone-800">同频问题</h2>
-              </div>
-              <BrandMark size="md" />
-            </div>
-            <div className="mb-4 grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2 rounded-[18px] bg-white/60 px-3 py-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#6b73ff]">
-                  <Sparkles size={16} />
-                </span>
-                <div>
-                  <p className="text-[10px] font-bold text-[#5d6387]">匹配度</p>
-                  <p className="text-sm font-semibold text-stone-900">92%</p>
-                </div>
-              </div>
-              <div className="rounded-[18px] bg-white/60 px-3 py-2">
-                <div className="mb-1 flex -space-x-2">
-                  {["L", "Y", "U"].map((name, index) => (
-                    <span
-                      key={name}
-                      className="grid h-6 w-6 place-items-center rounded-full border-2 border-white text-[10px] font-bold text-white"
-                      style={{
-                        background: ["#3aa99e", "#f07b6e", "#6877dd"][index],
-                      }}
-                    >
-                      {name}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-xs font-semibold leading-4 text-stone-700">3 人已回答</p>
-              </div>
-            </div>
-            <div className="rounded-[26px] bg-white/74 p-5 shadow-[0_16px_42px_rgba(88,95,142,0.12)]">
-              <p className="text-sm font-semibold text-[#5d6387]">今日问题</p>
-              <p className="mt-3 text-2xl font-semibold leading-tight text-stone-900">
-                  你可以和所有动物对话，【但是】其他人类从此听不懂你说话
-              </p>
+    <div
+      className="agape-phone-preview"
+      style={{
+        "--phone-progress": timelineState.progress,
+        "--conversation-shift": timelineState.conversationShift,
+      }}
+    >
+      <div className="agape-phone-shell">
+        <div className="agape-phone-side agape-phone-side-left-one" />
+        <div className="agape-phone-side agape-phone-side-left-two" />
+        <div className="agape-phone-side agape-phone-side-right" />
+        <div className="agape-phone-screen">
+          <div className="agape-phone-notch">
+            <span />
+            <i />
+          </div>
+          <div className="agape-phone-dots" />
+          <div className="agape-phone-topbar">
+            <button type="button" className="agape-phone-close" aria-label="关闭预览">
+              ×
+            </button>
+            <div className="agape-phone-score">+10 ☆</div>
+          </div>
+
+          <div className="agape-phone-question">
+            <p className="agape-phone-category">动物电波</p>
+            <div className="agape-phone-question-card">
+              你可以和所有动物对话，【但是】其他人类从此听不懂你说话
             </div>
           </div>
 
-          <div className="space-y-4 px-5 py-5">
-            <div className="rounded-[26px] bg-white/78 p-4 shadow-[0_14px_36px_rgba(88,95,142,0.1)]">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-stone-700">双向揭晓</p>
-                <span className="rounded-full bg-[#e3f6ef] px-3 py-1 text-xs font-bold text-[#267a68]">
-                  已互答
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-[20px] bg-[#eff7ff] p-3">
-                  <p className="text-xs font-semibold text-[#527599]">你</p>
-                  <p className="mt-2 text-sm leading-5 text-stone-700">天哪，不和人交流的日子也太孤单了吧</p>
-                </div>
-                <div className="rounded-[20px] bg-[#f3edff] p-3">
-                  <p className="text-xs font-semibold text-[#7a61ca]">小橘</p>
-                  <p className="mt-2 text-sm leading-5 text-stone-700">但是动物很可爱啊，有坏心眼人类好多</p>
+          <div className="agape-phone-conversation">
+            {phoneMessages.map((message, index) => (
+              <div
+                key={message.text}
+                className={`agape-phone-message agape-phone-message--${message.side}`}
+                style={{
+                  "--message-progress": timelineState.messageProgress[index],
+                }}
+              >
+                <span className="agape-phone-message-dot" />
+                <div className="agape-phone-bubble">
+                  <span>{message.author}</span>
+                  {message.text}
                 </div>
               </div>
-            </div>
+            ))}
+          </div>
 
-            <div className="aurora-dark rounded-[26px] p-4 text-white shadow-glow">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-[#3aa99e]">
-                  <Radio size={20} />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold">晚风电波房</p>
-                  <p className="text-xs text-white/62">谈心 / 交友 / 夜聊</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between rounded-full bg-white/10 px-4 py-3">
-                <span className="text-sm font-semibold">准备进入</span>
-                <ArrowRight size={18} />
-              </div>
+          <div className="agape-phone-footer">
+            <div className="agape-phone-input">
+              <span>Keep it going...</span>
+              <ArrowRight size={18} />
             </div>
+            <button
+              type="button"
+              className="agape-phone-continue"
+              onClick={onContinue}
+              disabled={!canContinue}
+              aria-label={canContinue ? "显示下一条对话" : "全部对话已显示"}
+            >
+              CONTINUE
+            </button>
           </div>
         </div>
       </div>
@@ -183,10 +251,33 @@ function PhonePreview() {
 }
 
 export default function Landing({ onStart }) {
+  const howStoryRef = useRef(null);
+  const storyProgress = useScrollProgress(howStoryRef);
+  const timelineState = getTimelineState(storyProgress);
+  const nextMessageIndex = getNextMessageIndex(storyProgress);
+
+  const handlePhoneContinue = () => {
+    const storyRail = howStoryRef.current;
+    if (!storyRail || nextMessageIndex < 0) return;
+
+    const railRect = storyRail.getBoundingClientRect();
+    const viewportHeight = document.documentElement.clientHeight || window.innerHeight || 1;
+    const railTop = window.scrollY + railRect.top;
+    const scrollableDistance = Math.max(railRect.height - viewportHeight, 0);
+    const targetProgress = phoneMessages[nextMessageIndex].end;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    window.scrollTo({
+      top: railTop + scrollableDistance * targetProgress,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  };
+
   return (
-    <main className="main-wash min-h-screen overflow-hidden text-stone-900">
-      <section className="main-wash relative min-h-screen border-b border-white/70 px-5">
-        <nav className="mx-auto flex w-full max-w-6xl items-center justify-between py-6">
+    <main className="landing-page main-wash relative isolate min-h-screen text-stone-900">
+      <section className="landing-screen-section main-wash relative min-h-screen border-b border-white/70 px-5">
+        <AgapeBackgroundLayer variant="hero" progress={0} />
+        <nav className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between py-6">
           <button
             onClick={onStart}
             className="inline-flex items-center gap-3 text-left"
@@ -208,8 +299,8 @@ export default function Landing({ onStart }) {
           </button>
         </nav>
 
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 pb-20 pt-8 lg:min-h-[calc(100vh-92px)] lg:grid-cols-[1fr_0.86fr] lg:pb-24">
-          <div>
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl items-center pb-20 pt-8 lg:min-h-[calc(100vh-93px)] lg:pb-24">
+          <div className="max-w-4xl">
             <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/76 px-4 py-2 text-sm font-semibold text-[#5d6387] shadow-sm ring-1 ring-white/80 backdrop-blur">
               <Sparkles size={16} />
               用千奇百怪的问题开启更自然的第一场对话
@@ -251,35 +342,76 @@ export default function Landing({ onStart }) {
               ))}
             </div>
           </div>
-
-          <PhonePreview />
         </div>
       </section>
 
-      <section id="how" className="px-5 py-20 sm:py-24">
-        <div className="mx-auto w-full max-w-6xl">
-          <div className="max-w-2xl">
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#3a8f83]">使用流程</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
-              用一个很小的仪式，打开合适的关系入口。
-            </h2>
-          </div>
+      <section id="how" className="relative">
+        <div
+          ref={howStoryRef}
+          className="landing-story-scroll"
+          style={{
+            "--story-screen-count": storySteps.length + 1,
+            "--story-shape-x": timelineState.backgroundX,
+            "--story-shape-y": timelineState.backgroundY,
+          }}
+        >
+          <div className="landing-story-sticky">
+            <div className="landing-story-background" aria-hidden="true">
+              <div className="landing-story-background__glow landing-story-background__glow--left" />
+              <div className="landing-story-background__glow landing-story-background__glow--right" />
+              <div className="landing-story-background__wave landing-story-background__wave--back" />
+              <div className="landing-story-background__wave landing-story-background__wave--front" />
+              <div className="landing-story-background__dots" />
+            </div>
+            <AgapeBackgroundLayer variant="story" progress={storyProgress} />
+            <div className="landing-story-progress">
+              <div className="landing-story-progress__track">
+                <div
+                  className="landing-story-progress__bar"
+                  style={{ transform: `scaleY(${timelineState.progressBarScale})` }}
+                />
+              </div>
+              {storySteps.map((step, index) => (
+                <span
+                  key={step.id}
+                  className={index <= timelineState.activeStoryIndex ? "is-active" : ""}
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
+            <div className="landing-story-inner mx-auto w-full max-w-6xl">
+              <div className="landing-story-copy">
+                <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#3a8f83]">使用流程</p>
+                <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
+                  用一个很小的仪式，打开合适的关系入口。
+                </h2>
+                <div className="landing-story-panels">
+                  {storySteps.map((panel, index) => (
+                    <article
+                      key={panel.title}
+                      className={`landing-story-panel ${index === timelineState.activeStoryIndex ? "is-active" : ""}`}
+                    >
+                      <p>{panel.eyebrow}</p>
+                      <h3>{panel.title}</h3>
+                      <span>{panel.text}</span>
+                    </article>
+                  ))}
+                </div>
+              </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <article key={step.title} className="glass-panel rounded-[28px] p-6">
-                <span className="aurora-dark grid h-12 w-12 place-items-center rounded-[18px] text-lg font-bold text-white">
-                  {index + 1}
-                </span>
-                <h3 className="mt-8 text-2xl font-semibold text-stone-950">{step.title}</h3>
-                <p className="mt-3 text-base leading-7 text-stone-600">{step.text}</p>
-              </article>
-            ))}
+              <div className="landing-story-phone">
+                <ConversationPhonePreview
+                  timelineState={timelineState}
+                  onContinue={handlePhoneContinue}
+                  canContinue={nextMessageIndex >= 0}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-white/70 bg-[linear-gradient(135deg,rgba(238,244,255,0.96),rgba(242,232,255,0.94))] px-5 py-20 sm:py-24">
+      <section className="landing-screen-section landing-screen-section--center border-y border-white/70 bg-[linear-gradient(135deg,rgba(238,244,255,0.96),rgba(242,232,255,0.94))] px-5 py-20 sm:py-24">
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6b73ff]">为什么是 Uslike</p>
@@ -290,6 +422,17 @@ export default function Landing({ onStart }) {
               我们保留每日问题产品的清晰感，并把它延展到 Uslike 的社交流程里：
               发现、进房、互答、交友，以及逐步解锁更深互动。
             </p>
+            <div className="mx-auto grid w-full max-w-6xl gap-4 md:grid-rows-3">
+            {steps.map((step, index) => (
+                <article key={step.title} className="glass-panel rounded-[28px] p-6">
+                <span className="aurora-dark grid h-12 w-12 place-items-center rounded-[18px] text-lg font-bold text-white">
+                    {index + 1}
+                </span>
+                <h3 className="mt-8 text-2xl font-semibold text-stone-950">{step.title}</h3>
+                <p className="mt-3 text-base leading-7 text-stone-600">{step.text}</p>
+                </article>
+            ))}
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -309,7 +452,7 @@ export default function Landing({ onStart }) {
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:py-24">
+      <section className="landing-screen-section landing-screen-section--center px-5 py-20 sm:py-24">
         <div className="mx-auto w-full max-w-6xl">
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
             <div className="max-w-2xl">
@@ -343,7 +486,7 @@ export default function Landing({ onStart }) {
         </div>
       </section>
 
-      <section className="border-y border-white/70 bg-[linear-gradient(135deg,rgba(246,248,255,0.98),rgba(241,234,255,0.94))] px-5 py-20 sm:py-24">
+      <section className="landing-screen-section landing-screen-section--center border-y border-white/70 bg-[linear-gradient(135deg,rgba(246,248,255,0.98),rgba(241,234,255,0.94))] px-5 py-20 sm:py-24">
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6877dd]">常见问题</p>
@@ -370,7 +513,7 @@ export default function Landing({ onStart }) {
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:py-24">
+      <section className="landing-screen-section landing-screen-section--center px-5 py-20 sm:py-24">
         <div className="glass-panel mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 rounded-[32px] p-8 sm:p-10 lg:flex-row lg:items-center">
           <div className="max-w-2xl">
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6b73ff]">现在开始</p>
