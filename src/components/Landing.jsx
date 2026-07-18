@@ -12,8 +12,8 @@ import BrandMark from "./BrandMark.jsx";
 
 const steps = [
   {
-    title: "每日同频问题",
-    text: "每天一个轻量问题，让两个人自然越过寒暄，先分享一点真实的自己。",
+    title: "同频脑电波问题",
+    text: "一个轻量问题，让两个人自然越过寒暄，先分享一点真实的自己。",
   },
   {
     title: "双方回答后交友",
@@ -21,7 +21,7 @@ const steps = [
   },
   {
     title: "解锁更深互动",
-    text: "持续回应会积累信任与匹配条件，逐步解锁语音房、文字房和轻游戏。",
+    text: "持续回应会积累信任与匹配条件，逐步解锁轻游戏，大世界文游等更多惊喜",
   },
 ];
 
@@ -34,7 +34,7 @@ const benefits = [
   {
     icon: Radio,
     title: "同频发现",
-    text: "Uslike 通过兴趣、语义信号和表达节奏，帮你找到更像同类的人。",
+    text: "Uslike 通过兴趣、语义信号和表达节奏，帮你找到更聊得来的人。",
   },
   {
     icon: Lock,
@@ -44,48 +44,49 @@ const benefits = [
   {
     icon: Trophy,
     title: "有趣的关系进度",
-    text: "连续回答、每日仪式和轻游戏，让关系变熟这件事不再像任务。",
+    text: "回答问题和轻游戏，让关系变熟这件事不再像任务。",
   },
 ];
 
 const testimonials = [
-  {
-    quote: "以前我总会想太多，不知道怎么开口。每日问题让第一句话变得很自然。",
-    name: "米娜",
-    label: "喜欢思考的大学生",
-  },
-  {
-    quote: "比滑来滑去更有人味。我们通过问题找到了可以聊的上下文。",
-    name: "阿杰",
-    label: "语音房爱好者",
-  },
-  {
-    quote: "回答问题只是一个小瞬间，但它让每天回应变成了两个人的小仪式。",
-    name: "安安和 Leo",
-    label: "异地好友",
-  },
+{
+quote: "作为一个鬼点子多但不知如何开口的人，那些有趣的问题让我不用硬想开场白，也能很自然地说出第一句话。",
+name: "米娜",
+label: "有点社恐的电波系大学生",
+},
+{
+quote: "从’你也看过《三体》‘开始，我们聊了一下午，找到同频的人，开口真的很自然",
+name: "阿杰",
+label: "小众科幻爱好者",
+},
+{
+quote: "异地久了，每天只剩早午晚安。Uslike 让我们重新聊起彼此最近的情绪和变化。",
+name: "安安和 Leo",
+label: "异地情侣",
+},
 ];
+
 
 const faqs = [
   {
     question: "Uslike 是什么？",
     answer:
-      "Uslike 是一个通过语音房、文字房中回答电波问题和一起玩轻游戏来认识新朋友的社交产品。",
+      "Uslike 是一个通过语音房、文字房中回答电波问题和一起玩轻游戏来认识新朋友的社交产品",
   },
   {
-    question: "它只适合恋爱交友吗？",
+    question: "它只适合网恋交友吗？",
     answer:
-      "不是。Uslike 面向所有想拥有更好对话的人，关系可以是朋友、搭子、合作伙伴，也可以继续发展。",
+      "不是。Uslike 面向所有想拥有更好对话的人，你在现实中的朋友、伙伴、恋人也可以通过这个社交软件来继续发展关系",
+  },
+  {
+    question: "我需要干什么？",
+    answer:
+      "你会先创建资料并回答几个引导问题（可跳过），然后进入应用，创造/发现房间并开始相遇",
   },
   {
     question: "匹配是怎么发生的？",
     answer:
-      "当前原型会结合兴趣、房间语境和用户问卷，在进入更深互动前先创造一个更温暖的发现时刻。",
-  },
-  {
-    question: "点击开始后会发生什么？",
-    answer:
-      "你会先创建资料并回答几个引导问题，然后进入应用，发现房间并开始相遇。",
+      "当前原型会结合兴趣、房间语境和用户问卷进行推荐，由你决定是否进入房间，让每次相遇更安心、更自主",
   },
 ];
 
@@ -134,7 +135,7 @@ function PhonePreview() {
             <div className="rounded-[26px] bg-white/74 p-5 shadow-[0_16px_42px_rgba(88,95,142,0.12)]">
               <p className="text-sm font-semibold text-[#5d6387]">今日问题</p>
               <p className="mt-3 text-2xl font-semibold leading-tight text-stone-900">
-                  家人为你准备了一条稳定、风险低的职业道路，但你真正想做的方向不稳定、收入也不确定。你会：
+                  你可以和所有动物对话，【但是】其他人类从此听不懂你说话
               </p>
             </div>
           </div>
@@ -150,11 +151,11 @@ function PhonePreview() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[20px] bg-[#eff7ff] p-3">
                   <p className="text-xs font-semibold text-[#527599]">你</p>
-                  <p className="mt-2 text-sm leading-5 text-stone-700">选择自己的方向，承担选择带来的风险</p>
+                  <p className="mt-2 text-sm leading-5 text-stone-700">天哪，不和人交流的日子也太孤单了吧</p>
                 </div>
                 <div className="rounded-[20px] bg-[#f3edff] p-3">
-                  <p className="text-xs font-semibold text-[#7a61ca]">小鹿</p>
-                  <p className="mt-2 text-sm leading-5 text-stone-700">先走稳定道路，在有保障的情况下再尝试喜欢的事。</p>
+                  <p className="text-xs font-semibold text-[#7a61ca]">小橘</p>
+                  <p className="mt-2 text-sm leading-5 text-stone-700">但是动物很可爱啊，有坏心眼人类好多</p>
                 </div>
               </div>
             </div>
@@ -211,14 +212,14 @@ export default function Landing({ onStart }) {
           <div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/76 px-4 py-2 text-sm font-semibold text-[#5d6387] shadow-sm ring-1 ring-white/80 backdrop-blur">
               <Sparkles size={16} />
-              用每日问题开启更自然的第一场对话
+              用千奇百怪的问题开启更自然的第一场对话
             </p>
-            <h1 className="max-w-3xl text-5xl font-semibold leading-[1.03] text-stone-950 sm:text-6xl lg:text-7xl">
-              每天回答一个问题，遇见真正同频的人。
+            <h1 className="max-w-3xl text-3xl font-semibold leading-[1.03] text-stone-900 sm:text-5xl lg:text-7xl">
+              回答一个有趣的问题，遇见一群同频的人。
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-600">
               Uslike 用个性匹配带来双向揭晓、
-              同频房间和可解锁的互动，让你更快判断一个人是不是你的同类。
+              同频房间和可解锁的互动，让你更快判断一个人和你聊不聊的来。
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -260,7 +261,7 @@ export default function Landing({ onStart }) {
           <div className="max-w-2xl">
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#3a8f83]">使用流程</p>
             <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
-              一个很小的每日仪式，打开更合适的关系入口。
+              用一个很小的仪式，打开合适的关系入口。
             </h2>
           </div>
 
@@ -347,7 +348,7 @@ export default function Landing({ onStart }) {
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6877dd]">常见问题</p>
             <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
-              简短说明。
+              为任何想好好聊天的人打造
             </h2>
           </div>
 
