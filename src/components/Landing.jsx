@@ -53,17 +53,17 @@ const benefits = [
 
 const testimonials = [
 {
-quote: "作为一个鬼点子多但不知如何开口的人，那些有趣的问题让我不用硬想开场白，也能很自然地说出第一句话。",
+quote: "作为一个鬼点子多但不知如何开口的人，那些有趣的问题让我不用硬想开场白，也能很自然地说出第一句话",
 name: "米娜",
 label: "有点社恐的电波系大学生",
 },
 {
-quote: "从’你也看过《三体》‘开始，我们聊了一下午，找到同频的人，开口真的很自然",
+quote: "从’原来你也看《三体》‘开始，我们聊了一下午，找到同频的人，开口真的很自然",
 name: "阿杰",
 label: "小众科幻爱好者",
 },
 {
-quote: "异地久了，每天只剩早午晚安。Uslike 让我们重新聊起彼此最近的情绪和变化。",
+quote: "异地久了，每天只剩早午晚安。Uslike 让我们重新聊起彼此最近的情绪和变化",
 name: "安安和 Leo",
 label: "异地情侣",
 },
@@ -411,6 +411,32 @@ export default function Landing({ onStart }) {
         </div>
       </section>
 
+      <section className="landing-screen-section landing-screen-section--center border-y border-white/70 bg-[linear-gradient(135deg,rgba(246,248,255,0.98),rgba(239,234,255,0.94))] px-5 py-20 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#6b73ff]">关系流程</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950 sm:text-5xl">
+              三步，把好奇心接成关系。
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-stone-600">
+              从一个轻量问题开始，让两个人自然越过寒暄，再把舒服的对话推进到更深的互动。
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <article key={step.title} className="glass-panel rounded-[28px] p-6">
+                <span className="aurora-dark grid h-12 w-12 place-items-center rounded-[18px] text-lg font-bold text-white">
+                  {index + 1}
+                </span>
+                <h3 className="mt-8 text-2xl font-semibold text-stone-950">{step.title}</h3>
+                <p className="mt-3 text-base leading-7 text-stone-600">{step.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="landing-screen-section landing-screen-section--center border-y border-white/70 bg-[linear-gradient(135deg,rgba(238,244,255,0.96),rgba(242,232,255,0.94))] px-5 py-20 sm:py-24">
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
@@ -422,20 +448,9 @@ export default function Landing({ onStart }) {
               我们保留每日问题产品的清晰感，并把它延展到 Uslike 的社交流程里：
               发现、进房、互答、交友，以及逐步解锁更深互动。
             </p>
-            <div className="mx-auto grid w-full max-w-6xl gap-4 md:grid-rows-3">
-            {steps.map((step, index) => (
-                <article key={step.title} className="glass-panel rounded-[28px] p-6">
-                <span className="aurora-dark grid h-12 w-12 place-items-center rounded-[18px] text-lg font-bold text-white">
-                    {index + 1}
-                </span>
-                <h3 className="mt-8 text-2xl font-semibold text-stone-950">{step.title}</h3>
-                <p className="mt-3 text-base leading-7 text-stone-600">{step.text}</p>
-                </article>
-            ))}
-            </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="landing-benefits-grid grid gap-4 sm:grid-cols-2">
             {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (

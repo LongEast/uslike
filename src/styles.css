@@ -84,6 +84,24 @@ button {
   align-items: center;
 }
 
+.landing-benefits-grid {
+  align-self: center;
+}
+
+@media (min-width: 1024px) {
+  .landing-benefits-grid {
+    height: 50vh;
+    min-height: 360px;
+    max-height: 520px;
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  .landing-benefits-grid .glass-panel {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 .landing-page > .main-wash {
   background: transparent;
 }
