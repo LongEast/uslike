@@ -324,7 +324,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
                     className="ink-glass rounded-3xl px-5 py-4 text-left transition hover:-translate-y-1 hover:brightness-110"
                   >
                     <span className="block text-base font-semibold text-stone-800">{item.label}</span>
-                    <span className="mt-1 block text-sm text-stone-500">{item.hint}</span>
+                    <span className="assistant-action-hint mt-1 block text-sm">{item.hint}</span>
                   </button>
                 ))}
               </div>

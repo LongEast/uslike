@@ -1280,6 +1280,10 @@ button {
   color: inherit !important;
 }
 
+.ink-glass .assistant-action-hint {
+  color: #a8a29e !important;
+}
+
 button.glass-choice,
 button.glass-choice-active,
 button.ink-glass {
