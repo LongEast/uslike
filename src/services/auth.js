@@ -12,10 +12,11 @@ export function validatePhone(phone) {
 }
 
 export async function apiRequest(path, options) {
+  const isFormData = typeof FormData !== "undefined" && options?.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...options?.headers,
     },
   });
@@ -69,7 +70,7 @@ export function toAppUser(apiUser) {
     id: apiUser.id,
     phone: apiUser.phone,
     nickname: apiUser.profile.nickname,
-    avatar: apiUser.profile.avatar,
+    avatar: resolveApiAssetUrl(apiUser.profile.avatar),
     age: apiUser.profile.age,
     gender: apiUser.profile.gender,
     region: apiUser.profile.region || "",
@@ -77,6 +78,11 @@ export function toAppUser(apiUser) {
     socialPreferences: apiUser.profile.social_preferences || [],
     realNameVerified: apiUser.real_name_verified,
   };
+}
+
+export function resolveApiAssetUrl(url) {
+  if (!url || !url.startsWith("/api/") || !API_BASE_URL) return url;
+  return `${API_BASE_URL.replace(/\/$/, "")}${url}`;
 }
 
 export function saveAuthSession(authResponse, storage = window.localStorage) {
@@ -88,6 +94,14 @@ export function saveAuthSession(authResponse, storage = window.localStorage) {
   };
   storage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
   return session;
+}
+
+export function updateStoredAuthUser(apiUser, storage = window.localStorage) {
+  const session = loadAuthSession(storage);
+  if (!session) return null;
+  const updatedSession = { ...session, user: apiUser };
+  storage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedSession));
+  return updatedSession;
 }
 
 export function loadAuthSession(storage = window.localStorage, now = Date.now()) {
@@ -142,6 +156,53 @@ export function saveValuesTest(accessToken, valuesTest) {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(createValuesTestPayload(valuesTest)),
+  });
+}
+
+const accountHeaders = (accessToken) => ({ Authorization: `Bearer ${accessToken}` });
+
+export function getAccount(accessToken) {
+  return apiRequest("/api/account", { method: "GET", headers: accountHeaders(accessToken) });
+}
+
+export function updateAccountProfile(accessToken, profile) {
+  return apiRequest("/api/account/profile", {
+    method: "PATCH",
+    headers: accountHeaders(accessToken),
+    body: JSON.stringify(profile),
+  });
+}
+
+export function updateAccountPhone(accessToken, newPhone, currentPassword) {
+  return apiRequest("/api/account/phone", {
+    method: "PUT",
+    headers: accountHeaders(accessToken),
+    body: JSON.stringify({ new_phone: normalizePhone(newPhone), current_password: currentPassword }),
+  });
+}
+
+export function updateAccountPassword(accessToken, currentPassword, newPassword) {
+  return apiRequest("/api/account/password", {
+    method: "PUT",
+    headers: accountHeaders(accessToken),
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+export function uploadAccountAvatar(accessToken, avatar) {
+  const body = new FormData();
+  body.append("avatar", avatar);
+  return apiRequest("/api/account/avatar", {
+    method: "POST",
+    headers: accountHeaders(accessToken),
+    body,
+  });
+}
+
+export function resetAccountAvatar(accessToken) {
+  return apiRequest("/api/account/avatar", {
+    method: "DELETE",
+    headers: accountHeaders(accessToken),
   });
 }
 

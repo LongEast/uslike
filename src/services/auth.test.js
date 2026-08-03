@@ -9,6 +9,8 @@ import {
   logoutAndClearSession,
   normalizePhone,
   saveAuthSession,
+  updateStoredAuthUser,
+  uploadAccountAvatar,
   validatePhone,
 } from "./auth.js";
 
@@ -71,6 +73,17 @@ test("auth session is saved, restored, and removed after expiry", () => {
   assert.equal(storage.getItem(AUTH_STORAGE_KEY), null);
 });
 
+test("account updates replace only the stored public user snapshot", () => {
+  const storage = memoryStorage();
+  saveAuthSession(
+    { access_token: "token", expires_at: "2030-01-01T00:00:00.000Z", user: { id: "user-1", phone: "1" } },
+    storage,
+  );
+  const updated = updateStoredAuthUser({ id: "user-1", phone: "2" }, storage);
+  assert.equal(updated.accessToken, "token");
+  assert.equal(loadAuthSession(storage, Date.parse("2029-01-01T00:00:00Z")).user.phone, "2");
+});
+
 test("clearAllLocalStorage removes app and unrelated origin keys", () => {
   const storage = memoryStorage({ [AUTH_STORAGE_KEY]: "auth", unrelated: "value" });
   clearAllLocalStorage(storage);
@@ -84,5 +97,22 @@ test("logout clears all local storage after API success or failure", async () =>
     await logoutAndClearSession("token", storage, remoteLogout);
     assert.equal(storage.getItem(AUTH_STORAGE_KEY), null);
     assert.equal(storage.getItem("unrelated"), null);
+  }
+});
+
+test("avatar upload lets the browser set the multipart content type", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestOptions;
+  globalThis.fetch = async (_url, options) => {
+    requestOptions = options;
+    return { ok: true, status: 200, json: async () => ({ user: { id: "user-1" } }) };
+  };
+  try {
+    await uploadAccountAvatar("token", new Blob(["avatar"], { type: "image/png" }));
+    assert.equal(requestOptions.headers.Authorization, "Bearer token");
+    assert.equal("Content-Type" in requestOptions.headers, false);
+    assert.equal(requestOptions.body instanceof FormData, true);
+  } finally {
+    globalThis.fetch = originalFetch;
   }
 });

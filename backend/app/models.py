@@ -134,6 +134,73 @@ class PublicUser(ApiModel):
     last_login_at: datetime
 
 
+class ValuesTestSummary(ApiModel):
+    answered_count: int = Field(description="已保存的问卷答案数量")
+    completed_at: datetime | None = Field(default=None, description="最近一次问卷提交时间")
+
+
+class AccountResponse(ApiModel):
+    user: PublicUser
+    values_test: ValuesTestSummary
+
+
+class ProfileUpdate(ApiModel):
+    nickname: Annotated[str, Field(min_length=1, max_length=50)] | None = None
+    age: int | None = Field(default=None, ge=1, le=120)
+    gender: Literal["男", "女", "神秘"] | None = None
+    region: str | None = Field(default=None, max_length=100)
+    interests: list[Annotated[str, Field(min_length=1, max_length=50)]] | None = Field(
+        default=None,
+        max_length=30,
+    )
+    social_preferences: list[Annotated[str, Field(min_length=1, max_length=50)]] | None = Field(
+        default=None,
+        max_length=20,
+    )
+
+    @field_validator("region", mode="before")
+    @classmethod
+    def empty_region_to_none(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
+
+    @field_validator("interests", "social_preferences")
+    @classmethod
+    def unique_optional_labels(cls, values: list[str] | None) -> list[str] | None:
+        return list(dict.fromkeys(values)) if values is not None else None
+
+    @model_validator(mode="after")
+    def has_editable_field(self) -> "ProfileUpdate":
+        if not self.model_fields_set:
+            raise ValueError("至少需要提交一个要修改的字段")
+        if "nickname" in self.model_fields_set and self.nickname is None:
+            raise ValueError("昵称不能为空")
+        return self
+
+
+class PhoneUpdateRequest(ApiModel):
+    new_phone: str = Field(description="新的登录手机号", examples=["+8613900139000"])
+    current_password: Annotated[str, Field(min_length=8, max_length=128)]
+
+    @field_validator("new_phone")
+    @classmethod
+    def normalize_new_phone(cls, value: str) -> str:
+        normalized = value.replace(" ", "").replace("-", "")
+        if not PHONE_PATTERN.fullmatch(normalized):
+            raise ValueError("手机号必须包含 6 到 20 位数字，并且只能在开头使用 +")
+        return normalized
+
+
+class PasswordUpdateRequest(ApiModel):
+    current_password: Annotated[str, Field(min_length=8, max_length=128)]
+    new_password: Annotated[str, Field(min_length=8, max_length=128)]
+
+    @model_validator(mode="after")
+    def password_must_change(self) -> "PasswordUpdateRequest":
+        if self.current_password == self.new_password:
+            raise ValueError("新密码不能与当前密码相同")
+        return self
+
+
 class AuthResponse(ApiModel):
     access_token: str = Field(
         description="随机 Bearer Token，仅在创建会话时返回",

@@ -516,7 +516,7 @@ export function ProfileModal({ defaultUser, onSave, onSwitchToLogin }) {
   );
 }
 
-export function OnboardingQuestionsModal({ onSkip, onSave }) {
+export function OnboardingQuestionsModal({ onSkip, onSave, mode = "registration", onClose }) {
   const onboardingQuestions = useMemo(() => getRandomOnboardingQuestions(10), []);
   const [answers, setAnswers] = useState(() =>
     onboardingQuestions.reduce((result, question) => ({ ...result, [question.id]: "" }), {}),
@@ -590,14 +590,22 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
   };
 
   return (
-    <Modal title="可选：让相遇更同频" width="max-w-3xl">
+    <Modal
+      title={mode === "settings" ? "重新填写价值观问卷" : "可选：让相遇更同频"}
+      onClose={mode === "settings" ? onClose : undefined}
+      width="max-w-3xl"
+    >
       <div className="space-y-5">
         <div className="rounded-2xl bg-white/72 p-4 text-stone-600 shadow-sm">
           <p className="text-base font-semibold text-stone-800">
-            账号已经创建成功。回答一些轻问题，可以帮助系统更好地把你带到相似的人身边。
+            {mode === "settings"
+              ? "重新回答一些轻问题，可以继续帮助系统优化你的相遇匹配。"
+              : "账号已经创建成功。回答一些轻问题，可以帮助系统更好地把你带到相似的人身边。"}
           </p>
           <p className="mt-2 text-sm leading-6">
-            这十题都不是必填，你可以只回答有感觉的部分，也可以先跳过直接进入 Uslike。
+            {mode === "settings"
+              ? "保存后会覆盖上一次答案；直接关闭不会修改已经保存的问卷。"
+              : "这十题都不是必填，你可以只回答有感觉的部分，也可以先跳过直接进入 Uslike。"}
           </p>
         </div>
 
@@ -679,8 +687,8 @@ export function OnboardingQuestionsModal({ onSkip, onSave }) {
             {submitting
               ? "正在保存问卷…"
               : answeredCount
-                ? `保存 ${answeredCount} 个回答并进入`
-                : "跳过，直接进入"}
+                ? mode === "settings" ? `保存 ${answeredCount} 个回答` : `保存 ${answeredCount} 个回答并进入`
+                : mode === "settings" ? "稍后再填" : "跳过，直接进入"}
             <ArrowRight size={18} />
           </button>
         </div>

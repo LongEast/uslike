@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
+import AccountSettingsView from "./AccountSettingsView.jsx";
 import Modal from "./Modal.jsx";
 
 export function FeedView({ feed }) {
@@ -589,7 +590,18 @@ export function FriendsView({ friends }) {
   );
 }
 
-export function SettingsView({ user, onLogout }) {
+export function SettingsView({
+  user,
+  onLogout,
+  accessToken,
+  questionnaireRevision,
+  onAccountUserUpdated,
+  onOpenSettingsQuestionnaire,
+  onToast,
+  accountOpen,
+  onOpenAccount,
+  onCloseAccount,
+}) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuGroups = [
     [
@@ -598,12 +610,26 @@ export function SettingsView({ user, onLogout }) {
       { label: "商城", icon: Store, color: "text-[#b85cff]", badge: "推荐" },
       { label: "表情商店", icon: Smile, color: "text-[#d757c8]" },
     ],
-    [{ label: "设置", icon: Settings, color: "text-[#4267d5]" }],
+    [{ label: "设置", icon: Settings, color: "text-[#4267d5]", onClick: onOpenAccount }],
   ];
+
+  if (accountOpen) {
+    return (
+      <AccountSettingsView
+        user={user}
+        accessToken={accessToken}
+        questionnaireRevision={questionnaireRevision}
+        onBack={onCloseAccount}
+        onUserUpdated={onAccountUserUpdated}
+        onOpenQuestionnaire={onOpenSettingsQuestionnaire}
+        onToast={onToast}
+      />
+    );
+  }
 
   return (
     <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
-      <div className="overflow-hidden rounded-[34px] border border-white/76 bg-white/82 shadow-soft backdrop-blur-xl">
+      <div className="overflow-hidden rounded-[34px] border border-white/[0.76] bg-white/[0.82] shadow-soft backdrop-blur-xl">
         <div className="flex items-center gap-5 px-6 py-8 sm:px-8">
           <Avatar src={user.avatar} name={user.nickname} size="lg" glow />
           <div className="min-w-0 flex-1">
@@ -631,11 +657,12 @@ export function SettingsView({ user, onLogout }) {
         {menuGroups.map((group, groupIndex) => (
           <div
             key={groupIndex}
-            className="overflow-hidden rounded-[28px] border border-white/76 bg-white/82 shadow-sm backdrop-blur-xl"
+            className="overflow-hidden rounded-[28px] border border-white/[0.76] bg-white/[0.82] shadow-sm backdrop-blur-xl"
           >
-            {group.map(({ label, icon: Icon, color, badge }) => (
+            {group.map(({ label, icon: Icon, color, badge, onClick }) => (
               <button
                 key={label}
+                onClick={onClick}
                 className="flex w-full items-center gap-4 border-b border-stone-100/90 px-6 py-5 text-left transition last:border-b-0 hover:bg-white/62"
               >
                 <Icon size={27} className={color} />
@@ -658,7 +685,7 @@ export function SettingsView({ user, onLogout }) {
             setIsLoggingOut(true);
             await onLogout();
           }}
-          className="flex w-full items-center gap-4 rounded-[28px] border border-red-100/90 bg-white/82 px-6 py-5 text-left text-red-600 shadow-sm backdrop-blur-xl transition hover:bg-red-50/80 disabled:cursor-wait disabled:opacity-60"
+          className="flex w-full items-center gap-4 rounded-[28px] border border-red-100/90 bg-white/[0.82] px-6 py-5 text-left text-red-600 shadow-sm backdrop-blur-xl transition hover:bg-red-50/80 disabled:cursor-wait disabled:opacity-60"
         >
           <LogOut size={27} />
           <span className="min-w-0 flex-1 text-xl font-semibold">

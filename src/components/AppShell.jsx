@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Avatar from "./Avatar.jsx";
 import BottomNav from "./BottomNav.jsx";
 import HomeView from "./HomeView.jsx";
@@ -16,7 +17,13 @@ export default function AppShell({
   onStartWaveRoom,
   onToast,
   onLogout,
+  accessToken,
+  questionnaireRevision,
+  onAccountUserUpdated,
+  onOpenSettingsQuestionnaire,
 }) {
+  const [settingsPage, setSettingsPage] = useState("hub");
+
   const renderView = () => {
     if (activeView === "feed") return <FeedView feed={feed} />;
     if (activeView === "messages") {
@@ -31,7 +38,22 @@ export default function AppShell({
       );
     }
     if (activeView === "friends") return <FriendsView friends={friends} />;
-    if (activeView === "settings") return <SettingsView user={user} onLogout={onLogout} />;
+    if (activeView === "settings") {
+      return (
+        <SettingsView
+          user={user}
+          onLogout={onLogout}
+          accessToken={accessToken}
+          questionnaireRevision={questionnaireRevision}
+          onAccountUserUpdated={onAccountUserUpdated}
+          onOpenSettingsQuestionnaire={onOpenSettingsQuestionnaire}
+          onToast={onToast}
+          accountOpen={settingsPage === "account"}
+          onOpenAccount={() => setSettingsPage("account")}
+          onCloseAccount={() => setSettingsPage("hub")}
+        />
+      );
+    }
     return <HomeView user={user} feed={feed} onMeet={onMeet} />;
   };
 
@@ -54,8 +76,12 @@ export default function AppShell({
       <BottomNav
         active={activeView}
         onSelect={(key) => {
-          if (key === "meet") onMeet();
-          else onNavigate(key);
+          if (key === "meet") {
+            onMeet();
+            return;
+          }
+          if (key === "settings") setSettingsPage("hub");
+          onNavigate(key);
         }}
       />
     </main>

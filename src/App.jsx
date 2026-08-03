@@ -29,6 +29,7 @@ import {
   saveAuthSession,
   saveValuesTest,
   toAppUser,
+  updateStoredAuthUser,
 } from "./services/auth.js";
 
 export default function App() {
@@ -64,6 +65,8 @@ export default function App() {
   const [discoverBackView, setDiscoverBackView] = useState("messages");
   const [toast, setToast] = useState("");
   const [meetTutorialStep, setMeetTutorialStep] = useState(null);
+  const [questionnaireContext, setQuestionnaireContext] = useState("registration");
+  const [questionnaireRevision, setQuestionnaireRevision] = useState(0);
   const toastTimer = useRef(null);
 
   useEffect(() => {
@@ -171,6 +174,7 @@ export default function App() {
   const saveProfile = async ({ account, profile }) => {
     const response = await registerUser(createRegistrationPayload(account, profile));
     persistAuthResponse(response);
+    setQuestionnaireContext("registration");
     setModal("onboarding-questions");
     showToast("注册成功，问卷可以跳过。");
   };
@@ -178,10 +182,11 @@ export default function App() {
   const saveOnboardingQuestions = async (valuesTest) => {
     if (!authSession?.accessToken) throw new Error("登录信息已失效，请重新登录。");
     await saveValuesTest(authSession.accessToken, valuesTest);
+    setQuestionnaireRevision((value) => value + 1);
     setModal(null);
     setActiveView("messages");
     setPhase("home");
-    showToast("回答已保存，正在为你优化相遇。");
+    showToast(questionnaireContext === "settings" ? "价值观问卷已更新。" : "回答已保存，正在为你优化相遇。");
   };
 
   const skipOnboardingQuestions = async () => {
@@ -210,6 +215,17 @@ export default function App() {
       window.history.replaceState({}, "", "/mvp");
       showToast("已退出登录，请重新登录。");
     }
+  };
+
+  const handleAccountUserUpdated = (apiUser) => {
+    const session = updateStoredAuthUser(apiUser);
+    if (session) setAuthSession(session);
+    setUser(toAppUser(apiUser));
+  };
+
+  const openSettingsQuestionnaire = () => {
+    setQuestionnaireContext("settings");
+    setModal("onboarding-questions");
   };
 
   const addFriendFromRoom = (room) => {
@@ -287,7 +303,9 @@ export default function App() {
 
       {modal === "onboarding-questions" ? (
         <OnboardingQuestionsModal
-          onSkip={skipOnboardingQuestions}
+          mode={questionnaireContext}
+          onClose={() => setModal(null)}
+          onSkip={questionnaireContext === "settings" ? () => setModal(null) : skipOnboardingQuestions}
           onSave={saveOnboardingQuestions}
         />
       ) : null}
@@ -413,6 +431,10 @@ export default function App() {
         onStartWaveRoom={startWaveRoom}
         onToast={showToast}
         onLogout={handleLogout}
+        accessToken={authSession?.accessToken}
+        questionnaireRevision={questionnaireRevision}
+        onAccountUserUpdated={handleAccountUserUpdated}
+        onOpenSettingsQuestionnaire={openSettingsQuestionnaire}
       />
 
       {modal === "meet" ? (

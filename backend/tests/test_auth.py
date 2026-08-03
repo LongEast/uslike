@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import pytest
 
+import backend.app.main as main_module
 from backend.app.main import create_app
 
 
@@ -295,3 +296,170 @@ async def test_openapi_documents_auth_and_values_test_operations(client):
     assert "/api/profile/values-test" in schema["paths"]
     assert "/api/onboarding/{module}" in schema["paths"]
     assert "/api/onboarding/{module}/events" in schema["paths"]
+    assert "/api/account" in schema["paths"]
+    assert "/api/account/profile" in schema["paths"]
+    assert "/api/account/phone" in schema["paths"]
+    assert "/api/account/password" in schema["paths"]
+    assert "/api/account/avatar" in schema["paths"]
+
+
+@pytest.mark.anyio
+async def test_account_reads_summary_and_updates_profile_fields(client, database_path):
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    await client.post("/api/profile/values-test", json=values_test_payload(), headers=headers)
+
+    account = await client.get("/api/account", headers=headers)
+    assert account.status_code == 200
+    assert account.json()["values_test"]["answered_count"] == 1
+    assert account.json()["values_test"]["completed_at"] is not None
+
+    updated = await client.patch(
+        "/api/account/profile",
+        json={"nickname": "新昵称", "region": None, "interests": ["电影", "电影", "音乐"]},
+        headers=headers,
+    )
+    assert updated.status_code == 200
+    assert updated.json()["user"]["profile"]["nickname"] == "新昵称"
+    assert updated.json()["user"]["profile"]["region"] is None
+    assert updated.json()["user"]["profile"]["interests"] == ["电影", "音乐"]
+    assert (await client.patch("/api/account/profile", json={}, headers=headers)).status_code == 422
+
+    persisted = json.loads(database_path.read_text(encoding="utf-8"))
+    assert persisted["users"][0]["id"] == registration["user"]["id"]
+
+
+@pytest.mark.anyio
+async def test_phone_update_requires_password_preserves_id_and_revokes_other_sessions(client):
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    second_session = (
+        await client.post(
+            "/api/auth/login",
+            json={"phone": "+8613800138000", "password": "correct-horse"},
+        )
+    ).json()
+    first_headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    current_headers = {"Authorization": f"Bearer {second_session['access_token']}"}
+
+    wrong = await client.put(
+        "/api/account/phone",
+        json={"new_phone": "+8613900139000", "current_password": "wrong-password"},
+        headers=current_headers,
+    )
+    assert wrong.status_code == 400
+
+    changed = await client.put(
+        "/api/account/phone",
+        json={"new_phone": "+8613900139000", "current_password": "correct-horse"},
+        headers=current_headers,
+    )
+    assert changed.status_code == 200
+    assert changed.json()["user"]["id"] == registration["user"]["id"]
+    assert changed.json()["user"]["phone"] == "+8613900139000"
+    assert (await client.get("/api/account", headers=first_headers)).status_code == 401
+    assert (await client.get("/api/account", headers=current_headers)).status_code == 200
+
+    old_login = await client.post(
+        "/api/auth/login",
+        json={"phone": "+8613800138000", "password": "correct-horse"},
+    )
+    new_login = await client.post(
+        "/api/auth/login",
+        json={"phone": "+8613900139000", "password": "correct-horse"},
+    )
+    assert old_login.status_code == 401
+    assert new_login.status_code == 200
+
+
+@pytest.mark.anyio
+async def test_phone_update_rejects_phone_owned_by_another_user(client):
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    await client.post("/api/auth/register", json=register_payload(phone="+8613900139000"))
+    headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    response = await client.put(
+        "/api/account/phone",
+        json={"new_phone": "+8613900139000", "current_password": "correct-horse"},
+        headers=headers,
+    )
+    assert response.status_code == 409
+
+
+@pytest.mark.anyio
+async def test_password_update_rehashes_and_revokes_other_sessions(client, database_path):
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    current_session = (
+        await client.post(
+            "/api/auth/login",
+            json={"phone": "+8613800138000", "password": "correct-horse"},
+        )
+    ).json()
+    old_headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    current_headers = {"Authorization": f"Bearer {current_session['access_token']}"}
+
+    changed = await client.put(
+        "/api/account/password",
+        json={"current_password": "correct-horse", "new_password": "new-correct-horse"},
+        headers=current_headers,
+    )
+    assert changed.status_code == 200
+    assert (await client.get("/api/account", headers=old_headers)).status_code == 401
+    assert (await client.get("/api/account", headers=current_headers)).status_code == 200
+    assert (
+        await client.post(
+            "/api/auth/login",
+            json={"phone": "+8613800138000", "password": "correct-horse"},
+        )
+    ).status_code == 401
+    assert (
+        await client.post(
+            "/api/auth/login",
+            json={"phone": "+8613800138000", "password": "new-correct-horse"},
+        )
+    ).status_code == 200
+    assert "new-correct-horse" not in database_path.read_text(encoding="utf-8")
+
+
+@pytest.mark.anyio
+async def test_avatar_upload_validation_replacement_and_reset(client):
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    fake_png = b"\x89PNG\r\n\x1a\n" + b"avatar-content"
+
+    uploaded = await client.post(
+        "/api/account/avatar",
+        files={"avatar": ("avatar.png", fake_png, "image/png")},
+        headers=headers,
+    )
+    assert uploaded.status_code == 200
+    avatar_url = uploaded.json()["user"]["profile"]["avatar"]
+    assert avatar_url.startswith("/api/uploads/avatars/")
+    avatar_path = client.app.state.avatar_directory / avatar_url.rsplit("/", 1)[-1]
+    assert avatar_path.read_bytes() == fake_png
+
+    invalid = await client.post(
+        "/api/account/avatar",
+        files={"avatar": ("avatar.png", b"not-a-png", "image/png")},
+        headers=headers,
+    )
+    assert invalid.status_code == 415
+    assert (await client.get("/api/account", headers=headers)).json()["user"]["profile"]["avatar"] == avatar_url
+
+    reset = await client.delete("/api/account/avatar", headers=headers)
+    assert reset.status_code == 200
+    assert reset.json()["user"]["profile"]["avatar"].startswith("https://api.dicebear.com/")
+    assert not avatar_path.exists()
+
+
+@pytest.mark.anyio
+async def test_account_and_avatar_upload_reject_unauthorized_or_oversized_requests(client, monkeypatch):
+    assert (await client.get("/api/account")).status_code == 401
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    monkeypatch.setattr(main_module, "MAX_AVATAR_BYTES", 16)
+    oversized = b"\x89PNG\r\n\x1a\n" + b"x" * 17
+    response = await client.post(
+        "/api/account/avatar",
+        files={"avatar": ("large.png", oversized, "image/png")},
+        headers=headers,
+    )
+    assert response.status_code == 413

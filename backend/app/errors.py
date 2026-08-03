@@ -8,6 +8,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 FIELD_NAMES = {
     "phone": "手机号",
+    "new_phone": "新手机号",
+    "current_password": "当前密码",
+    "new_password": "新密码",
     "password": "密码",
     "profile": "个人资料",
     "nickname": "昵称",
