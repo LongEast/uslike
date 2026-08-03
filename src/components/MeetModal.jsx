@@ -40,6 +40,8 @@ export default function MeetModal({ onClose, onCreate, onJoin, tutorialActive, o
             <SpotlightTutorial
               step={1}
               targets={[{ ref: joinButtonRef, padding: 7, radius: 24 }]}
+              showContinue
+              onContinue={onJoin}
               onDismiss={onTutorialDismiss}
             >
               尝试加入一个房间，开始你的第一次相遇。

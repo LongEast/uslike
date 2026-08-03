@@ -240,6 +240,31 @@ async def test_dismissed_module_onboarding_is_terminal(client):
 
 
 @pytest.mark.anyio
+async def test_module_onboarding_can_be_restarted_from_settings(client):
+    registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    headers = {"Authorization": f"Bearer {registration['access_token']}"}
+    await client.post(
+        "/api/onboarding/meet/events",
+        json={"event": "dismissed", "step": "map_intro"},
+        headers=headers,
+    )
+
+    restarted = await client.post(
+        "/api/onboarding/meet/events",
+        json={"event": "restarted", "step": "join_room"},
+        headers=headers,
+    )
+
+    assert restarted.json() == {
+        "module": "meet",
+        "status": "in_progress",
+        "finished": False,
+        "should_show": True,
+        "current_step": "join_room",
+    }
+
+
+@pytest.mark.anyio
 async def test_login_uses_same_error_for_unknown_phone_and_wrong_password(client):
     await client.post("/api/auth/register", json=register_payload())
 

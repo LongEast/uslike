@@ -217,7 +217,7 @@ class ValuesTestResponse(ApiModel):
 
 
 class OnboardingEventInput(ApiModel):
-    event: Literal["started", "step_viewed", "dismissed", "completed"]
+    event: Literal["started", "step_viewed", "dismissed", "completed", "restarted"]
     step: str | None = Field(default=None, min_length=1, max_length=80)
 
 

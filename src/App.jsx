@@ -4,6 +4,7 @@ import { AuthModal, OnboardingQuestionsModal, ProfileModal } from "./components/
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
+import Modal from "./components/Modal.jsx";
 import MvpSplash from "./components/MvpSplash.jsx";
 import RoomDiscovery from "./components/RoomDiscovery.jsx";
 import TextRoom from "./components/TextRoom.jsx";
@@ -68,6 +69,7 @@ export default function App() {
   const [questionnaireContext, setQuestionnaireContext] = useState("registration");
   const [questionnaireRevision, setQuestionnaireRevision] = useState(0);
   const toastTimer = useRef(null);
+  const tutorialDismissNoticeShownRef = useRef(new Set());
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -129,14 +131,39 @@ export default function App() {
     setMeetTutorialStep(null);
   };
 
-  const dismissMeetTutorial = async () => {
+  const shouldShowTutorialDismissNotice = () => {
+    const userId = authSession?.user?.id || user?.id || "guest";
+    const storageKey = `uslike:meet-tutorial-dismiss-notice:${userId}`;
+    if (tutorialDismissNoticeShownRef.current.has(storageKey)) return false;
+    tutorialDismissNoticeShownRef.current.add(storageKey);
+    try {
+      if (window.localStorage.getItem(storageKey)) return false;
+      window.localStorage.setItem(storageKey, "shown");
+    } catch {
+      // The in-memory ref still prevents duplicate notices during this session.
+    }
+    return true;
+  };
+
+  const dismissMeetTutorial = () => {
+    const showDismissNotice = shouldShowTutorialDismissNotice();
     void recordMeetTutorialEvent("dismissed", meetTutorialStep);
     setMeetTutorialStep(null);
     setCurrentRoom(null);
     setWaitingRoom(null);
     setPhase("home");
     setActiveView("messages");
+    setModal(showDismissNotice ? "tutorial-dismissed" : null);
+  };
+
+  const restartMeetTutorial = () => {
+    setCurrentRoom(null);
+    setWaitingRoom(null);
+    setDiscoverBackView("messages");
+    setPhase("home");
+    setMeetTutorialStep("join_room");
     setModal("meet");
+    void recordMeetTutorialEvent("restarted", "join_room");
   };
 
   const completeMeetTutorial = async () => {
@@ -309,6 +336,21 @@ export default function App() {
           onSave={saveOnboardingQuestions}
         />
       ) : null}
+
+      {modal === "tutorial-dismissed" ? (
+        <Modal title="新手引导已关闭" onClose={() => setModal(null)} width="max-w-md">
+          <p className="text-sm leading-7 text-stone-600">
+            以后如果还需要查看新手引导，请前往「设置」，点击「新手引导」即可重新打开。
+          </p>
+          <button
+            type="button"
+            onClick={() => setModal(null)}
+            className="aurora-dark mt-5 w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-glow transition hover:brightness-110"
+          >
+            我知道了
+          </button>
+        </Modal>
+      ) : null}
     </>
   );
 
@@ -435,6 +477,7 @@ export default function App() {
         questionnaireRevision={questionnaireRevision}
         onAccountUserUpdated={handleAccountUserUpdated}
         onOpenSettingsQuestionnaire={openSettingsQuestionnaire}
+        onRestartMeetTutorial={restartMeetTutorial}
       />
 
       {modal === "meet" ? (

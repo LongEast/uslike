@@ -487,7 +487,13 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
                     "updated_at": now.isoformat(),
                 },
             )
-            if state["status"] not in {"dismissed", "completed"}:
+            if payload.event == "restarted":
+                state["status"] = "in_progress"
+                state["current_step"] = payload.step
+                state["started_at"] = now.isoformat()
+                state["ended_at"] = None
+                state["updated_at"] = now.isoformat()
+            elif state["status"] not in {"dismissed", "completed"}:
                 if payload.event == "started":
                     state["status"] = "in_progress"
                     state["started_at"] = state["started_at"] or now.isoformat()

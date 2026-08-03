@@ -67,8 +67,9 @@ Authentication and onboarding endpoints:
 - `POST /api/profile/values-test` validates and saves the optional post-registration questionnaire
   for the current Bearer Token user. Re-submitting replaces the previous questionnaire response.
 - `GET /api/onboarding/{module}` reports whether a module tutorial should still be shown.
-- `POST /api/onboarding/{module}/events` records tutorial progress, dismissal, or completion in the
-  generic behavior event log. Interrupted tutorials remain unfinished and restart on the next entry.
+- `POST /api/onboarding/{module}/events` records tutorial progress, dismissal, completion, or an
+  explicit restart from settings in the generic behavior event log. Interrupted tutorials remain
+  unfinished and restart on the next entry.
 
 ## Test
 

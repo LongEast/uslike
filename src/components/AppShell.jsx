@@ -21,6 +21,7 @@ export default function AppShell({
   questionnaireRevision,
   onAccountUserUpdated,
   onOpenSettingsQuestionnaire,
+  onRestartMeetTutorial,
 }) {
   const [settingsPage, setSettingsPage] = useState("hub");
 
@@ -47,6 +48,7 @@ export default function AppShell({
           questionnaireRevision={questionnaireRevision}
           onAccountUserUpdated={onAccountUserUpdated}
           onOpenSettingsQuestionnaire={onOpenSettingsQuestionnaire}
+          onRestartMeetTutorial={onRestartMeetTutorial}
           onToast={onToast}
           accountOpen={settingsPage === "account"}
           onOpenAccount={() => setSettingsPage("account")}

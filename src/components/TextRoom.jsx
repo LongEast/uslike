@@ -345,7 +345,7 @@ export default function TextRoom({
         <SpotlightTutorial
           step={5}
           targets={[{ ref: questionCardRef, padding: 7, radius: 32 }]}
-          allowBackdropContinue
+          showContinue
           onContinue={() => onTutorialStep?.("assistant_intro")}
           onDismiss={onTutorialDismiss}
         >
@@ -356,7 +356,7 @@ export default function TextRoom({
         <SpotlightTutorial
           step={6}
           targets={[{ ref: assistantIntroRef, padding: 7, radius: 24 }]}
-          allowBackdropContinue
+          showContinue
           onContinue={() => onTutorialStep?.("send_message")}
           onDismiss={onTutorialDismiss}
         >
@@ -379,11 +379,11 @@ export default function TextRoom({
         <SpotlightTutorial
           step={8}
           targets={[{ ref: assistantReplyRef, padding: 7, radius: 24 }]}
-          allowBackdropContinue
+          showContinue
           onContinue={() => onTutorialStep?.("answer_first")}
           onDismiss={onTutorialDismiss}
         >
-          相遇小助手回复了你。点击任意区域继续答题。
+          相遇小助手回复了你。点击“下一步”继续答题。
         </SpotlightTutorial>
       ) : null}
       {tutorialStep === "answer_first" ? (
@@ -399,12 +399,9 @@ export default function TextRoom({
         <SpotlightTutorial
           step={10}
           targets={[{ ref: nextQuestionRef, padding: 7, radius: 18 }]}
-          allowBackdropContinue
-          continueOnTargetClick={false}
-          onContinue={finishTutorialQuestions}
           onDismiss={onTutorialDismiss}
         >
-          题库不止一道。点击“下一题”继续体验，或点击其他区域跳过。
+          题库不止一道。点击“下一题”继续体验。
         </SpotlightTutorial>
       ) : null}
       {tutorialStep === "answer_second" ? (

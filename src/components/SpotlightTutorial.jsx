@@ -28,8 +28,7 @@ export default function SpotlightTutorial({
   targets = [],
   children,
   onDismiss,
-  allowBackdropContinue = false,
-  continueOnTargetClick = allowBackdropContinue,
+  showContinue = false,
   onContinue,
   actionLabel,
   onAction,
@@ -89,10 +88,6 @@ export default function SpotlightTutorial({
     };
   }, [step]);
 
-  const continueFromBackdrop = () => {
-    if (allowBackdropContinue) onContinue?.();
-  };
-
   const primaryHole = holes[0];
   const targetIsLow = primaryHole && primaryHole.y + primaryHole.height / 2 > viewport.height / 2;
   const targetIsRight = primaryHole && primaryHole.x + primaryHole.width / 2 > viewport.width / 2;
@@ -117,15 +112,14 @@ export default function SpotlightTutorial({
           fill="rgba(10, 12, 24, 0.72)"
           fillRule="evenodd"
           className="pointer-events-auto"
-          onClick={continueFromBackdrop}
         />
       </svg>
 
       {holes.map((hole, index) => (
         <span
           key={`${step}-${index}`}
-          className={`tutorial-spotlight fixed ${continueOnTargetClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
-          onClick={continueOnTargetClick ? onContinue : undefined}
+          className={`tutorial-spotlight fixed ${showContinue ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
+          onClick={showContinue ? onContinue : undefined}
           style={{
             left: hole.x,
             top: hole.y,
@@ -140,8 +134,8 @@ export default function SpotlightTutorial({
         step={step}
         total={total}
         onDismiss={onDismiss}
-        onContinue={allowBackdropContinue ? onContinue : undefined}
-        continueLabel={allowBackdropContinue ? "点击任意区域继续" : undefined}
+        onContinue={showContinue ? onContinue : undefined}
+        continueLabel="下一步"
         actionLabel={actionLabel}
         onAction={onAction}
         className={bubblePosition}

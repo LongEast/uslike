@@ -4,6 +4,7 @@ import {
   Camera,
   Check,
   ChevronRight,
+  CircleHelp,
   Gamepad2,
   Gift,
   Image,
@@ -597,6 +598,7 @@ export function SettingsView({
   questionnaireRevision,
   onAccountUserUpdated,
   onOpenSettingsQuestionnaire,
+  onRestartMeetTutorial,
   onToast,
   accountOpen,
   onOpenAccount,
@@ -610,7 +612,16 @@ export function SettingsView({
       { label: "商城", icon: Store, color: "text-[#b85cff]", badge: "推荐" },
       { label: "表情商店", icon: Smile, color: "text-[#d757c8]" },
     ],
-    [{ label: "设置", icon: Settings, color: "text-[#4267d5]", onClick: onOpenAccount }],
+    [
+      {
+        label: "新手引导",
+        icon: CircleHelp,
+        color: "text-[#6b5ee7]",
+        badge: "重新体验",
+        onClick: onRestartMeetTutorial,
+      },
+      { label: "设置", icon: Settings, color: "text-[#4267d5]", onClick: onOpenAccount },
+    ],
   ];
 
   if (accountOpen) {

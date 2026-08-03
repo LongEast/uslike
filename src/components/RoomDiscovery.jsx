@@ -1424,7 +1424,7 @@ export default function RoomDiscovery({
         <SpotlightTutorial
           step={2}
           targets={[{ ref: spaceRef, padding: 4, radius: 36 }]}
-          allowBackdropContinue
+          showContinue
           onContinue={onTutorialMapIntro}
           onDismiss={onTutorialDismiss}
         >
