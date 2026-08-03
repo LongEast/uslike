@@ -2,6 +2,8 @@
 
 React + Vite + Tailwind CSS frontend with a FastAPI JSON-database authentication backend.
 
+Now in-website user tips are also available
+
 ## Requirements
 
 - Node.js 18 or newer
