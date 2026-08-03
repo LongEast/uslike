@@ -10,6 +10,7 @@ import {
   ImagePlus,
   Link,
   Lock,
+  LogOut,
   MessageCircle,
   Mic,
   MoreHorizontal,
@@ -588,7 +589,8 @@ export function FriendsView({ friends }) {
   );
 }
 
-export function SettingsView({ user }) {
+export function SettingsView({ user, onLogout }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuGroups = [
     [
       { label: "收藏", icon: Box, color: "text-[#6b73ff]" },
@@ -648,6 +650,21 @@ export function SettingsView({ user }) {
             ))}
           </div>
         ))}
+        <button
+          type="button"
+          disabled={isLoggingOut}
+          onClick={async () => {
+            if (isLoggingOut) return;
+            setIsLoggingOut(true);
+            await onLogout();
+          }}
+          className="flex w-full items-center gap-4 rounded-[28px] border border-red-100/90 bg-white/82 px-6 py-5 text-left text-red-600 shadow-sm backdrop-blur-xl transition hover:bg-red-50/80 disabled:cursor-wait disabled:opacity-60"
+        >
+          <LogOut size={27} />
+          <span className="min-w-0 flex-1 text-xl font-semibold">
+            {isLoggingOut ? "正在退出…" : "退出登录"}
+          </span>
+        </button>
       </div>
     </section>
   );

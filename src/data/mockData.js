@@ -8,6 +8,48 @@ export function getMockUser() {
   };
 }
 
+export function getMeetTutorialRoom() {
+  return {
+    id: "tutorial-meet-assistant",
+    name: "相遇小助手的练习房",
+    hostName: "相遇小助手",
+    hostAvatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=helper",
+    nickname: "相遇小助手",
+    age: null,
+    gender: "神秘",
+    region: "Uslike",
+    interests: ["新手引导", "轻松聊天"],
+    type: "打字房",
+    vibe: "测试账号 · 陪你完成第一次相遇",
+    x: 50,
+    y: 50,
+    color: "#f28b45",
+    mapX: 0,
+    mapY: 0,
+    similarity: 99,
+    isTutorial: true,
+  };
+}
+
+export function getMeetTutorialQuestions() {
+  return [
+    {
+      id: "values-queue-friend",
+      text: "朋友赶时间，希望加入你已经排了很久的队伍。你会：",
+      a: "让 TA 进来，偶尔帮助具体的人并不过分",
+      b: "拒绝，因为这会让后面所有人承担代价",
+      c: "写下你的答案",
+    },
+    {
+      id: "values-animal-language",
+      text: "你可以和所有动物对话，但是其他人类从此听不懂你说话。你会接受吗？",
+      a: "接受，能和动物交流值得这个代价",
+      b: "不接受，我仍然希望能和其他人类沟通",
+      c: "写下你的答案",
+    },
+  ];
+}
+
 export function getMockRooms() {
   return [
     {
@@ -402,8 +444,8 @@ const getRandomQuestions = (count = conversationQuestionPool.length) =>
   shuffleQuestions(conversationQuestionPool).slice(0, count);
 
 export function getRandomOnboardingQuestions(count = 10) {
-  return getRandomQuestions(count).map((question, index) => ({
-    id: `onboarding-${index + 1}-${question.id}`,
+  return getRandomQuestions(count).map((question) => ({
+    id: question.id,
     text: question.text,
     options: [question.a, question.b],
   }));

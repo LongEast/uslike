@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import Avatar from "./Avatar.jsx";
 import Modal from "./Modal.jsx";
+import SpotlightTutorial from "./SpotlightTutorial.jsx";
 
 const INITIAL_CAMERA = { yaw: -0.38, pitch: 0.58, distance: 120, targetX: 0, targetZ: 0 };
 const MIN_DISTANCE = 72;
@@ -293,6 +294,12 @@ export default function RoomDiscovery({
   onEnterVoice,
   onEnterText,
   onToast,
+  tutorialStep,
+  tutorialRoomId,
+  onTutorialMapIntro,
+  onTutorialSelectRoom,
+  onTutorialEnterRoom,
+  onTutorialDismiss,
 }) {
   const spaceRef = useRef(null);
   const sceneCanvasRef = useRef(null);
@@ -300,6 +307,8 @@ export default function RoomDiscovery({
   const suppressNextSpaceClickRef = useRef(false);
   const listScrollRef = useRef(null);
   const listRefs = useRef({});
+  const tutorialRoomListRef = useRef(null);
+  const tutorialEnterButtonRef = useRef(null);
   const cameraStateRef = useRef({ ...INITIAL_CAMERA });
   const sceneStateRef = useRef(null);
   const selectedIdRef = useRef(null);
@@ -867,6 +876,7 @@ export default function RoomDiscovery({
       onEnterVoice(selectedRoom);
       return;
     }
+    if (selectedRoom.id === tutorialRoomId) onTutorialEnterRoom?.();
     onEnterText(selectedRoom);
   };
 
@@ -1029,6 +1039,7 @@ export default function RoomDiscovery({
                     }
                     setDetailRoomId(null);
                     setSelectedId(room.id);
+                    if (room.id === tutorialRoomId) onTutorialSelectRoom?.();
                   }}
                   onKeyDown={(event) => {
                     if (event.key !== "Enter" && event.key !== " ") return;
@@ -1039,6 +1050,7 @@ export default function RoomDiscovery({
                     }
                     setDetailRoomId(null);
                     setSelectedId(room.id);
+                    if (room.id === tutorialRoomId) onTutorialSelectRoom?.();
                   }}
                   onMouseEnter={() => setHoveredId(room.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -1200,6 +1212,7 @@ export default function RoomDiscovery({
                               onEnterVoice(detailRoom);
                               return;
                             }
+                            if (detailRoom.id === tutorialRoomId) onTutorialEnterRoom?.();
                             onEnterText(detailRoom);
                           }}
                           className={`rounded-2xl px-5 py-3 font-semibold text-white transition ${
@@ -1254,18 +1267,24 @@ export default function RoomDiscovery({
                     data-selected={selectedId === room.id ? "true" : undefined}
                     ref={(node) => {
                       listRefs.current[room.id] = node;
+                      if (room.id === tutorialRoomId) tutorialRoomListRef.current = node;
                     }}
                     onClick={() => {
                       markSyncSource("list");
                       lastSyncedRoomRef.current = room.id;
                       setDetailRoomId(null);
                       setSelectedId(room.id);
+                      if (room.id === tutorialRoomId) onTutorialSelectRoom?.();
                       setHoveredId(room.id);
                       focusRoomInGalaxy(room);
                     }}
                     onMouseEnter={() => setHoveredId(room.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     className={`cosmic-list-item flex min-w-[250px] items-center gap-3 rounded-3xl border p-3 text-left transition lg:min-w-0 ${
+                      tutorialStep === "select_assistant" && room.id === tutorialRoomId
+                        ? "ring-4 ring-[#8b82e8]/35"
+                        : ""
+                    } ${
                       selectedId === room.id
                         ? "border-[#8b82e8]/45 bg-[#eeeaff]"
                         : "border-white/70 bg-white/62 hover:border-white hover:bg-white"
@@ -1380,6 +1399,7 @@ export default function RoomDiscovery({
                 </div>
               </div>
               <button
+                ref={selectedRoom.id === tutorialRoomId ? tutorialEnterButtonRef : null}
                 onClick={meetRoom}
                 className={`w-full rounded-2xl px-5 py-3 font-semibold text-white transition ${
                   selectedRoom.type === "打字房"
@@ -1400,6 +1420,35 @@ export default function RoomDiscovery({
           )}
         </aside>
       </section>
+      {tutorialStep === "map_intro" ? (
+        <SpotlightTutorial
+          step={2}
+          targets={[{ ref: spaceRef, padding: 4, radius: 36 }]}
+          allowBackdropContinue
+          onContinue={onTutorialMapIntro}
+          onDismiss={onTutorialDismiss}
+        >
+          这里是同频房间地图。越靠近你的坐标，越可能遇到同频的人。
+        </SpotlightTutorial>
+      ) : null}
+      {tutorialStep === "select_assistant" ? (
+        <SpotlightTutorial
+          step={3}
+          targets={[{ ref: tutorialRoomListRef, padding: 7, radius: 24 }]}
+          onDismiss={onTutorialDismiss}
+        >
+          选择列表开头的“相遇小助手”打字房。
+        </SpotlightTutorial>
+      ) : null}
+      {tutorialStep === "enter_room" ? (
+        <SpotlightTutorial
+          step={4}
+          targets={[{ ref: tutorialEnterButtonRef, padding: 7, radius: 18 }]}
+          onDismiss={onTutorialDismiss}
+        >
+          已选中测试房间，点击“相遇”进入打字房。
+        </SpotlightTutorial>
+      ) : null}
     </main>
   );
 }

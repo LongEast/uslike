@@ -15,6 +15,7 @@ export default function AppShell({
   onSendMessage,
   onStartWaveRoom,
   onToast,
+  onLogout,
 }) {
   const renderView = () => {
     if (activeView === "feed") return <FeedView feed={feed} />;
@@ -30,7 +31,7 @@ export default function AppShell({
       );
     }
     if (activeView === "friends") return <FriendsView friends={friends} />;
-    if (activeView === "settings") return <SettingsView user={user} />;
+    if (activeView === "settings") return <SettingsView user={user} onLogout={onLogout} />;
     return <HomeView user={user} feed={feed} onMeet={onMeet} />;
   };
 

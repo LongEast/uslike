@@ -7,3 +7,8 @@ dist
 .agents
 .vercel
 .env*
+backend/data/uslike.json
+backend/data/.*.tmp
+__pycache__/
+.pytest_cache/
+.venv/

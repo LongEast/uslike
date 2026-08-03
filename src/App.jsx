@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "./components/AppShell.jsx";
-import { OnboardingQuestionsModal, ProfileModal, RegisterModal } from "./components/AuthModals.jsx";
+import { AuthModal, OnboardingQuestionsModal, ProfileModal } from "./components/AuthModals.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
@@ -11,14 +11,28 @@ import VoiceRoom from "./components/VoiceRoom.jsx";
 import {
   getGameList,
   getInitialMessages,
+  getMeetTutorialQuestions,
+  getMeetTutorialRoom,
   getMockFeed,
   getMockQuestions,
   getMockRooms,
   getMockUser,
   makeFriendFromRoom,
 } from "./data/mockData.js";
+import { getOnboardingState, recordOnboardingEvent } from "./services/onboarding.js";
+import {
+  createRegistrationPayload,
+  loadAuthSession,
+  loginUser,
+  logoutAndClearSession,
+  registerUser,
+  saveAuthSession,
+  saveValuesTest,
+  toAppUser,
+} from "./services/auth.js";
 
 export default function App() {
+  const [authSession, setAuthSession] = useState(() => loadAuthSession());
   const [route, setRoute] = useState(() =>
     window.location.pathname.startsWith("/mvp") ? "mvp" : "landing",
   );
@@ -30,23 +44,26 @@ export default function App() {
       feed: getMockFeed(),
       messages: getInitialMessages(),
       games: getGameList(),
+      meetTutorialRoom: getMeetTutorialRoom(),
+      meetTutorialQuestions: getMeetTutorialQuestions(),
     }),
     [],
   );
 
   const [phase, setPhase] = useState(() =>
-    window.location.pathname.startsWith("/mvp") ? "splash" : "home",
+    window.location.pathname.startsWith("/mvp") && !authSession ? "splash" : "home",
   );
   const [modal, setModal] = useState(null);
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(Boolean(authSession));
   const [activeView, setActiveView] = useState("messages");
-  const [user, setUser] = useState(mock.user);
+  const [user, setUser] = useState(() => (authSession ? toAppUser(authSession.user) : mock.user));
   const [friends, setFriends] = useState([]);
   const [threads, setThreads] = useState(mock.messages);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [waitingRoom, setWaitingRoom] = useState(null);
   const [discoverBackView, setDiscoverBackView] = useState("messages");
   const [toast, setToast] = useState("");
+  const [meetTutorialStep, setMeetTutorialStep] = useState(null);
   const toastTimer = useRef(null);
 
   useEffect(() => {
@@ -82,39 +99,117 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => setToast(""), 2200);
   };
 
-  const saveProfile = (profile) => {
-    const interests = Array.from(
-      new Set([...profile.interests, profile.customInterest.trim()].filter(Boolean)),
-    );
-
-    setUser((current) => ({
-      ...current,
-      nickname: profile.nickname || current.nickname,
-      region: profile.region || current.region,
-      interests,
-    }));
-    setModal("onboarding-questions");
-    showToast("基础信息已保存。");
+  const recordMeetTutorialEvent = (event, step) => {
+    if (!authSession?.accessToken) return Promise.resolve(null);
+    return recordOnboardingEvent(authSession.accessToken, "meet", event, step).catch(() => null);
   };
 
-  const completeOnboarding = (message) => {
+  const openMeet = async () => {
+    setModal("meet");
+    if (!authSession?.accessToken) return;
+    try {
+      const state = await getOnboardingState(authSession.accessToken, "meet");
+      if (!state.should_show) return;
+      setMeetTutorialStep("join_room");
+      await recordMeetTutorialEvent("started", "join_room");
+    } catch {
+      setMeetTutorialStep(null);
+    }
+  };
+
+  const advanceMeetTutorial = (step) => {
+    setMeetTutorialStep(step);
+    void recordMeetTutorialEvent("step_viewed", step);
+  };
+
+  const interruptMeetTutorial = () => {
+    setMeetTutorialStep(null);
+  };
+
+  const dismissMeetTutorial = async () => {
+    void recordMeetTutorialEvent("dismissed", meetTutorialStep);
+    setMeetTutorialStep(null);
+    setCurrentRoom(null);
+    setWaitingRoom(null);
+    setPhase("home");
+    setActiveView("messages");
+    setModal("meet");
+  };
+
+  const completeMeetTutorial = async () => {
+    await recordMeetTutorialEvent("completed", "open_messages");
+    setMeetTutorialStep(null);
+    setCurrentRoom(null);
+    setWaitingRoom(null);
+    setModal(null);
+    setPhase("home");
+    setActiveView("messages");
+    showToast("新手引导完成，已回到相遇小助手消息页。");
+  };
+
+  const persistAuthResponse = (response) => {
+    const session = saveAuthSession(response);
+    setAuthSession(session);
+    setUser(toAppUser(response.user));
     setHasCompletedOnboarding(true);
+    return session;
+  };
+
+  const acceptAuthResponse = (response, message) => {
+    persistAuthResponse(response);
     setModal(null);
     setActiveView("messages");
     setPhase("home");
     showToast(message);
   };
 
-  const skipOnboardingQuestions = () => {
-    completeOnboarding("欢迎进入 Uslike。");
+  const handleLogin = async (credentials) => {
+    const response = await loginUser(credentials);
+    acceptAuthResponse(response, "欢迎回来。");
   };
 
-  const saveOnboardingQuestions = (questionAnswers) => {
-    setUser((current) => ({
-      ...current,
-      questionAnswers,
-    }));
-    completeOnboarding(questionAnswers.length ? "回答已保存，正在为你优化相遇。" : "欢迎进入 Uslike。");
+  const saveProfile = async ({ account, profile }) => {
+    const response = await registerUser(createRegistrationPayload(account, profile));
+    persistAuthResponse(response);
+    setModal("onboarding-questions");
+    showToast("注册成功，问卷可以跳过。");
+  };
+
+  const saveOnboardingQuestions = async (valuesTest) => {
+    if (!authSession?.accessToken) throw new Error("登录信息已失效，请重新登录。");
+    await saveValuesTest(authSession.accessToken, valuesTest);
+    setModal(null);
+    setActiveView("messages");
+    setPhase("home");
+    showToast("回答已保存，正在为你优化相遇。");
+  };
+
+  const skipOnboardingQuestions = async () => {
+    setModal(null);
+    setActiveView("messages");
+    setPhase("home");
+    showToast("欢迎进入 Uslike。你之后仍可以补填问卷。");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutAndClearSession(authSession?.accessToken);
+    } finally {
+      setAuthSession(null);
+      setHasCompletedOnboarding(false);
+      setUser(mock.user);
+      setFriends([]);
+      setThreads(mock.messages);
+      setCurrentRoom(null);
+      setWaitingRoom(null);
+      setMeetTutorialStep(null);
+      setActiveView("messages");
+      setPhase("splash");
+      setRoute("mvp");
+      setModal("auth-login");
+      window.history.replaceState({}, "", "/mvp");
+      showToast("已退出登录，请重新登录。");
+    }
   };
 
   const addFriendFromRoom = (room) => {
@@ -174,17 +269,21 @@ export default function App() {
 
   const onboardingModals = (
     <>
-      {modal === "register" ? (
-        <RegisterModal
+      {modal === "auth-login" ? (
+        <AuthModal
           onClose={() => setModal(null)}
-          onSuccess={() => {
-            showToast("注册成功。");
-            setModal("profile");
-          }}
+          onLogin={handleLogin}
+          onRegisterStart={() => setModal("profile")}
         />
       ) : null}
 
-      {modal === "profile" ? <ProfileModal defaultUser={user} onSave={saveProfile} /> : null}
+      {modal === "profile" ? (
+        <ProfileModal
+          defaultUser={{ nickname: "", region: "", interests: [], socialPreferences: [] }}
+          onSave={saveProfile}
+          onSwitchToLogin={() => setModal("auth-login")}
+        />
+      ) : null}
 
       {modal === "onboarding-questions" ? (
         <OnboardingQuestionsModal
@@ -200,7 +299,7 @@ export default function App() {
   if (phase === "splash") {
     return (
       <>
-        <MvpSplash onStart={() => setModal("register")} />
+        <MvpSplash onStart={() => setModal("auth-login")} />
         {onboardingModals}
         <Toast message={toast} />
       </>
@@ -211,15 +310,22 @@ export default function App() {
     return (
       <>
         <RoomDiscovery
-          rooms={mock.rooms}
+          rooms={meetTutorialStep ? [mock.meetTutorialRoom, ...mock.rooms] : mock.rooms}
           waitingRoom={waitingRoom}
           onBack={() => {
+            if (meetTutorialStep) interruptMeetTutorial();
             setWaitingRoom(null);
             setActiveView(discoverBackView);
             setPhase("home");
           }}
           onDismissWaiting={() => setWaitingRoom(null)}
           onToast={showToast}
+          tutorialStep={meetTutorialStep}
+          tutorialRoomId={mock.meetTutorialRoom.id}
+          onTutorialMapIntro={() => advanceMeetTutorial("select_assistant")}
+          onTutorialSelectRoom={() => advanceMeetTutorial("enter_room")}
+          onTutorialEnterRoom={() => advanceMeetTutorial("question_intro")}
+          onTutorialDismiss={dismissMeetTutorial}
           onEnterVoice={(room) => {
             const friendThread = threads.find((thread) => thread.friendId === room.id);
             setWaitingRoom(null);
@@ -274,7 +380,13 @@ export default function App() {
           room={currentRoom}
           questions={mock.questions}
           games={mock.games}
+          tutorialStep={currentRoom.isTutorial ? meetTutorialStep : null}
+          tutorialQuestions={mock.meetTutorialQuestions}
+          onTutorialStep={advanceMeetTutorial}
+          onTutorialDismiss={dismissMeetTutorial}
+          onTutorialComplete={completeMeetTutorial}
           onExit={() => {
+            if (currentRoom.isTutorial) interruptMeetTutorial();
             setPhase("home");
             setActiveView("messages");
           }}
@@ -296,22 +408,26 @@ export default function App() {
         threads={threads}
         games={mock.games}
         onNavigate={setActiveView}
-        onMeet={() => setModal("meet")}
+        onMeet={openMeet}
         onSendMessage={sendFriendMessage}
         onStartWaveRoom={startWaveRoom}
         onToast={showToast}
+        onLogout={handleLogout}
       />
 
       {modal === "meet" ? (
         <MeetModal
-          onClose={() => setModal(null)}
+          onClose={meetTutorialStep ? dismissMeetTutorial : () => setModal(null)}
           onCreate={() => setModal("create-room")}
           onJoin={() => {
+            if (meetTutorialStep === "join_room") advanceMeetTutorial("map_intro");
             setModal(null);
             setWaitingRoom(null);
             setDiscoverBackView("messages");
             setPhase("discover");
           }}
+          tutorialActive={meetTutorialStep === "join_room"}
+          onTutorialDismiss={dismissMeetTutorial}
         />
       ) : null}
 

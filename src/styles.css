@@ -90,7 +90,7 @@ button {
 
 @media (min-width: 1024px) {
   .landing-benefits-grid {
-    height: 50vh;
+    height: 100vh;
     min-height: 360px;
     max-height: 520px;
     grid-auto-rows: minmax(0, 1fr);
@@ -1790,7 +1790,8 @@ button.ink-glass {
   .galaxy-room__avatar-star::after,
   .galaxy-detail-overlay,
   .galaxy-detail-card,
-  .galaxy-list-return {
+  .galaxy-list-return,
+  .tutorial-spotlight {
     animation: none;
   }
 }
@@ -1799,6 +1800,34 @@ button.ink-glass {
   background:
     linear-gradient(90deg, transparent, rgba(139, 130, 232, .22), rgba(80, 191, 165, .18), transparent),
     rgba(244, 246, 255, .76);
+}
+
+.tutorial-spotlight {
+  border: 3px solid rgba(255, 255, 255, .94);
+  box-shadow:
+    0 0 0 4px rgba(139, 130, 232, .72),
+    0 0 34px 10px rgba(139, 130, 232, .58),
+    inset 0 0 20px rgba(255, 255, 255, .18);
+  animation: tutorialSpotlightPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tutorialSpotlightPulse {
+  0%,
+  100% {
+    filter: brightness(.92);
+    transform: scale(1);
+  }
+
+  50% {
+    filter: brightness(1.18);
+    transform: scale(1.012);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-spotlight {
+    animation: none;
+  }
 }
 
 .answer-dot {
