@@ -26,6 +26,7 @@ export default function AppShell({
 }) {
   const [settingsPage, setSettingsPage] = useState("hub");
   const [storeOpen, setStoreOpen] = useState(false);
+  const [activeChatFriendId, setActiveChatFriendId] = useState(null);
 
   const renderView = () => {
     if (storeOpen) return <StoreView onBack={() => setStoreOpen(false)} onToast={onToast} />;
@@ -35,6 +36,8 @@ export default function AppShell({
         <MessagesView
           threads={threads}
           games={games}
+          activeFriendId={activeChatFriendId}
+          onActiveFriendChange={setActiveChatFriendId}
           onSendMessage={onSendMessage}
           onStartWaveRoom={onStartWaveRoom}
           onToast={onToast}
@@ -42,7 +45,17 @@ export default function AppShell({
         />
       );
     }
-    if (activeView === "friends") return <FriendsView friends={friends} />;
+    if (activeView === "friends") {
+      return (
+        <FriendsView
+          friends={friends}
+          onOpenChat={(friendId) => {
+            setActiveChatFriendId(friendId);
+            onNavigate("messages");
+          }}
+        />
+      );
+    }
     if (activeView === "settings") {
       return (
         <SettingsView

@@ -172,8 +172,19 @@ export function FeedView({ feed }) {
   );
 }
 
-export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRoom, onToast, onOpenStore }) {
-  const [activeThreadId, setActiveThreadId] = useState(() => threads[0]?.id || null);
+export function MessagesView({
+  threads,
+  games = [],
+  activeFriendId,
+  onActiveFriendChange,
+  onSendMessage,
+  onStartWaveRoom,
+  onToast,
+  onOpenStore,
+}) {
+  const [activeThreadId, setActiveThreadId] = useState(
+    () => threads.find((thread) => thread.friendId === activeFriendId)?.id || threads[0]?.id || null,
+  );
   const [friendActions, setFriendActions] = useState(null);
   const [gamePicker, setGamePicker] = useState(null);
   const [waveRoomPicker, setWaveRoomPicker] = useState(null);
@@ -206,6 +217,12 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
       setActiveThreadId(threads[0].id);
     }
   }, [activeThreadId, threads]);
+
+  useEffect(() => {
+    if (!activeFriendId) return;
+    const targetThread = threads.find((thread) => thread.friendId === activeFriendId);
+    if (targetThread) setActiveThreadId(targetThread.id);
+  }, [activeFriendId, threads]);
 
   const submitMessage = () => {
     if (!activeThread || !draft.trim()) return;
@@ -277,7 +294,10 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
           {threads.map((thread) => (
             <button
               key={thread.id}
-              onClick={() => setActiveThreadId(thread.id)}
+              onClick={() => {
+                setActiveThreadId(thread.id);
+                onActiveFriendChange?.(thread.friendId);
+              }}
               className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
                 activeThreadId === thread.id ? "ink-glass" : "glass-choice"
               }`}
@@ -579,7 +599,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
   );
 }
 
-export function FriendsView({ friends }) {
+export function FriendsView({ friends, onOpenChat }) {
   return (
     <section className="mx-auto w-full max-w-4xl pb-32 pt-24">
       <h2 className="mb-5 text-3xl font-semibold text-stone-800">好友</h2>
@@ -588,13 +608,22 @@ export function FriendsView({ friends }) {
           <div className="glass-panel rounded-[28px] p-8 text-stone-500">还没有添加好友。</div>
         ) : (
           friends.map((friend) => (
-            <div key={friend.id} className="glass-panel flex items-center gap-4 rounded-[28px] p-5">
+            <button
+              key={friend.id}
+              type="button"
+              onClick={() => onOpenChat(friend.id)}
+              className="glass-panel group flex w-full items-center gap-4 rounded-[28px] p-5 text-left transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+              aria-label={`和 ${friend.name} 聊天`}
+            >
               <Avatar src={friend.avatar} name={friend.name} size="lg" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-semibold text-stone-800">{friend.name}</h3>
                 <p className="mt-1 text-sm text-stone-500">{friend.subtitle}</p>
               </div>
-            </div>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/70 bg-white/58 text-[#5d6387] transition group-hover:bg-white group-hover:text-[#6966dd]">
+                <MessageCircle size={21} />
+              </span>
+            </button>
           ))
         )}
       </div>
