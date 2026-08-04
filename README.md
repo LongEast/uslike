@@ -46,8 +46,35 @@ Open the app in your browser:
 http://localhost:5173/
 ```
 
-Vite proxies `/api` requests to the local FastAPI server. For a separately hosted backend, set
-`VITE_API_BASE_URL` to its origin when building the frontend.
+### Frontend API URL
+
+For local development, `VITE_API_BASE_URL` is intentionally optional. When it is unset,
+`import.meta.env.VITE_API_BASE_URL` is `undefined` and the frontend falls back to an empty string.
+API requests therefore use relative `/api/...` URLs, which Vite proxies to
+`http://127.0.0.1:8000` according to `vite.config.js`.
+
+Set `VITE_API_BASE_URL` only when the frontend must call a separately hosted backend directly.
+Create or update `.env.local` in the repository root:
+
+```dotenv
+VITE_API_BASE_URL=https://api.example.com
+```
+
+This also applies when FastAPI uses a different local port. For example:
+
+```bash
+.venv/bin/uvicorn backend.app.main:app --reload --port 8001
+```
+
+```dotenv
+VITE_API_BASE_URL=http://127.0.0.1:8001
+```
+
+Use the backend origin without a trailing slash. Vite exposes only variables prefixed with
+`VITE_` to frontend code. It reads environment files when the development server starts, so stop
+and restart `npm run dev` after changing `.env.local`. For a production deployment, provide the
+variable before running `npm run build`; the value is embedded in the browser bundle and must not
+contain secrets.
 
 The backend creates `backend/data/uslike.json` on the first successful write. The store uses locked,
 atomic file replacement, but is intentionally limited to one application process and should not be

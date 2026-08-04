@@ -618,7 +618,6 @@ export function SettingsView({
         label: "新手引导",
         icon: CircleHelp,
         color: "text-[#6b5ee7]",
-        badge: "重新体验",
         onClick: onRestartMeetTutorial,
       },
       { label: "设置", icon: Settings, color: "text-[#4267d5]", onClick: onOpenAccount },
