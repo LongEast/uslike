@@ -2,6 +2,7 @@ import { useState } from "react";
 import Avatar from "./Avatar.jsx";
 import BottomNav from "./BottomNav.jsx";
 import HomeView from "./HomeView.jsx";
+import StoreView from "./StoreView.jsx";
 import { FeedView, FriendsView, MessagesView, SettingsView } from "./SimpleViews.jsx";
 
 export default function AppShell({
@@ -24,8 +25,10 @@ export default function AppShell({
   onRestartMeetTutorial,
 }) {
   const [settingsPage, setSettingsPage] = useState("hub");
+  const [storeOpen, setStoreOpen] = useState(false);
 
   const renderView = () => {
+    if (storeOpen) return <StoreView onBack={() => setStoreOpen(false)} onToast={onToast} />;
     if (activeView === "feed") return <FeedView feed={feed} />;
     if (activeView === "messages") {
       return (
@@ -35,6 +38,7 @@ export default function AppShell({
           onSendMessage={onSendMessage}
           onStartWaveRoom={onStartWaveRoom}
           onToast={onToast}
+          onOpenStore={() => setStoreOpen(true)}
         />
       );
     }
@@ -49,6 +53,7 @@ export default function AppShell({
           onAccountUserUpdated={onAccountUserUpdated}
           onOpenSettingsQuestionnaire={onOpenSettingsQuestionnaire}
           onRestartMeetTutorial={onRestartMeetTutorial}
+          onOpenStore={() => setStoreOpen(true)}
           onToast={onToast}
           accountOpen={settingsPage === "account"}
           onOpenAccount={() => setSettingsPage("account")}
@@ -78,6 +83,7 @@ export default function AppShell({
       <BottomNav
         active={activeView}
         onSelect={(key) => {
+          setStoreOpen(false);
           if (key === "meet") {
             onMeet();
             return;

@@ -171,7 +171,7 @@ export function FeedView({ feed }) {
   );
 }
 
-export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRoom, onToast }) {
+export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRoom, onToast, onOpenStore }) {
   const [activeThreadId, setActiveThreadId] = useState(() => threads[0]?.id || null);
   const [friendActions, setFriendActions] = useState(null);
   const [gamePicker, setGamePicker] = useState(null);
@@ -321,7 +321,7 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
                 ].map((item) => (
                   <button
                     key={item.label}
-                    onClick={() => onToast(`${item.label}稍后开放。`)}
+                    onClick={onOpenStore}
                     className="ink-glass rounded-3xl px-5 py-4 text-left transition hover:-translate-y-1 hover:brightness-110"
                   >
                     <span className="block text-base font-semibold text-stone-800">{item.label}</span>
@@ -599,6 +599,7 @@ export function SettingsView({
   onAccountUserUpdated,
   onOpenSettingsQuestionnaire,
   onRestartMeetTutorial,
+  onOpenStore,
   onToast,
   accountOpen,
   onOpenAccount,
@@ -609,7 +610,7 @@ export function SettingsView({
     [
       { label: "收藏", icon: Box, color: "text-[#6b73ff]" },
       { label: "动态", icon: Bell, color: "text-[#4267d5]" },
-      { label: "商城", icon: Store, color: "text-[#b85cff]", badge: "推荐" },
+      { label: "商城", icon: Store, color: "text-[#b85cff]", badge: "推荐", onClick: onOpenStore },
       { label: "表情商店", icon: Smile, color: "text-[#d757c8]" },
     ],
     [
