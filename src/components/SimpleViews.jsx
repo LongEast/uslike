@@ -14,6 +14,7 @@ import {
   LogOut,
   MessageCircle,
   Mic,
+  Minus,
   MoreHorizontal,
   PenLine,
   PhoneCall,
@@ -440,14 +441,21 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
                 </button>
                 <button
                   onClick={() => setToolPanelOpen((open) => !open)}
-                  title="更多"
+                  title={toolPanelOpen ? "收起更多功能" : "展开更多功能"}
+                  aria-label={toolPanelOpen ? "收起更多功能" : "展开更多功能"}
+                  aria-expanded={toolPanelOpen}
+                  aria-controls="chat-tool-panel"
                   className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border transition ${
                     toolPanelOpen
                       ? "border-[#8b82e8]/55 bg-[#8b82e8]/18 text-[#312f68] shadow-[0_0_0_2px_rgba(139,130,232,0.12)]"
                       : "border-stone-300 bg-white/42 text-stone-700 hover:bg-white/70 hover:text-stone-950"
                   }`}
                 >
-                  <Plus size={31} strokeWidth={2.4} />
+                  {toolPanelOpen ? (
+                    <Minus size={31} strokeWidth={2.4} />
+                  ) : (
+                    <Plus size={31} strokeWidth={2.4} />
+                  )}
                 </button>
                 <button
                   onClick={submitMessage}
@@ -459,7 +467,10 @@ export function MessagesView({ threads, games = [], onSendMessage, onStartWaveRo
               </div>
 
               {toolPanelOpen ? (
-                <div className="mt-4 rounded-[28px] border border-white/60 bg-white/36 p-5 backdrop-blur-xl">
+                <div
+                  id="chat-tool-panel"
+                  className="mt-4 rounded-[28px] border border-white/60 bg-white/36 p-5 backdrop-blur-xl"
+                >
                   {callOptionsOpen ? (
                     <div className="mb-5 grid gap-3 sm:grid-cols-2">
                       <button
