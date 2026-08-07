@@ -463,6 +463,7 @@ export function getMockFeed() {
   return [
     {
       id: "feed-1",
+      channel: "friends",
       user: "柚白",
       avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=youbo",
       badge: "同频 86%",
@@ -475,6 +476,7 @@ export function getMockFeed() {
     },
     {
       id: "feed-2",
+      channel: "discover",
       user: "南枝",
       avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=nanzhi",
       badge: "新动态",
@@ -487,6 +489,7 @@ export function getMockFeed() {
     },
     {
       id: "feed-3",
+      channel: "friends",
       user: "青禾",
       avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=feed-qinghe",
       status: "武汉 · 周末空出半天",
@@ -498,6 +501,7 @@ export function getMockFeed() {
     },
     {
       id: "feed-4",
+      channel: "discover",
       user: "森野",
       avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=feed-senye",
       badge: "电影笔记",
