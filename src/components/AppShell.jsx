@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Avatar from "./Avatar.jsx";
 import BottomNav from "./BottomNav.jsx";
+import { CoinBalancePill } from "./CoinWalletUI.jsx";
 import HomeView from "./HomeView.jsx";
 import StoreView from "./StoreView.jsx";
 import { FeedView, FriendsView, MessagesView, SettingsView } from "./SimpleViews.jsx";
@@ -23,13 +24,20 @@ export default function AppShell({
   onAccountUserUpdated,
   onOpenSettingsQuestionnaire,
   onRestartMeetTutorial,
+  wallet,
+  storeOpen,
+  onStoreOpen,
+  onStoreClose,
+  onOpenWallet,
+  onOpenCheckIn,
+  onCheckIn,
+  onSpendCoins,
 }) {
   const [settingsPage, setSettingsPage] = useState("hub");
-  const [storeOpen, setStoreOpen] = useState(false);
   const [activeChatFriendId, setActiveChatFriendId] = useState(null);
 
   const renderView = () => {
-    if (storeOpen) return <StoreView onBack={() => setStoreOpen(false)} onToast={onToast} />;
+    if (storeOpen) return <StoreView onBack={onStoreClose} onToast={onToast} coinBalance={wallet.balance} onSpendCoins={onSpendCoins} />;
     if (activeView === "feed") return <FeedView feed={feed} />;
     if (activeView === "messages") {
       return (
@@ -41,7 +49,10 @@ export default function AppShell({
           onSendMessage={onSendMessage}
           onStartWaveRoom={onStartWaveRoom}
           onToast={onToast}
-          onOpenStore={() => setStoreOpen(true)}
+          onOpenStore={onStoreOpen}
+          wallet={wallet}
+          onOpenCheckIn={onOpenCheckIn}
+          onCheckIn={onCheckIn}
         />
       );
     }
@@ -66,15 +77,16 @@ export default function AppShell({
           onAccountUserUpdated={onAccountUserUpdated}
           onOpenSettingsQuestionnaire={onOpenSettingsQuestionnaire}
           onRestartMeetTutorial={onRestartMeetTutorial}
-          onOpenStore={() => setStoreOpen(true)}
+          onOpenStore={onStoreOpen}
           onToast={onToast}
+          coinBalance={wallet.balance}
           accountOpen={settingsPage === "account"}
           onOpenAccount={() => setSettingsPage("account")}
           onCloseAccount={() => setSettingsPage("hub")}
         />
       );
     }
-    return <HomeView user={user} feed={feed} onMeet={onMeet} />;
+    return <HomeView user={user} feed={feed} onMeet={onMeet} wallet={wallet} onOpenCheckIn={onOpenCheckIn} onCheckIn={onCheckIn} />;
   };
 
   return (
@@ -88,7 +100,8 @@ export default function AppShell({
 
       <header className="fixed left-6 top-5 z-30 flex items-center gap-3 rounded-full border border-white/70 bg-white/56 px-3 py-2 shadow-soft backdrop-blur-xl">
         <Avatar src={user.avatar} name={user.nickname} size="sm" />
-        <span className="pr-2 font-semibold text-stone-800">{user.nickname}</span>
+        <span className="font-semibold text-stone-800">{user.nickname}</span>
+        <CoinBalancePill balance={wallet.balance} onClick={onOpenWallet} compact />
       </header>
 
       <div className="relative z-10">{renderView()}</div>
@@ -96,7 +109,7 @@ export default function AppShell({
       <BottomNav
         active={activeView}
         onSelect={(key) => {
-          setStoreOpen(false);
+          onStoreClose();
           if (key === "meet") {
             onMeet();
             return;

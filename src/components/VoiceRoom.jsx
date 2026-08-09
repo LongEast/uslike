@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronUp, Gamepad2, Lock, MessageCircle, Mic, MicOff, PenLine, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Avatar from "./Avatar.jsx";
 import ChatSidebar from "./ChatSidebar.jsx";
 import Modal from "./Modal.jsx";
@@ -12,6 +12,7 @@ export default function VoiceRoom({
   onExit,
   onAddFriend,
   onToast,
+  onFirstInteraction,
 }) {
   const [micOn, setMicOn] = useState(true);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -27,6 +28,7 @@ export default function VoiceRoom({
   ]);
   const [showGames, setShowGames] = useState(false);
   const [friendState, setFriendState] = useState(() => (room.isFriend ? "added" : "idle"));
+  const firstInteractionRef = useRef(false);
 
   const hasNextQuestion = questionIndex < questions.length - 1;
   const currentQuestion = questions[Math.min(questionIndex, questions.length - 1)];
@@ -57,6 +59,10 @@ export default function VoiceRoom({
     setMyAnswer(answer);
     if (questionIndex === 0 && !room.isFriend) {
       setLightGameUnlocked(true);
+      if (!firstInteractionRef.current) {
+        firstInteractionRef.current = true;
+        onFirstInteraction?.();
+      }
     }
     window.setTimeout(() => setTheirAnswer("TA 也回答了"), 650);
   };

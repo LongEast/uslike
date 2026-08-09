@@ -437,11 +437,15 @@ function DecorationCard({ product, onPurchase, nickname }) {
   );
 }
 
-export default function StoreView({ onBack, onToast }) {
+export default function StoreView({ onBack, onToast, coinBalance, onSpendCoins }) {
   const [section, setSection] = useState("recharge");
   const nickname = "同频相遇";
   const purchase = (product) => {
-    onToast?.(`${product.name}购买功能稍后开放。`);
+    if (product.type !== "bubble" && product.type !== "frame" && product.type !== "text") {
+      onToast?.("MVP 暂不接入真实支付，可体验互像币装扮购买。");
+      return;
+    }
+    onSpendCoins(product);
   };
 
   return (
@@ -472,7 +476,7 @@ export default function StoreView({ onBack, onToast }) {
           </span>
           <span>
             <span className="block text-xs font-medium text-stone-400">我的互像币</span>
-            <span className="mt-0.5 block text-lg font-semibold text-stone-800">0</span>
+            <span className="mt-0.5 block text-lg font-semibold text-stone-800">{coinBalance}</span>
           </span>
         </div>
       </div>

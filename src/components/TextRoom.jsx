@@ -17,6 +17,7 @@ export default function TextRoom({
   onTutorialStep,
   onTutorialDismiss,
   onTutorialComplete,
+  onFirstInteraction,
 }) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [skipReady, setSkipReady] = useState(false);
@@ -53,6 +54,7 @@ export default function TextRoom({
   const messageLockedRef = useRef(false);
   const tutorialFinishedRef = useRef(false);
   const tutorialTimersRef = useRef([]);
+  const firstInteractionRef = useRef(false);
 
   const hasNextQuestion = isTutorialRoom
     ? questionIndex < tutorialQuestions.length - 1
@@ -112,6 +114,10 @@ export default function TextRoom({
     setMyAnswer(answer);
     if (questionIndex === 0 && !room.isFriend) {
       setLightGameUnlocked(true);
+      if (!firstInteractionRef.current) {
+        firstInteractionRef.current = true;
+        onFirstInteraction?.();
+      }
     }
     scheduleTutorialUpdate(() => {
       setTheirAnswer("相遇小助手也回答了");

@@ -933,7 +933,7 @@ export default function RoomDiscovery({
               </div>
               <h2 className="mt-3 text-xl font-semibold text-stone-800">{waitingRoom.name}</h2>
               <p className="mt-1 text-sm leading-6 text-stone-500">
-                等待过程中你也可以继续浏览同频空间，选择下方已有房间直接加入。
+                等待过程中你也可以继续浏览同频空间；当前不会冻结互像币，匹配成功并开始互动时才会冻结。
               </p>
             </div>
           </div>
@@ -987,6 +987,9 @@ export default function RoomDiscovery({
             <h1 className="mt-4 max-w-[calc(100vw-96px)] text-3xl font-semibold leading-tight text-stone-900 drop-shadow-[0_8px_26px_rgba(255,255,255,0.45)] sm:max-w-2xl sm:text-4xl">
               越靠近我的坐标，越可能同频相遇
             </h1>
+            <p className="mt-3 w-fit rounded-full border border-white/70 bg-white/58 px-3 py-2 text-xs font-semibold text-[#5d6387] shadow-sm backdrop-blur-xl">
+              自由探索不冻结互像币，确认和具体用户开始互动时才暂时冻结 1 币
+            </p>
           </div>
 
           <div

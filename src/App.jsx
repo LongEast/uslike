@@ -2,11 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "./components/AppShell.jsx";
 import { AuthModal, OnboardingQuestionsModal, ProfileModal } from "./components/AuthModals.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
+import { CheckInModal, CoinHistoryModal } from "./components/CoinWalletUI.jsx";
 import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
 import Modal from "./components/Modal.jsx";
 import MvpSplash from "./components/MvpSplash.jsx";
 import RoomDiscovery from "./components/RoomDiscovery.jsx";
+import {
+  CooldownModal,
+  DepositConfirmModal,
+  ExitDepositModal,
+  InsufficientCoinsModal,
+  ResumeRoomModal,
+} from "./components/RoomDepositUI.jsx";
 import TextRoom from "./components/TextRoom.jsx";
 import VoiceRoom from "./components/VoiceRoom.jsx";
 import {
@@ -21,6 +29,16 @@ import {
   makeFriendFromRoom,
 } from "./data/mockData.js";
 import { getOnboardingState, recordOnboardingEvent } from "./services/onboarding.js";
+import {
+  appendTransaction,
+  claimDailyCheckIn,
+  getActiveCooldown,
+  loadRoomDeposit,
+  loadWallet,
+  recordQuickExit,
+  saveRoomDeposit,
+  saveWallet,
+} from "./services/coinWallet.js";
 import {
   createRegistrationPayload,
   loadAuthSession,
@@ -68,8 +86,18 @@ export default function App() {
   const [meetTutorialStep, setMeetTutorialStep] = useState(null);
   const [questionnaireContext, setQuestionnaireContext] = useState("registration");
   const [questionnaireRevision, setQuestionnaireRevision] = useState(0);
+  const [wallet, setWallet] = useState(() => loadWallet());
+  const [roomDeposit, setRoomDeposit] = useState(() => loadRoomDeposit());
+  const [pendingEntry, setPendingEntry] = useState(null);
+  const [storeOpen, setStoreOpen] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [exitIsQuick, setExitIsQuick] = useState(false);
   const toastTimer = useRef(null);
   const tutorialDismissNoticeShownRef = useRef(new Set());
+  const resumePromptShownRef = useRef(false);
+
+  useEffect(() => saveWallet(wallet), [wallet]);
+  useEffect(() => saveRoomDeposit(roomDeposit), [roomDeposit]);
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -102,6 +130,31 @@ export default function App() {
     setToast(message);
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(""), 2200);
+  };
+
+  const handleCheckIn = () => {
+    const result = claimDailyCheckIn(wallet);
+    if (!result.reward) return;
+    setWallet(result.wallet);
+    showToast(`签到成功 +${result.reward} 互像币`);
+  };
+
+  const openStore = () => {
+    setModal(null);
+    setPendingEntry(null);
+    setCurrentRoom(null);
+    setPhase("home");
+    setStoreOpen(true);
+    setActiveView("messages");
+  };
+
+  const spendCoins = (product) => {
+    if (wallet.balance < product.coinPrice) {
+      showToast("互像币余额不足");
+      return;
+    }
+    setWallet((current) => appendTransaction(current, `购买${product.name}`, -product.coinPrice));
+    showToast(`已购买「${product.name}」 · -${product.coinPrice} 互像币`);
   };
 
   const recordMeetTutorialEvent = (event, step) => {
@@ -294,6 +347,137 @@ export default function App() {
     };
   };
 
+  const enterRoomNow = (room, targetPhase) => {
+    const friendThread = threads.find((thread) => thread.friendId === room.id);
+    setWaitingRoom(null);
+    setCurrentRoom({
+      ...room,
+      isFriend: Boolean(room.isFriend || friends.some((friend) => friend.id === room.id)),
+      ...getFriendGameState(friendThread),
+    });
+    setModal(null);
+    setPendingEntry(null);
+    setPhase(targetPhase);
+  };
+
+  const finishEntry = (entry, reuseDeposit = false) => {
+    if (!entry) return;
+    if (!reuseDeposit) {
+      const nextWallet = appendTransaction(wallet, "房间互动保证金冻结", -1);
+      const depositTransactionId = nextWallet.transactions[0]?.id;
+      setWallet(nextWallet);
+      setRoomDeposit({
+        roomId: entry.room.id,
+        room: entry.room,
+        enteredAt: Date.now(),
+        frozen: true,
+        depositTransactionId,
+      });
+    }
+
+    if (reuseDeposit && roomDeposit?.roomId !== entry.room.id) {
+      setRoomDeposit((current) => current ? { ...current, roomId: entry.room.id, room: entry.room } : current);
+    }
+
+    enterRoomNow(entry.room, entry.targetPhase);
+    if (!reuseDeposit) showToast("1 互像币互动保证金已冻结");
+  };
+
+  const requestRoomEntry = (room, targetPhase) => {
+    const friendThread = threads.find((thread) => thread.friendId === room.id);
+    const entryRoom = {
+      ...room,
+      isFriend: Boolean(room.isFriend || friends.some((friend) => friend.id === room.id)),
+      ...getFriendGameState(friendThread),
+    };
+    if (entryRoom.isFriend || entryRoom.isTutorial) {
+      enterRoomNow(entryRoom, targetPhase);
+      return;
+    }
+
+    const entry = { room: entryRoom, targetPhase };
+    if (roomDeposit?.frozen) {
+      const resumable = Date.now() - roomDeposit.enteredAt <= 5 * 60 * 1000;
+      if (resumable) {
+        setPendingEntry(entry);
+        if (waitingRoom && roomDeposit.roomId !== entryRoom.id) {
+          finishEntry(entry, true);
+          return;
+        }
+        if (roomDeposit.roomId !== entryRoom.id) {
+          setPendingEntry({
+            room: roomDeposit.room || entryRoom,
+            targetPhase: roomDeposit.room?.type === "语音房" ? "voice" : "text",
+          });
+        }
+        setModal("resume-room");
+        return;
+      }
+
+      setWallet((current) => appendTransaction(current, "异常中断・保证金返还", 1));
+      setRoomDeposit(null);
+      showToast("上次房间已超出重连时间，冻结保证金已安全返还");
+    }
+
+    const cooldown = getActiveCooldown();
+    if (cooldown) {
+      setCooldownUntil(cooldown.cooldownUntil);
+      setModal("cooldown");
+      return;
+    }
+    const availableBalance = wallet.balance + (roomDeposit?.frozen ? 1 : 0);
+    if (availableBalance < 1) {
+      setPendingEntry({ room: entryRoom, targetPhase });
+      setModal("insufficient-coins");
+      return;
+    }
+
+    setPendingEntry(entry);
+    setModal("deposit-confirm");
+  };
+
+  const releaseRoomDeposit = () => {
+    if (!roomDeposit?.frozen || !currentRoom || roomDeposit.roomId !== currentRoom.id) return;
+    setWallet((current) => appendTransaction(current, "完成首次问题・保证金返还", 1));
+    setRoomDeposit(null);
+  };
+
+  const exitRoomNow = () => {
+    setCurrentRoom(null);
+    setModal(null);
+    setPhase("home");
+    setActiveView("messages");
+  };
+
+  const requestRoomExit = () => {
+    if (!currentRoom || currentRoom.isFriend || currentRoom.isTutorial || !roomDeposit?.frozen || roomDeposit.roomId !== currentRoom.id) {
+      exitRoomNow();
+      return;
+    }
+    setExitIsQuick(Date.now() - roomDeposit.enteredAt < 60 * 1000);
+    setModal("exit-deposit");
+  };
+
+  const confirmDepositExit = () => {
+    if (roomDeposit?.depositTransactionId) {
+      setWallet((current) => ({
+        ...current,
+        transactions: current.transactions.map((transaction) =>
+          transaction.id === roomDeposit.depositTransactionId
+            ? { ...transaction, label: "互动保证金扣除（未完成互动）" }
+            : transaction,
+        ),
+      }));
+    }
+    if (exitIsQuick) {
+      const quickExit = recordQuickExit();
+      setCooldownUntil(quickExit.cooldownUntil);
+    }
+    setRoomDeposit(null);
+    exitRoomNow();
+    showToast("互动保证金 -1\n本次进入后未完成有效互动");
+  };
+
   const startWaveRoom = (thread, type) => {
     setCurrentRoom({
       id: thread.friendId || thread.id,
@@ -309,6 +493,24 @@ export default function App() {
     });
     setPhase(type === "语音房" ? "voice" : "text");
   };
+
+  useEffect(() => {
+    if (
+      resumePromptShownRef.current ||
+      route !== "mvp" ||
+      phase !== "home" ||
+      modal ||
+      !roomDeposit?.frozen ||
+      !roomDeposit.room ||
+      Date.now() - roomDeposit.enteredAt > 5 * 60 * 1000
+    ) return;
+    resumePromptShownRef.current = true;
+    setPendingEntry({
+      room: roomDeposit.room,
+      targetPhase: roomDeposit.room.type === "语音房" ? "voice" : "text",
+    });
+    setModal("resume-room");
+  }, [modal, phase, roomDeposit, route]);
 
   const onboardingModals = (
     <>
@@ -354,6 +556,48 @@ export default function App() {
     </>
   );
 
+  const economyModals = (
+    <>
+      {modal === "check-in" ? (
+        <CheckInModal wallet={wallet} onClose={() => setModal(null)} onClaim={handleCheckIn} />
+      ) : null}
+      {modal === "coin-history" ? (
+        <CoinHistoryModal wallet={wallet} onClose={() => setModal(null)} onOpenStore={openStore} />
+      ) : null}
+      {modal === "deposit-confirm" ? (
+        <DepositConfirmModal
+          balance={wallet.balance}
+          actionLabel="开始互动"
+          onCancel={() => {
+            setModal(null);
+            setPendingEntry(null);
+          }}
+          onConfirm={() => finishEntry(pendingEntry)}
+        />
+      ) : null}
+      {modal === "insufficient-coins" ? (
+        <InsufficientCoinsModal
+          onClose={() => setModal(null)}
+          onCheckIn={() => setModal("check-in")}
+          onStore={openStore}
+        />
+      ) : null}
+      {modal === "exit-deposit" ? (
+        <ExitDepositModal quickExit={exitIsQuick} onContinue={() => setModal(null)} onExit={confirmDepositExit} />
+      ) : null}
+      {modal === "resume-room" && pendingEntry ? (
+        <ResumeRoomModal
+          roomName={pendingEntry.room.name || pendingEntry.room.hostName}
+          onClose={() => setModal(null)}
+          onResume={() => finishEntry(pendingEntry, true)}
+        />
+      ) : null}
+      {modal === "cooldown" ? (
+        <CooldownModal cooldownUntil={cooldownUntil} onClose={() => setModal(null)} />
+      ) : null}
+    </>
+  );
+
   if (route === "landing") return <Landing onStart={openMvp} />;
 
   if (phase === "splash") {
@@ -387,26 +631,13 @@ export default function App() {
           onTutorialEnterRoom={() => advanceMeetTutorial("question_intro")}
           onTutorialDismiss={dismissMeetTutorial}
           onEnterVoice={(room) => {
-            const friendThread = threads.find((thread) => thread.friendId === room.id);
-            setWaitingRoom(null);
-            setCurrentRoom({
-              ...room,
-              isFriend: friends.some((friend) => friend.id === room.id),
-              ...getFriendGameState(friendThread),
-            });
-            setPhase("voice");
+            requestRoomEntry(room, "voice");
           }}
           onEnterText={(room) => {
-            const friendThread = threads.find((thread) => thread.friendId === room.id);
-            setWaitingRoom(null);
-            setCurrentRoom({
-              ...room,
-              isFriend: friends.some((friend) => friend.id === room.id),
-              ...getFriendGameState(friendThread),
-            });
-            setPhase("text");
+            requestRoomEntry(room, "text");
           }}
         />
+        {economyModals}
         <Toast message={toast} />
       </>
     );
@@ -420,13 +651,12 @@ export default function App() {
           room={currentRoom}
           questions={mock.questions}
           games={mock.games}
-          onExit={() => {
-            setPhase("home");
-            setActiveView("messages");
-          }}
+          onExit={requestRoomExit}
           onToast={showToast}
           onAddFriend={addFriendFromRoom}
+          onFirstInteraction={releaseRoomDeposit}
         />
+        {economyModals}
         <Toast message={toast} />
       </>
     );
@@ -447,12 +677,13 @@ export default function App() {
           onTutorialComplete={completeMeetTutorial}
           onExit={() => {
             if (currentRoom.isTutorial) interruptMeetTutorial();
-            setPhase("home");
-            setActiveView("messages");
+            requestRoomExit();
           }}
           onToast={showToast}
           onAddFriend={addFriendFromRoom}
+          onFirstInteraction={releaseRoomDeposit}
         />
+        {economyModals}
         <Toast message={toast} />
       </>
     );
@@ -478,6 +709,14 @@ export default function App() {
         onAccountUserUpdated={handleAccountUserUpdated}
         onOpenSettingsQuestionnaire={openSettingsQuestionnaire}
         onRestartMeetTutorial={restartMeetTutorial}
+        wallet={wallet}
+        storeOpen={storeOpen}
+        onStoreOpen={() => setStoreOpen(true)}
+        onStoreClose={() => setStoreOpen(false)}
+        onOpenWallet={() => setModal("coin-history")}
+        onOpenCheckIn={() => setModal("check-in")}
+        onCheckIn={handleCheckIn}
+        onSpendCoins={spendCoins}
       />
 
       {modal === "meet" ? (
@@ -502,15 +741,25 @@ export default function App() {
           onClose={() => setModal(null)}
           onCreated={(roomDraft) => {
             setModal(null);
-            setWaitingRoom({ ...roomDraft, startedAt: Date.now() });
+            setWaitingRoom({
+              ...roomDraft,
+              id: `created-${Date.now()}`,
+              hostName: user.nickname,
+              hostAvatar: user.avatar,
+              nickname: user.nickname,
+              region: user.region,
+              interests: user.interests,
+              startedAt: Date.now(),
+            });
             setDiscoverBackView("messages");
             setPhase("discover");
-            showToast("房间已创建，正在等待玩家加入。");
+            showToast("房间已创建，匹配到玩家并开始互动时才会冻结保证金。");
           }}
         />
       ) : null}
 
       {onboardingModals}
+      {economyModals}
 
       <Toast message={toast} />
     </>
@@ -521,7 +770,7 @@ function Toast({ message }) {
   if (!message) return null;
 
   return (
-    <div className="fixed left-1/2 top-6 z-[70] -translate-x-1/2 animate-pop rounded-full border border-white/55 bg-white/42 px-5 py-3 text-sm font-semibold text-stone-800 shadow-[0_18px_48px_rgba(88,95,142,0.16)] backdrop-blur-xl">
+    <div className="fixed left-1/2 top-6 z-[70] -translate-x-1/2 animate-pop whitespace-pre-line rounded-full border border-white/55 bg-white/72 px-5 py-3 text-center text-sm font-semibold text-stone-800 shadow-[0_18px_48px_rgba(88,95,142,0.16)] backdrop-blur-xl">
       {message}
     </div>
   );

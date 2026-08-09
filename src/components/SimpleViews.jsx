@@ -37,6 +37,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { filterFeedByChannel } from "../utils/feedFilter.js";
 import Avatar from "./Avatar.jsx";
 import AccountSettingsView from "./AccountSettingsView.jsx";
+import { CheckInCard } from "./CoinWalletUI.jsx";
 import Modal from "./Modal.jsx";
 
 export function FeedView({ feed }) {
@@ -245,6 +246,9 @@ export function MessagesView({
   onStartWaveRoom,
   onToast,
   onOpenStore,
+  wallet,
+  onOpenCheckIn,
+  onCheckIn,
 }) {
   const [activeThreadId, setActiveThreadId] = useState(
     () => threads.find((thread) => thread.friendId === activeFriendId)?.id || threads[0]?.id || null,
@@ -352,31 +356,34 @@ export function MessagesView({
 
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-5 pb-32 pt-24 lg:grid-cols-[360px_1fr]">
-      <div className="glass-panel rounded-[32px] p-5">
-        <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
-        <div className="space-y-3">
-          {threads.map((thread) => (
-            <button
-              key={thread.id}
-              onClick={() => {
-                setActiveThreadId(thread.id);
-                onActiveFriendChange?.(thread.friendId);
-              }}
-              className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
-                activeThreadId === thread.id ? "ink-glass" : "glass-choice"
-              }`}
-            >
-              <Avatar src={thread.avatar} name={thread.name} />
-              <span>
-                <span className="block font-semibold text-stone-800">
-                  {thread.name}
+      <div className="space-y-5">
+        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} />
+        <div className="glass-panel rounded-[32px] p-5">
+          <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
+          <div className="space-y-3">
+            {threads.map((thread) => (
+              <button
+                key={thread.id}
+                onClick={() => {
+                  setActiveThreadId(thread.id);
+                  onActiveFriendChange?.(thread.friendId);
+                }}
+                className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
+                  activeThreadId === thread.id ? "ink-glass" : "glass-choice"
+                }`}
+              >
+                <Avatar src={thread.avatar} name={thread.name} />
+                <span>
+                  <span className="block font-semibold text-stone-800">
+                    {thread.name}
+                  </span>
+                  <span className="mt-1 block text-xs text-stone-500">
+                    {thread.subtitle}
+                  </span>
                 </span>
-                <span className="mt-1 block text-xs text-stone-500">
-                  {thread.subtitle}
-                </span>
-              </span>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -714,6 +721,7 @@ export function SettingsView({
   onRestartMeetTutorial,
   onOpenStore,
   onToast,
+  coinBalance,
   accountOpen,
   onOpenAccount,
   onCloseAccount,
@@ -760,6 +768,9 @@ export function SettingsView({
             <h2 className="truncate text-3xl font-semibold text-stone-900">{user.nickname}</h2>
             <p className="mt-2 text-base text-stone-500">Uslike ID：{user.id}</p>
             <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full border border-[#d8dcff] bg-[#f4f6ff] px-3 py-1.5 text-sm font-semibold text-[#6b5ee7]">
+                互像币 {coinBalance}
+              </span>
               <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
                 + 状态
               </span>
