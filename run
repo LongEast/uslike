@@ -1,13 +1,41 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+BACKEND_LOG="${BACKEND_LOG:-/tmp/uslike-backend.log}"
 
 cleanup() {
     echo "Stopping services..."
-    kill "$BACKEND_PID" 2>/dev/null
+    if [[ -n "${BACKEND_PID:-}" ]]; then
+        kill "$BACKEND_PID" 2>/dev/null || true
+        wait "$BACKEND_PID" 2>/dev/null || true
+    fi
 }
 
 trap cleanup EXIT INT TERM
 
-.venv/bin/uvicorn backend.app.main:app --reload &
+if command -v pkill >/dev/null 2>&1; then
+    pkill -f 'uvicorn .*backend\.app\.main:app' 2>/dev/null || true
+else
+    echo "pkill not available; skipping stale backend cleanup" >&2
+fi
+
+: > "$BACKEND_LOG"
+echo "Starting backend..."
+.venv/bin/uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000 >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 
+for _ in $(seq 1 30); do
+    if curl -fsS http://127.0.0.1:8000/docs >/dev/null 2>&1; then
+        echo "Backend ready at http://127.0.0.1:8000/docs"
+        break
+    fi
+    sleep 1
+done
+
+if ! curl -fsS http://127.0.0.1:8000/docs >/dev/null 2>&1; then
+    echo "Backend failed to start. See $BACKEND_LOG" >&2
+    exit 1
+fi
+
+echo "Starting frontend..."
 npm run dev

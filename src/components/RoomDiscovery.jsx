@@ -24,28 +24,34 @@ const MAX_DISTANCE = 178;
 const PAN_LIMIT = 92;
 const ROOM_SPACE_SCALE = 8.5;
 const MAX_ROOM_BATCH_SIZE = 10;
-const INNER_MATCH_RADIUS = 150;
-const OUTER_MATCH_RADIUS = 580;
-const COMPACT_LABEL_SIZE = { width: 104, height: 76 };
+const INNER_ROOM_RADIUS = 150;
+const OUTER_ROOM_RADIUS = 580;
+const COMPACT_LABEL_SIZE = { width: 76, height: 76 };
 const EXPANDED_LABEL_SIZE = { width: 304, height: 104 };
 
-const getRoomPosition = (room) => ({
-  mapX: room.mapX ?? (room.x - 50) * 12,
-  mapY: room.mapY ?? (room.y - 50) * 9,
-});
+const hashString = (value) =>
+  [...String(value)].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 9973, 17);
 
-const getStaticSimilarity = (room) => {
-  if (room.similarity) return room.similarity;
-  const { mapX, mapY } = getRoomPosition(room);
-  const distance = Math.hypot(mapX, mapY);
-  return Math.max(32, Math.min(98, Math.round(100 - distance / 8)));
-};
+const getRoomPosition = (room, index = 0, total = 1) => {
+  if (Number.isFinite(room.mapX) && Number.isFinite(room.mapY)) {
+    return { mapX: room.mapX, mapY: room.mapY };
+  }
 
-const getMatchTone = (similarity) => {
-  if (similarity >= 76) return "同频很近";
-  if (similarity >= 64) return "高匹配";
-  if (similarity >= 52) return "可探索";
-  return "遥远星系";
+  if (Number.isFinite(room.x) && Number.isFinite(room.y)) {
+    return {
+      mapX: (room.x - 50) * 12,
+      mapY: (room.y - 50) * 9,
+    };
+  }
+
+  const seed = hashString(room.id);
+  const order = total <= 1 ? 0 : index / (total - 1);
+  const angle = -Math.PI * 0.92 + (index / Math.max(1, total)) * Math.PI * 2 + ((seed % 17) - 8) * 0.004;
+  const radius = INNER_ROOM_RADIUS + order * (OUTER_ROOM_RADIUS - INNER_ROOM_RADIUS);
+  return {
+    mapX: Math.cos(angle) * radius,
+    mapY: Math.sin(angle) * radius,
+  };
 };
 
 const getRoomTypeStyle = (type) => {
@@ -71,31 +77,13 @@ const formatElapsed = (seconds) => {
   return `${minutes} 分 ${String(restSeconds).padStart(2, "0")} 秒`;
 };
 
-const hashString = (value) =>
-  [...String(value)].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % 9973, 17);
-
 const getRoomVector = (room) => {
   const seed = hashString(room.id);
-  const mapX = room.displayMapX ?? room.mapX;
-  const mapY = room.displayMapY ?? room.mapY;
   return new THREE.Vector3(
-    mapX / ROOM_SPACE_SCALE,
+    room.mapX / ROOM_SPACE_SCALE,
     ((seed % 15) - 7) * 0.88,
-    mapY / ROOM_SPACE_SCALE,
+    room.mapY / ROOM_SPACE_SCALE,
   );
-};
-
-const getSpreadRoomPosition = (room, index, total, batchIndex) => {
-  const closeness = Math.max(0, Math.min(1, (room.similarity - 35) / 55));
-  const seed = hashString(`${room.id}-${batchIndex}`);
-  const angleJitter = ((seed % 17) - 8) * 0.004;
-  const angle = -Math.PI * 0.92 + (index / Math.max(1, total)) * Math.PI * 2 + angleJitter;
-  const radius = OUTER_MATCH_RADIUS - closeness * (OUTER_MATCH_RADIUS - INNER_MATCH_RADIUS);
-
-  return {
-    displayMapX: Math.cos(angle) * radius,
-    displayMapY: Math.sin(angle) * radius,
-  };
 };
 
 const clampLabelToBounds = (label, bounds, minLabelY, selected) => {
@@ -272,13 +260,13 @@ const extractDominantAvatarColor = (svgText) => {
   });
 
   let bestColor = null;
-  let bestScore = 0;
+  let bestWeight = 0;
   colorCounts.forEach((count, color) => {
     const signal = getColorSignal(color);
     const lightnessBias = 1 - Math.abs(signal.lightness - 0.56);
-    const score = count * (0.6 + signal.saturation) * lightnessBias;
-    if (score > bestScore) {
-      bestScore = score;
+    const weight = count * (0.6 + signal.saturation) * lightnessBias;
+    if (weight > bestWeight) {
+      bestWeight = weight;
       bestColor = color;
     }
   });
@@ -328,40 +316,30 @@ export default function RoomDiscovery({
   const [roomBatchIndex, setRoomBatchIndex] = useState(0);
   const [detailRoomId, setDetailRoomId] = useState(null);
   const batchSize = Math.min(MAX_ROOM_BATCH_SIZE, Math.max(1, rooms.length));
-  const allRoomsWithSignal = useMemo(
+  const normalizedRooms = useMemo(
     () =>
-      rooms.map((room) => {
-        const similarity = getStaticSimilarity(room);
-        return {
-          ...room,
-          ...getRoomPosition(room),
-          color: avatarColors[room.id] || room.color,
-          matchLabel: getMatchTone(similarity),
-          similarity,
-        };
-      }),
+      rooms.map((room, index) => ({
+        ...room,
+        ...getRoomPosition(room, index, rooms.length),
+        color: avatarColors[room.id] || room.color,
+      })),
     [avatarColors, rooms],
   );
-  const roomsWithSignal = useMemo(() => {
-    const startIndex = (roomBatchIndex * batchSize) % Math.max(1, allRoomsWithSignal.length);
+  const displayedRooms = useMemo(() => {
+    const startIndex = (roomBatchIndex * batchSize) % Math.max(1, normalizedRooms.length);
     const batch =
-      allRoomsWithSignal.length <= batchSize
-        ? allRoomsWithSignal
+      normalizedRooms.length <= batchSize
+        ? normalizedRooms
         : Array.from(
             { length: batchSize },
-            (_, index) => allRoomsWithSignal[(startIndex + index) % allRoomsWithSignal.length],
+            (_, index) => normalizedRooms[(startIndex + index) % normalizedRooms.length],
           );
 
-    return batch.map((room, index) => ({
-      ...room,
-      ...getSpreadRoomPosition(room, index, batch.length, roomBatchIndex),
-    }));
-  }, [allRoomsWithSignal, batchSize, roomBatchIndex]);
-  const listedRooms = useMemo(() => [...roomsWithSignal].sort((a, b) => b.similarity - a.similarity), [roomsWithSignal]);
-  const selectedRoom = roomsWithSignal.find((room) => room.id === selectedId);
-  const selectedSignal = roomsWithSignal.find((room) => room.id === selectedId);
-  const detailRoom = roomsWithSignal.find((room) => room.id === detailRoomId);
-  const detailSignal = roomsWithSignal.find((room) => room.id === detailRoomId);
+    return batch;
+  }, [batchSize, normalizedRooms, roomBatchIndex]);
+  const listedRooms = displayedRooms;
+  const selectedRoom = displayedRooms.find((room) => room.id === selectedId);
+  const detailRoom = displayedRooms.find((room) => room.id === detailRoomId);
   const detailRoomTypeStyle = detailRoom ? getRoomTypeStyle(detailRoom.type) : null;
   const DetailRoomTypeIcon = detailRoomTypeStyle?.Icon;
 
@@ -371,18 +349,18 @@ export default function RoomDiscovery({
 
   useEffect(() => {
     if (!selectedId) return;
-    if (!roomsWithSignal.some((room) => room.id === selectedId)) {
+    if (!displayedRooms.some((room) => room.id === selectedId)) {
       setSelectedId(null);
       setDetailRoomId(null);
     }
-  }, [roomsWithSignal, selectedId]);
+  }, [displayedRooms, selectedId]);
 
   useEffect(() => {
     if (!detailRoomId) return;
-    if (!roomsWithSignal.some((room) => room.id === detailRoomId)) {
+    if (!displayedRooms.some((room) => room.id === detailRoomId)) {
       setDetailRoomId(null);
     }
-  }, [detailRoomId, roomsWithSignal]);
+  }, [detailRoomId, displayedRooms]);
 
   useEffect(() => {
     let cancelled = false;
@@ -523,7 +501,7 @@ export default function RoomDiscovery({
     galaxyGroup.add(coreHalo);
 
     const roomObjects = new Map();
-    roomsWithSignal.forEach((room) => {
+    displayedRooms.forEach((room) => {
       const position = getRoomVector(room);
       const color = new THREE.Color(room.color);
       const roomGroup = new THREE.Group();
@@ -544,7 +522,7 @@ export default function RoomDiscovery({
       galaxyGroup.add(line);
 
       const star = new THREE.Mesh(
-        new THREE.SphereGeometry(1.95 + room.similarity / 80, 32, 32),
+        new THREE.SphereGeometry(2.7, 32, 32),
         new THREE.MeshStandardMaterial({
           color,
           emissive: color,
@@ -556,7 +534,7 @@ export default function RoomDiscovery({
       roomGroup.add(star);
 
       const halo = new THREE.Mesh(
-        new THREE.SphereGeometry(5.8 + room.similarity / 22, 32, 32),
+        new THREE.SphereGeometry(8.4, 32, 32),
         new THREE.MeshBasicMaterial({
           color,
           transparent: true,
@@ -567,7 +545,7 @@ export default function RoomDiscovery({
       roomGroup.add(halo);
 
       const orbit = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints(createRingPoints(5.2 + room.similarity / 24, 0, 96)),
+        new THREE.BufferGeometry().setFromPoints(createRingPoints(7.8, 0, 96)),
         new THREE.LineBasicMaterial({
           color,
           transparent: true,
@@ -673,7 +651,7 @@ export default function RoomDiscovery({
         object.line.material.dispose();
       });
     };
-  }, [roomsWithSignal]);
+  }, [displayedRooms]);
 
   useEffect(() => {
     const sceneState = sceneStateRef.current;
@@ -795,7 +773,7 @@ export default function RoomDiscovery({
     const targetX = cameraStateRef.current.targetX;
     const targetZ = cameraStateRef.current.targetZ;
 
-    return roomsWithSignal.reduce(
+    return displayedRooms.reduce(
       (closest, room) => {
         const position = getRoomVector(room);
         const distance = Math.hypot(position.x - targetX, position.z - targetZ);
@@ -1018,7 +996,7 @@ export default function RoomDiscovery({
           </div>
 
           <div className="galaxy-map absolute inset-0 z-20">
-            {roomsWithSignal.map((room, index) => {
+            {displayedRooms.map((room, index) => {
               const roomTypeStyle = getRoomTypeStyle(room.type);
               const RoomTypeIcon = roomTypeStyle.Icon;
               const isExpanded = selectedId === room.id;
@@ -1033,7 +1011,7 @@ export default function RoomDiscovery({
                   data-stop-pan
                   data-selected={isExpanded ? "true" : undefined}
                   data-expanded={isExpanded ? "true" : undefined}
-                  aria-label={`${room.hostName}，匹配度 ${room.similarity}%，点击查看详情`}
+                  aria-label={`${room.hostName}，${room.name}，点击查看详情`}
                   onClick={(event) => {
                     event.stopPropagation();
                     if (selectedIdRef.current === room.id) {
@@ -1061,7 +1039,7 @@ export default function RoomDiscovery({
                     left: `${labelPosition.x}px`,
                     top: `${labelPosition.y}px`,
                     "--room-color": room.color,
-                    "--halo-size": `${96 + room.similarity * 0.42}px`,
+                    "--halo-size": "122px",
                     "--offset": `${(index % 2 === 0 ? -1 : 1) * 6}px`,
                     "--depth-scale": labelPosition.scale,
                     "--drift-x": `${5 + (index % 3) * 2}px`,
@@ -1085,28 +1063,21 @@ export default function RoomDiscovery({
                       <span className="galaxy-room__details min-w-0">
                         <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
                         <span className="block max-w-[150px] truncate text-xs text-stone-500">{room.name}</span>
-                        <span className="mt-2 flex flex-wrap gap-1.5">
+                        <span className="mt-2 flex flex-wrap">
                           <span className="galaxy-room__type-badge inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold">
                             <RoomTypeIcon size={12} />
                             {room.type}
                           </span>
-                          <span className="galaxy-room__match galaxy-room__match--inline inline-flex rounded-full px-2 py-1 text-[11px] font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
-                            {room.similarity}%
-                          </span>
                         </span>
                       </span>
-                    ) : (
-                      <span className="galaxy-room__match inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" style={{ color: room.color, backgroundColor: `${room.color}1c` }}>
-                        {room.similarity}%
-                      </span>
-                    )}
+                    ) : null}
                   </span>
                 </div>
               );
             })}
           </div>
 
-          {detailRoom && detailSignal && detailRoomTypeStyle && DetailRoomTypeIcon ? (
+          {detailRoom && detailRoomTypeStyle && DetailRoomTypeIcon ? (
             <div
               data-stop-pan
               className="galaxy-detail-overlay absolute inset-0 z-40 bg-[#eef2ff]/50 p-3 backdrop-blur-md sm:p-6"
@@ -1115,7 +1086,7 @@ export default function RoomDiscovery({
               <article
                 key={detailRoom.id}
                 className="galaxy-detail-card selected-galaxy-card flex h-full min-h-0 flex-col overflow-hidden rounded-[32px] border border-white/78 bg-white/84 p-5 shadow-[0_28px_90px_rgba(88,95,142,0.22)] backdrop-blur-2xl sm:p-7"
-                style={{ "--room-color": detailSignal.color || "#8b82e8" }}
+                style={{ "--room-color": detailRoom.color || "#8b82e8" }}
                 onClick={(event) => event.stopPropagation()}
               >
                 <button
@@ -1135,10 +1106,6 @@ export default function RoomDiscovery({
                         <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${detailRoomTypeStyle.badgeClass}`}>
                           <DetailRoomTypeIcon size={14} />
                           {detailRoom.type}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-600">
-                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: detailSignal.color }} />
-                          同频 {detailSignal.similarity}%
                         </span>
                       </div>
                       <h2 className="truncate text-3xl font-semibold leading-tight text-stone-900">
@@ -1186,10 +1153,6 @@ export default function RoomDiscovery({
                     <section className="flex flex-col rounded-[26px] bg-white/68 p-5">
                       <p className="text-sm font-semibold text-[#6b5ee7]">房间信息</p>
                       <div className="mt-4 space-y-3 text-sm text-stone-600">
-                        <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f4f6ff]/82 px-4 py-3">
-                          <span>匹配状态</span>
-                          <strong className="text-stone-800">{detailSignal.matchLabel}</strong>
-                        </div>
                         <div className="flex items-center justify-between gap-4 rounded-2xl bg-[#f4f6ff]/82 px-4 py-3">
                           <span>房主</span>
                           <strong className="text-stone-800">{detailRoom.hostName}</strong>
@@ -1244,7 +1207,7 @@ export default function RoomDiscovery({
               </span>
               <button
                 onClick={refreshRoomBatch}
-                disabled={allRoomsWithSignal.length <= batchSize}
+                disabled={normalizedRooms.length <= batchSize}
                 className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/68 px-3 py-1 text-xs font-semibold text-[#6b5ee7] shadow-sm backdrop-blur-xl transition hover:bg-white disabled:pointer-events-none disabled:opacity-45"
                 title="换一批房间"
               >
@@ -1295,18 +1258,12 @@ export default function RoomDiscovery({
                   >
                     <Avatar src={room.hostAvatar} name={room.hostName} />
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center justify-between gap-3">
-                        <span className="truncate font-semibold text-stone-800">{room.hostName}</span>
-                        <span className="shrink-0 text-xs font-semibold" style={{ color: room.color }}>
-                          {room.similarity}%
-                        </span>
-                      </span>
-                      <span className="mt-2 flex items-center justify-between gap-2 text-xs text-stone-500">
+                      <span className="block truncate font-semibold text-stone-800">{room.hostName}</span>
+                      <span className="mt-2 flex items-center gap-2 text-xs text-stone-500">
                         <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 font-semibold ${roomTypeStyle.badgeClass}`}>
                           <RoomTypeIcon size={12} />
                           {room.type}
                         </span>
-                        <span>{room.matchLabel}</span>
                       </span>
                     </span>
                   </button>
@@ -1314,10 +1271,10 @@ export default function RoomDiscovery({
               })}
           </div>
 
-          {detailRoom ? null : selectedRoom && selectedSignal ? (
+          {detailRoom ? null : selectedRoom ? (
             <div
               className="selected-galaxy-card mt-auto rounded-[30px] border border-white/76 bg-white/76 p-5 shadow-sm"
-              style={{ "--room-color": selectedSignal.color || "#8b82e8" }}
+              style={{ "--room-color": selectedRoom.color || "#8b82e8" }}
             >
               <button
                 onClick={() => {
@@ -1335,7 +1292,7 @@ export default function RoomDiscovery({
                 <Avatar src={selectedRoom.hostAvatar} name={selectedRoom.hostName} size="lg" glow />
                 <div className="min-w-0">
                   <p className="mb-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold text-[#6b5ee7]">
-                    选中的房间 · {selectedSignal.matchLabel}
+                    选中的房间
                   </p>
                   <h2 className="text-2xl font-semibold text-stone-800">{selectedRoom.name}</h2>
                   <p className="mt-1 text-sm text-stone-500">房主 {selectedRoom.hostName}</p>
@@ -1396,10 +1353,6 @@ export default function RoomDiscovery({
                     </div>
                   );
                 })()}
-                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-600">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: selectedSignal.color }} />
-                  相似度 {selectedSignal.similarity}%
-                </div>
               </div>
               <button
                 ref={selectedRoom.id === tutorialRoomId ? tutorialEnterButtonRef : null}

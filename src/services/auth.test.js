@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   AUTH_STORAGE_KEY,
+  apiRequest,
   clearAllLocalStorage,
   createRegistrationPayload,
   createValuesTestPayload,
@@ -112,6 +113,34 @@ test("avatar upload lets the browser set the multipart content type", async () =
     assert.equal(requestOptions.headers.Authorization, "Bearer token");
     assert.equal("Content-Type" in requestOptions.headers, false);
     assert.equal(requestOptions.body instanceof FormData, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("api errors preserve structured quota metadata and Retry-After", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: false,
+    status: 429,
+    headers: new Headers({ "Retry-After": "3600" }),
+    json: async () => ({
+      detail: "近 24 小时最多删除 5 位好友",
+      code: "FRIEND_DELETE_LIMIT_REACHED",
+      meta: { next_available_at: "2030-01-01T00:00:00Z" },
+    }),
+  });
+  try {
+    await assert.rejects(
+      apiRequest("/api/friends/user-2", { method: "DELETE" }),
+      (error) => {
+        assert.equal(error.status, 429);
+        assert.equal(error.code, "FRIEND_DELETE_LIMIT_REACHED");
+        assert.equal(error.retryAfter, 3600);
+        assert.equal(error.meta.next_available_at, "2030-01-01T00:00:00Z");
+        return true;
+      },
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }

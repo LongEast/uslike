@@ -26,13 +26,27 @@ class JsonDatabase:
         now = utc_now_iso()
         return {
             "metadata": {
-                "schema_version": 2,
+                "schema_version": 3,
                 "created_at": now,
                 "updated_at": now,
             },
             "users": [],
             "sessions": [],
             "behavior_events": [],
+            "social": self._empty_social_data(),
+        }
+
+    @staticmethod
+    def _empty_social_data() -> dict[str, list[dict[str, Any]]]:
+        return {
+            "posts": [],
+            "comments": [],
+            "post_likes": [],
+            "post_bookmarks": [],
+            "comment_likes": [],
+            "friend_requests": [],
+            "friendships": [],
+            "friend_deletion_events": [],
         }
 
     def _load_unlocked(self) -> dict[str, Any]:
@@ -45,7 +59,10 @@ class JsonDatabase:
         if not all(key in data for key in ("metadata", "users", "sessions")):
             raise ValueError(f"Uslike JSON 数据库格式无效：{self.path}")
         data.setdefault("behavior_events", [])
-        data["metadata"]["schema_version"] = max(data["metadata"].get("schema_version", 1), 2)
+        social = data.setdefault("social", {})
+        for collection, default in self._empty_social_data().items():
+            social.setdefault(collection, default)
+        data["metadata"]["schema_version"] = max(data["metadata"].get("schema_version", 1), 3)
         return data
 
     def _write_unlocked(self, data: dict[str, Any]) -> None:

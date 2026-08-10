@@ -1677,27 +1677,6 @@ button.ink-glass {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4);
 }
 
-.galaxy-room__match {
-  position: absolute;
-  right: -20px;
-  bottom: -1px;
-  z-index: 2;
-  border: 1px solid color-mix(in srgb, var(--room-color) 54%, rgba(255, 255, 255, .54));
-  background: rgba(255, 255, 255, .82) !important;
-  box-shadow:
-    0 0 0 3px rgba(255, 255, 255, .12),
-    0 10px 28px color-mix(in srgb, var(--room-color) 34%, rgba(88, 95, 142, .16));
-  color: #1f2937 !important;
-  text-shadow: none;
-  white-space: nowrap;
-}
-
-.galaxy-room__match--inline {
-  position: static;
-  border-color: color-mix(in srgb, var(--room-color) 54%, rgba(255, 255, 255, .28));
-  box-shadow: 0 8px 20px rgba(88, 95, 142, .14);
-}
-
 .galaxy-room:hover .galaxy-room__card,
 .galaxy-room.is-active .galaxy-room__card {
   transform: translateY(-6px) scale(1.02);

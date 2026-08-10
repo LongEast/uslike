@@ -6,6 +6,60 @@ export default function Modal({ title, headerAction, children, onClose, width = 
   const dialogRef = useRef(null);
 
   useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusableSelector = [
+      "button:not([disabled])",
+      "a[href]",
+      "input:not([disabled])",
+      "textarea:not([disabled])",
+      "select:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(",");
+    const focusFrame = window.requestAnimationFrame(() => {
+      const focusable = dialog.querySelector(focusableSelector);
+      (focusable || dialog).focus({ preventScroll: true });
+    });
+
+    const trapFocus = (event) => {
+      if (event.key !== "Tab" || event.defaultPrevented) return;
+      const dialogs = document.querySelectorAll("[data-modal-dialog]");
+      if (dialogs.item(dialogs.length - 1) !== dialog) return;
+      const focusable = [...dialog.querySelectorAll(focusableSelector)]
+        .filter((element) => !element.hasAttribute("hidden") && element.getAttribute("aria-hidden") !== "true");
+      if (!focusable.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", trapFocus);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", trapFocus);
+      document.body.style.overflow = previousOverflow;
+      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+        previouslyFocused.focus({ preventScroll: true });
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!onClose) return undefined;
 
     const handleKeyDown = (event) => {
@@ -35,6 +89,7 @@ export default function Modal({ title, headerAction, children, onClose, width = 
             role="dialog"
             aria-modal="true"
             aria-label={title}
+            tabIndex={-1}
             className={`motion-safe:animate-pop relative z-10 w-full rounded-[28px] border p-5 sm:p-7 ${
               isGlass
                 ? "border-white/[0.85] bg-white/[0.68] shadow-[0_32px_100px_rgba(77,70,154,0.22)] backdrop-blur-2xl"

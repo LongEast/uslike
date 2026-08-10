@@ -26,7 +26,6 @@ export function getMeetTutorialRoom() {
     color: "#f28b45",
     mapX: 0,
     mapY: 0,
-    similarity: 99,
     isTutorial: true,
   };
 }
@@ -69,7 +68,6 @@ export function getMockRooms() {
       color: "#ff8a7a",
       mapX: -310,
       mapY: -140,
-      similarity: 58,
     },
     {
       id: "room-2",
@@ -88,7 +86,6 @@ export function getMockRooms() {
       color: "#50bfa5",
       mapX: 62,
       mapY: -178,
-      similarity: 84,
     },
     {
       id: "room-3",
@@ -107,7 +104,6 @@ export function getMockRooms() {
       color: "#f6bd60",
       mapX: 236,
       mapY: 86,
-      similarity: 73,
     },
     {
       id: "room-4",
@@ -126,7 +122,6 @@ export function getMockRooms() {
       color: "#9f86ff",
       mapX: -185,
       mapY: 204,
-      similarity: 67,
     },
     {
       id: "room-5",
@@ -145,7 +140,6 @@ export function getMockRooms() {
       color: "#7bb7ff",
       mapX: 520,
       mapY: -220,
-      similarity: 49,
     },
     {
       id: "room-6",
@@ -164,7 +158,6 @@ export function getMockRooms() {
       color: "#ef9f70",
       mapX: -525,
       mapY: 124,
-      similarity: 45,
     },
     {
       id: "room-7",
@@ -183,7 +176,6 @@ export function getMockRooms() {
       color: "#6ccfc0",
       mapX: -18,
       mapY: 376,
-      similarity: 61,
     },
     {
       id: "room-8",
@@ -202,7 +194,6 @@ export function getMockRooms() {
       color: "#d18cff",
       mapX: 448,
       mapY: 286,
-      similarity: 42,
     },
     {
       id: "room-9",
@@ -221,7 +212,6 @@ export function getMockRooms() {
       color: "#8fbf72",
       mapX: -112,
       mapY: -348,
-      similarity: 63,
     },
     {
       id: "room-10",
@@ -240,7 +230,6 @@ export function getMockRooms() {
       color: "#ffb257",
       mapX: 650,
       mapY: 28,
-      similarity: 38,
     },
     {
       id: "room-11",
@@ -259,7 +248,6 @@ export function getMockRooms() {
       color: "#e58bb4",
       mapX: -642,
       mapY: -286,
-      similarity: 36,
     },
   ];
 }
@@ -466,7 +454,6 @@ export function getMockFeed() {
       channel: "friends",
       user: "柚白",
       avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=youbo",
-      badge: "同频 86%",
       status: "杭州 · 今天有一点点松弛",
       text: "把今天的散步路线存成了一张小地图。\n路过三家花店，两只橘色路灯，还有一个突然想认真生活的瞬间。",
       time: "今天 20:18",

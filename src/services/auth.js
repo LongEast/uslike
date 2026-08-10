@@ -23,15 +23,23 @@ export async function apiRequest(path, options) {
 
   if (!response.ok) {
     let message = "请求失败，请稍后重试。";
+    let code = null;
+    let meta = null;
     try {
       const body = await response.json();
       if (typeof body.detail === "string") message = body.detail;
       else if (Array.isArray(body.detail)) message = body.detail[0]?.msg || message;
+      code = typeof body.code === "string" ? body.code : null;
+      meta = body.meta && typeof body.meta === "object" ? body.meta : null;
     } catch {
       // Keep the friendly fallback for non-JSON/network proxy responses.
     }
     const error = new Error(message);
     error.status = response.status;
+    error.code = code;
+    error.meta = meta;
+    const retryAfter = response.headers.get("Retry-After");
+    error.retryAfter = retryAfter ? Number(retryAfter) : null;
     throw error;
   }
 

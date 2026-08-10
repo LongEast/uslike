@@ -6,6 +6,23 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
+class ApiError(StarletteHTTPException):
+    """HTTP error with a stable machine-readable code and optional metadata."""
+
+    def __init__(
+        self,
+        status_code: int,
+        detail: str,
+        code: str,
+        *,
+        meta: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
+        self.code = code
+        self.meta = meta
+
+
 FIELD_NAMES = {
     "phone": "手机号",
     "new_phone": "新手机号",
@@ -29,6 +46,16 @@ FIELD_NAMES = {
     "module": "引导模块",
     "event": "引导事件",
     "step": "引导步骤",
+    "content": "内容",
+    "link_url": "链接",
+    "tags": "标签",
+    "images": "图片",
+    "reply_to_comment_id": "回复目标",
+    "recipient_user_id": "接收用户",
+    "decision": "申请处理结果",
+    "direction": "申请方向",
+    "cursor": "分页游标",
+    "limit": "分页数量",
     "body": "请求内容",
     "query": "查询参数",
     "path": "路径参数",
@@ -43,6 +70,10 @@ HTTP_ERROR_MESSAGES = {
     404: "请求的接口不存在",
     405: "该接口不支持当前请求方法",
     409: "请求与当前数据状态冲突",
+    413: "上传内容过大",
+    415: "上传内容格式不受支持",
+    422: "请求内容格式不正确",
+    429: "操作过于频繁，请稍后重试",
     500: "服务器内部错误，请稍后重试",
 }
 
@@ -117,9 +148,14 @@ async def http_exception_handler(_request: Request, exception: StarletteHTTPExce
     detail = exception.detail
     if not isinstance(detail, str) or not any("\u4e00" <= char <= "\u9fff" for char in detail):
         detail = HTTP_ERROR_MESSAGES.get(exception.status_code, "请求处理失败")
+    content: dict[str, Any] = {"detail": detail}
+    if isinstance(exception, ApiError):
+        content["code"] = exception.code
+        if exception.meta is not None:
+            content["meta"] = exception.meta
     return JSONResponse(
         status_code=exception.status_code,
-        content={"detail": detail},
+        content=content,
         headers=exception.headers,
     )
 
