@@ -2,7 +2,7 @@ import { Radio, Sparkles } from "lucide-react";
 import Avatar from "./Avatar.jsx";
 import { CheckInCard } from "./CoinWalletUI.jsx";
 
-export default function HomeView({ user, feed, onMeet, wallet, onOpenCheckIn, onCheckIn }) {
+export default function HomeView({ user, feed, onMeet, wallet, onOpenCheckIn, onCheckIn, onOpenStore }) {
   return (
     <section className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-5 pb-32 pt-24 lg:grid-cols-[1.1fr_.9fr]">
       <div className="glass-panel min-h-[420px] rounded-[32px] p-8">
@@ -40,7 +40,7 @@ export default function HomeView({ user, feed, onMeet, wallet, onOpenCheckIn, on
             </div>
           </div>
         </div>
-        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} />
+        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} onOpenStore={onOpenStore} />
         {feed.map((item) => (
           <article key={item.id} className="glass-panel rounded-[28px] p-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#5d6387]">

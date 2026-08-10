@@ -357,7 +357,7 @@ export function MessagesView({
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-5 pb-32 pt-24 lg:grid-cols-[360px_1fr]">
       <div className="space-y-5">
-        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} />
+        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} onOpenStore={onOpenStore} />
         <div className="glass-panel rounded-[32px] p-5">
           <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
           <div className="space-y-3">
@@ -768,9 +768,14 @@ export function SettingsView({
             <h2 className="truncate text-3xl font-semibold text-stone-900">{user.nickname}</h2>
             <p className="mt-2 text-base text-stone-500">Uslike ID：{user.id}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full border border-[#d8dcff] bg-[#f4f6ff] px-3 py-1.5 text-sm font-semibold text-[#6b5ee7]">
+              <button
+                type="button"
+                onClick={onOpenStore}
+                aria-label={`前往互像商城，当前余额 ${coinBalance}`}
+                className="rounded-full border border-[#d8dcff] bg-[#f4f6ff] px-3 py-1.5 text-sm font-semibold text-[#6b5ee7] transition hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+              >
                 互像币 {coinBalance}
-              </span>
+              </button>
               <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
                 + 状态
               </span>

@@ -94,7 +94,7 @@ export default function AppShell({
         />
       );
     }
-    return <HomeView user={user} feed={feed} onMeet={onMeet} wallet={wallet} onOpenCheckIn={onOpenCheckIn} onCheckIn={onCheckIn} />;
+    return <HomeView user={user} feed={feed} onMeet={onMeet} wallet={wallet} onOpenCheckIn={onOpenCheckIn} onCheckIn={onCheckIn} onOpenStore={onStoreOpen} />;
   };
 
   return (
