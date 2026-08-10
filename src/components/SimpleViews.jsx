@@ -23,6 +23,7 @@ import {
   QrCode,
   Radio,
   RefreshCw,
+  Search,
   Send,
   Settings,
   Share2,
@@ -30,11 +31,13 @@ import {
   Star,
   Store,
   ThumbsUp,
+  UserPlus,
   Users,
   Video,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { filterFeedByChannel } from "../utils/feedFilter.js";
+import { FRIEND_INDEX_LABELS, groupFriendsByInitial } from "../utils/friendIndex.js";
 import Avatar from "./Avatar.jsx";
 import AccountSettingsView from "./AccountSettingsView.jsx";
 import { CheckInCard } from "./CoinWalletUI.jsx";
@@ -679,33 +682,159 @@ export function MessagesView({
   );
 }
 
-export function FriendsView({ friends, onOpenChat }) {
+export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
+  const [query, setQuery] = useState("");
+  const visibleFriends = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
+    if (!normalizedQuery) return friends;
+    return friends.filter((friend) =>
+      [friend.name, friend.subtitle]
+        .filter(Boolean)
+        .some((value) => value.toLocaleLowerCase("zh-CN").includes(normalizedQuery)),
+    );
+  }, [friends, query]);
+  const friendGroups = useMemo(() => groupFriendsByInitial(visibleFriends), [visibleFriends]);
+  const availableInitials = useMemo(
+    () => new Set(friendGroups.map(([initial]) => initial)),
+    [friendGroups],
+  );
+
+  const jumpToInitial = (initial) => {
+    document.getElementById(`friend-group-${initial}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <section className="mx-auto w-full max-w-4xl pb-32 pt-24">
-      <h2 className="mb-5 text-3xl font-semibold text-stone-800">好友</h2>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {friends.length === 0 ? (
-          <div className="glass-panel rounded-[28px] p-8 text-stone-500">还没有添加好友。</div>
-        ) : (
-          friends.map((friend) => (
-            <button
-              key={friend.id}
-              type="button"
-              onClick={() => onOpenChat(friend.id)}
-              className="glass-panel group flex w-full items-center gap-4 rounded-[28px] p-5 text-left transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
-              aria-label={`和 ${friend.name} 聊天`}
-            >
-              <Avatar src={friend.avatar} name={friend.name} size="lg" />
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xl font-semibold text-stone-800">{friend.name}</h3>
-                <p className="mt-1 text-sm text-stone-500">{friend.subtitle}</p>
+      <div className="mb-5">
+        <h2 className="text-3xl font-semibold text-stone-800">好友</h2>
+        <p className="mt-1.5 text-sm text-stone-500">找到好友后，点击名字即可继续聊天</p>
+      </div>
+
+      <div className="glass-panel rounded-[32px] p-3 sm:p-4">
+        <label className="warm-field flex min-h-12 items-center gap-3 rounded-[22px] px-4 text-stone-500">
+          <Search size={20} aria-hidden="true" />
+          <span className="sr-only">搜索好友</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="搜索好友"
+            className="min-w-0 flex-1 bg-transparent text-stone-800 outline-none placeholder:text-stone-400"
+          />
+        </label>
+
+        <button
+          type="button"
+          onClick={onOpenNewFriends}
+          className="group mt-3 flex w-full items-center gap-4 rounded-[24px] border border-white/70 bg-white/48 p-3 text-left transition hover:bg-white/72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+        >
+          <span className="aurora-dark grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-glow">
+            <UserPlus size={22} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-semibold text-stone-800">新的朋友</span>
+            <span className="mt-0.5 block text-xs text-stone-500">查看好友申请</span>
+          </span>
+          <ChevronRight
+            size={21}
+            className="text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-[#6966dd]"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+
+      <div className="relative mt-5">
+        <div className="overflow-hidden rounded-[32px] border border-white/75 bg-white/58 shadow-soft backdrop-blur-xl">
+          {friendGroups.length === 0 ? (
+            <div className="grid min-h-48 place-items-center px-8 py-12 text-center">
+              <div>
+                <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white/76 text-[#7770d8] shadow-sm">
+                  <Users size={22} aria-hidden="true" />
+                </span>
+                <p className="mt-4 font-semibold text-stone-700">
+                  {query ? "没有找到匹配的好友" : "还没有添加好友"}
+                </p>
+                <p className="mt-1 text-sm text-stone-400">
+                  {query ? "换个名字或关键词试试。" : "在相遇中认识同频的人吧。"}
+                </p>
               </div>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/70 bg-white/58 text-[#5d6387] transition group-hover:bg-white group-hover:text-[#6966dd]">
-                <MessageCircle size={21} />
-              </span>
-            </button>
-          ))
-        )}
+            </div>
+          ) : (
+            friendGroups.map(([initial, group]) => (
+              <section
+                key={initial}
+                id={`friend-group-${initial}`}
+                className="scroll-mt-24"
+                aria-labelledby={`friend-heading-${initial}`}
+              >
+                <h3
+                  id={`friend-heading-${initial}`}
+                  className="border-y border-white/70 bg-white/36 px-5 py-2 text-xs font-bold tracking-[0.2em] text-[#7770d8] first:border-t-0"
+                >
+                  {initial}
+                </h3>
+                {group.map((friend) => (
+                  <button
+                    key={friend.id}
+                    type="button"
+                    onClick={() => onOpenChat(friend.id)}
+                    className="group flex w-full items-center gap-4 border-b border-white/70 px-5 py-4 pr-12 text-left transition last:border-b-0 hover:bg-white/62 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7770d8]/55"
+                    aria-label={`和 ${friend.name} 聊天`}
+                  >
+                    <Avatar src={friend.avatar} name={friend.name} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-lg font-semibold text-stone-800">
+                        {friend.name}
+                      </span>
+                      {friend.subtitle ? (
+                        <span className="mt-0.5 block truncate text-sm text-stone-500">
+                          {friend.subtitle}
+                        </span>
+                      ) : null}
+                    </span>
+                    <ChevronRight
+                      size={19}
+                      className="shrink-0 text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-[#6966dd]"
+                      aria-hidden="true"
+                    />
+                  </button>
+                ))}
+              </section>
+            ))
+          )}
+        </div>
+
+        {friendGroups.length ? (
+          <div className="pointer-events-none absolute inset-y-0 right-2 z-10">
+            <nav
+              className="pointer-events-auto sticky top-24 flex flex-col items-center rounded-full border border-white/80 bg-white/72 px-1 py-1.5 shadow-sm backdrop-blur-xl"
+              aria-label="好友首字母索引"
+            >
+              {FRIEND_INDEX_LABELS.map((initial) => {
+                const isAvailable = availableInitials.has(initial);
+                return (
+                  <button
+                    key={initial}
+                    type="button"
+                    disabled={!isAvailable}
+                    onClick={() => jumpToInitial(initial)}
+                    className={`grid h-4 w-4 place-items-center rounded-full text-[9px] font-bold transition ${
+                      isAvailable
+                        ? "text-[#6966dd] hover:bg-[#8b82e8]/16"
+                        : "cursor-default text-stone-300"
+                    }`}
+                    aria-label={`跳到 ${initial}`}
+                  >
+                    {initial}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        ) : null}
       </div>
     </section>
   );
