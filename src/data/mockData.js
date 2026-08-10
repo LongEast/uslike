@@ -502,7 +502,39 @@ export function getMockFeed() {
   ];
 }
 
+export function getInitialFriends() {
+  return [
+    {
+      id: "friend-youbo",
+      name: "柚白",
+      avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=youbo",
+      subtitle: "杭州 · 喜欢散步与城市观察",
+      messages: [
+        { from: "system", text: "你们已经是好友，来聊聊最近的生活吧！" },
+        { from: "them", text: "下次散步遇到有趣的小店，也分享给你。" },
+      ],
+      decorHint: true,
+    },
+    {
+      id: "room-7",
+      name: "青禾",
+      avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=feed-qinghe",
+      subtitle: "武汉 · 喜欢拼图与轻游戏",
+      messages: [
+        { from: "system", text: "你们已经是好友，来聊聊最近的生活吧！" },
+        { from: "them", text: "有空的话，一起来拼那张 1000 片的图吧。" },
+      ],
+      decorHint: true,
+    },
+  ];
+}
+
 export function getInitialMessages() {
+  const friendThreads = getInitialFriends().map((friend) => ({
+    ...friend,
+    friendId: friend.id,
+  }));
+
   return [
     {
       id: "thread-welcome",
@@ -518,6 +550,7 @@ export function getInitialMessages() {
       ],
       decorHint: false,
     },
+    ...friendThreads,
   ];
 }
 

@@ -5,7 +5,6 @@ import {
   Check,
   ChevronRight,
   CircleHelp,
-  Compass,
   Gamepad2,
   Gift,
   Image,
@@ -44,50 +43,17 @@ import Modal from "./Modal.jsx";
 
 export function FeedView({ feed }) {
   const [showNonFriendComments, setShowNonFriendComments] = useState(false);
-  const [activeChannel, setActiveChannel] = useState("friends");
   const visibleFeed = useMemo(
-    () => filterFeedByChannel(feed, activeChannel),
-    [activeChannel, feed],
+    () => filterFeedByChannel(feed, "friends"),
+    [feed],
   );
-  const feedChannels = [
-    { key: "friends", label: "好友动态", icon: Users },
-    { key: "discover", label: "发现动态", icon: Compass },
-  ];
 
   return (
     <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5">
         <div>
           <h2 className="text-3xl font-semibold text-stone-800">空间动态</h2>
-          <p className="mt-1.5 text-sm text-stone-500">
-            {activeChannel === "friends" ? "看看好友最近在分享什么" : "发现与你同频的新鲜近况"}
-          </p>
-        </div>
-        <div
-          className="grid grid-cols-2 rounded-full border border-white/80 bg-white/48 p-1.5 shadow-sm backdrop-blur-xl"
-          role="tablist"
-          aria-label="动态筛选"
-        >
-          {feedChannels.map(({ key, label, icon: Icon }) => {
-            const isActive = activeChannel === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActiveChannel(key)}
-                className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition sm:min-w-[126px] ${
-                  isActive
-                    ? "aurora-dark text-white shadow-glow"
-                    : "text-[#5d6387] hover:bg-white/72 hover:text-[#6966dd]"
-                }`}
-              >
-                <Icon size={16} aria-hidden="true" />
-                {label}
-              </button>
-            );
-          })}
+          <p className="mt-1.5 text-sm text-stone-500">看看好友最近在分享什么</p>
         </div>
       </div>
 
@@ -147,13 +113,10 @@ export function FeedView({ feed }) {
 
       <div
         className="overflow-hidden rounded-[34px] border border-white/76 bg-white/58 shadow-soft backdrop-blur-xl"
-        role="tabpanel"
-        aria-label={activeChannel === "friends" ? "好友动态" : "发现动态"}
+        aria-label="好友动态"
       >
         <div className="flex items-center justify-between border-b border-white/70 bg-white/42 px-5 py-3 text-sm">
-          <span className="font-semibold text-stone-700">
-            {activeChannel === "friends" ? "只看好友" : "为你发现"}
-          </span>
+          <span className="font-semibold text-stone-700">只看好友</span>
           <span className="text-stone-400" aria-live="polite">
             {visibleFeed.length} 条动态
           </span>
@@ -225,11 +188,9 @@ export function FeedView({ feed }) {
           <div className="grid min-h-52 place-items-center bg-white/54 px-6 py-12 text-center">
             <div>
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white/76 text-[#7770d8] shadow-sm">
-                {activeChannel === "friends" ? <Users size={22} /> : <Compass size={22} />}
+                <Users size={22} />
               </div>
-              <p className="mt-4 font-semibold text-stone-700">
-                {activeChannel === "friends" ? "好友们还没有发布动态" : "暂时没有新的发现动态"}
-              </p>
+              <p className="mt-4 font-semibold text-stone-700">好友们还没有发布动态</p>
               <p className="mt-1 text-sm text-stone-400">稍后回来看看，会有新的同频故事。</p>
             </div>
           </div>

@@ -19,6 +19,7 @@ import TextRoom from "./components/TextRoom.jsx";
 import VoiceRoom from "./components/VoiceRoom.jsx";
 import {
   getGameList,
+  getInitialFriends,
   getInitialMessages,
   getMeetTutorialQuestions,
   getMeetTutorialRoom,
@@ -62,6 +63,7 @@ export default function App() {
       rooms: getMockRooms(),
       questions: getMockQuestions(),
       feed: getMockFeed(),
+      friends: getInitialFriends(),
       messages: getInitialMessages(),
       games: getGameList(),
       meetTutorialRoom: getMeetTutorialRoom(),
@@ -77,7 +79,7 @@ export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(Boolean(authSession));
   const [activeView, setActiveView] = useState("messages");
   const [user, setUser] = useState(() => (authSession ? toAppUser(authSession.user) : mock.user));
-  const [friends, setFriends] = useState([]);
+  const [friends, setFriends] = useState(mock.friends);
   const [threads, setThreads] = useState(mock.messages);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [waitingRoom, setWaitingRoom] = useState(null);
@@ -292,7 +294,7 @@ export default function App() {
       setAuthSession(null);
       setHasCompletedOnboarding(false);
       setUser(mock.user);
-      setFriends([]);
+      setFriends(mock.friends);
       setThreads(mock.messages);
       setCurrentRoom(null);
       setWaitingRoom(null);
