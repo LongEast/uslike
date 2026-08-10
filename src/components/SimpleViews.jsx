@@ -690,7 +690,7 @@ export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-lg font-semibold text-stone-800">新的朋友</span>
-            <span className="mt-0.5 block text-xs text-stone-500">查看好友申请</span>
+            <span className="mt-0.5 block text-xs text-stone-500">查看申请/添加好友</span>
           </span>
           <ChevronRight
             size={21}
