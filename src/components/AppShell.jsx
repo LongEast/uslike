@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Avatar from "./Avatar.jsx";
 import BottomNav from "./BottomNav.jsx";
-import { CoinBalancePill } from "./CoinWalletUI.jsx";
+import { CheckInCard, CoinBalancePill } from "./CoinWalletUI.jsx";
 import HomeView from "./HomeView.jsx";
 import StoreView from "./StoreView.jsx";
 import { FeedView, FriendsView, MessagesView, SettingsView } from "./SimpleViews.jsx";
@@ -58,9 +58,6 @@ export default function AppShell({
           onStartWaveRoom={onStartWaveRoom}
           onToast={onToast}
           onOpenStore={onStoreOpen}
-          wallet={wallet}
-          onOpenCheckIn={onOpenCheckIn}
-          onCheckIn={onCheckIn}
         />
       );
     }
@@ -95,7 +92,7 @@ export default function AppShell({
         />
       );
     }
-    return <HomeView user={user} feed={feed} onMeet={onMeet} wallet={wallet} onOpenCheckIn={onOpenCheckIn} onCheckIn={onCheckIn} onOpenStore={onStoreOpen} />;
+    return <HomeView user={user} feed={feed} onMeet={onMeet} />;
   };
 
   return (
@@ -107,11 +104,14 @@ export default function AppShell({
         <div className="absolute bottom-[5%] right-[7%] h-44 w-44 rotate-12 rounded-[28px] bg-white/34 blur-sm" />
       </div>
 
-      <header className="fixed left-6 top-5 z-30 flex items-center gap-3 rounded-full border border-white/70 bg-white/56 px-3 py-2 shadow-soft backdrop-blur-xl">
-        <Avatar src={user.avatar} name={user.nickname} size="sm" />
-        <span className="font-semibold text-stone-800">{user.nickname}</span>
-        <CoinBalancePill balance={wallet.balance} onClick={onOpenWallet} compact />
-      </header>
+      <div className="fixed left-6 right-6 top-5 z-30 flex items-start justify-between gap-2 xl:right-auto xl:w-[184px] xl:flex-col xl:justify-start">
+        <header className="flex items-center gap-2 rounded-full border border-white/70 bg-white/56 px-2.5 py-2 shadow-soft backdrop-blur-xl xl:w-full">
+          <Avatar src={user.avatar} name={user.nickname} size="sm" />
+          <span className="font-semibold text-stone-800">{user.nickname}</span>
+          <CoinBalancePill balance={wallet.balance} onClick={onOpenWallet} compact />
+        </header>
+        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} />
+      </div>
 
       <div className="relative z-10">{renderView()}</div>
 

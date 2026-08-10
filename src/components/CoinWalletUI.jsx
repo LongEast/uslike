@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Gem, Gift, LockKeyhole, ShoppingBag, Sparkles } from "lucide-react";
+import { Check, Gem, Gift, LockKeyhole, ShoppingBag, Sparkles } from "lucide-react";
 import { CHECK_IN_REWARDS, getCheckInState } from "../services/coinWallet.js";
 import Modal from "./Modal.jsx";
 
@@ -16,46 +16,65 @@ export function CoinBalancePill({ balance, onClick, compact = false }) {
   );
 }
 
-export function CheckInCard({ wallet, onOpen, onClaim, onOpenStore }) {
+export function CheckInCard({ wallet, onOpen, onClaim }) {
   const status = getCheckInState(wallet);
   return (
-    <div className="glass-panel rounded-[28px] p-5">
-      <div className="flex items-start gap-3">
-        <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-start gap-3 rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#eeeaff] text-[#6b5ee7]">
-            <Gift size={21} />
+    <>
+      <div className="hidden w-full items-center gap-1.5 rounded-[20px] border border-white/70 bg-white/56 p-2 shadow-soft backdrop-blur-xl xl:flex">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#eeeaff] text-[#6b5ee7]">
+            {status.checkedIn ? <Check size={18} /> : <Gift size={18} />}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-semibold text-stone-800">今日签到</span>
-            <span className="mt-1 block text-sm text-stone-500">
-              {status.checkedIn ? `已连续签到 ${wallet.streak} 天` : `连续签到第 ${status.nextDay} 天 · 今日 +${status.reward} 币`}
+            <span className="block text-sm font-semibold text-stone-800">
+              {status.checkedIn ? "今日已签到" : "今日签到"}
+            </span>
+            <span className="mt-0.5 block truncate text-[11px] text-stone-500">
+              {status.checkedIn
+                ? `连续 ${wallet.streak} 天 · 明日 +${status.reward}`
+                : `第 ${status.nextDay} 天 · 可领 +${status.reward} 币`}
             </span>
           </span>
         </button>
-        <button
-          type="button"
-          onClick={onOpenStore}
-          aria-label={`前往互像商城，当前余额 ${wallet.balance}`}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/70 bg-white/[0.58] px-2.5 py-1.5 text-xs font-semibold text-[#6b5ee7] shadow-sm backdrop-blur-xl transition hover:bg-white/[0.86] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
-        >
-          余额 {wallet.balance} <ChevronRight size={14} />
-        </button>
+        {status.checkedIn ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label="查看签到详情"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/80 bg-white/62 text-[#625dc7] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+          >
+            <Check size={17} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onClaim}
+            aria-label={`签到领取 ${status.reward} 互像币`}
+            className="aurora-dark h-9 shrink-0 rounded-xl px-2.5 text-xs font-semibold text-white shadow-glow transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+          >
+            +{status.reward}
+          </button>
+        )}
       </div>
-      {status.checkedIn ? (
-        <button type="button" onClick={onOpen} className="mt-4 flex w-full items-center justify-between rounded-2xl border border-white/80 bg-gradient-to-r from-[#edf2ff]/90 via-white/[0.68] to-[#f2eaff]/90 px-4 py-3 text-sm font-semibold text-[#625dc7] shadow-[0_10px_30px_rgba(92,84,174,0.10)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55">
-          <span className="inline-flex items-center gap-2"><Check size={17} />今日已签到</span>
-          <span>明日 +{status.reward} 币</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={onClaim}
-          className="aurora-dark mt-4 w-full rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:brightness-110"
-        >
-          签到领取 +{status.reward} 互像币
-        </button>
-      )}
-    </div>
+
+      <button
+        type="button"
+        onClick={status.checkedIn ? onOpen : onClaim}
+        aria-label={
+          status.checkedIn
+            ? `今日已签到，连续 ${wallet.streak} 天`
+            : `签到领取 ${status.reward} 互像币`
+        }
+        className="grid h-12 shrink-0 grid-flow-col place-items-center gap-1.5 rounded-full border border-white/70 bg-white/56 px-3 text-[#6b5ee7] shadow-soft backdrop-blur-xl transition hover:bg-white/82 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55 xl:hidden"
+      >
+        {status.checkedIn ? <Check size={18} /> : <Gift size={18} />}
+        {!status.checkedIn ? <span className="text-xs font-bold">+{status.reward}</span> : null}
+      </button>
+    </>
   );
 }
 

@@ -40,7 +40,6 @@ import { filterFeedByChannel } from "../utils/feedFilter.js";
 import { FRIEND_INDEX_LABELS, groupFriendsByInitial } from "../utils/friendIndex.js";
 import Avatar from "./Avatar.jsx";
 import AccountSettingsView from "./AccountSettingsView.jsx";
-import { CheckInCard } from "./CoinWalletUI.jsx";
 import Modal from "./Modal.jsx";
 
 export function FeedView({ feed }) {
@@ -249,9 +248,6 @@ export function MessagesView({
   onStartWaveRoom,
   onToast,
   onOpenStore,
-  wallet,
-  onOpenCheckIn,
-  onCheckIn,
 }) {
   const [activeThreadId, setActiveThreadId] = useState(
     () => threads.find((thread) => thread.friendId === activeFriendId)?.id || threads[0]?.id || null,
@@ -359,34 +355,31 @@ export function MessagesView({
 
   return (
     <section className="mx-auto grid w-full max-w-6xl gap-5 pb-32 pt-24 lg:grid-cols-[360px_1fr]">
-      <div className="space-y-5">
-        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} onOpenStore={onOpenStore} />
-        <div className="glass-panel rounded-[32px] p-5">
-          <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
-          <div className="space-y-3">
-            {threads.map((thread) => (
-              <button
-                key={thread.id}
-                onClick={() => {
-                  setActiveThreadId(thread.id);
-                  onActiveFriendChange?.(thread.friendId);
-                }}
-                className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
-                  activeThreadId === thread.id ? "ink-glass" : "glass-choice"
-                }`}
-              >
-                <Avatar src={thread.avatar} name={thread.name} />
-                <span>
-                  <span className="block font-semibold text-stone-800">
-                    {thread.name}
-                  </span>
-                  <span className="mt-1 block text-xs text-stone-500">
-                    {thread.subtitle}
-                  </span>
+      <div className="glass-panel min-h-[560px] rounded-[32px] p-5">
+        <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
+        <div className="space-y-3">
+          {threads.map((thread) => (
+            <button
+              key={thread.id}
+              onClick={() => {
+                setActiveThreadId(thread.id);
+                onActiveFriendChange?.(thread.friendId);
+              }}
+              className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
+                activeThreadId === thread.id ? "ink-glass" : "glass-choice"
+              }`}
+            >
+              <Avatar src={thread.avatar} name={thread.name} />
+              <span>
+                <span className="block font-semibold text-stone-800">
+                  {thread.name}
                 </span>
-              </button>
-            ))}
-          </div>
+                <span className="mt-1 block text-xs text-stone-500">
+                  {thread.subtitle}
+                </span>
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
