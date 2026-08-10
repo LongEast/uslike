@@ -19,6 +19,7 @@ export const createDefaultWallet = () => ({
   balance: 186,
   streak: 3,
   lastCheckInDate: null,
+  ownedProductIds: ["bubble-manga"],
   transactions: [
     { id: "demo-deep", label: "完成首次深度互动", amount: 2, createdAt: Date.now() - 38 * 60 * 1000 },
     { id: "demo-bubble", label: "购买聊天气泡", amount: -80, createdAt: Date.now() - 72 * 60 * 1000 },

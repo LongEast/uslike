@@ -149,12 +149,21 @@ export default function App() {
   };
 
   const spendCoins = (product) => {
+    if (wallet.ownedProductIds.includes(product.id)) {
+      showToast(`「${product.name}」已经在我的装扮中。`);
+      return false;
+    }
     if (wallet.balance < product.coinPrice) {
       showToast("互像币余额不足");
-      return;
+      return false;
     }
-    setWallet((current) => appendTransaction(current, `购买${product.name}`, -product.coinPrice));
+    setWallet((current) => appendTransaction(
+      { ...current, ownedProductIds: [product.id, ...current.ownedProductIds] },
+      `购买${product.name}`,
+      -product.coinPrice,
+    ));
     showToast(`已购买「${product.name}」 · -${product.coinPrice} 互像币`);
+    return true;
   };
 
   const recordMeetTutorialEvent = (event, step) => {

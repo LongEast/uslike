@@ -37,7 +37,15 @@ export default function AppShell({
   const [activeChatFriendId, setActiveChatFriendId] = useState(null);
 
   const renderView = () => {
-    if (storeOpen) return <StoreView onBack={onStoreClose} onToast={onToast} coinBalance={wallet.balance} onSpendCoins={onSpendCoins} />;
+    if (storeOpen) return (
+      <StoreView
+        onBack={onStoreClose}
+        onToast={onToast}
+        coinBalance={wallet.balance}
+        ownedProductIds={wallet.ownedProductIds}
+        onSpendCoins={onSpendCoins}
+      />
+    );
     if (activeView === "feed") return <FeedView feed={feed} />;
     if (activeView === "messages") {
       return (

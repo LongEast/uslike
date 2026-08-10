@@ -8,6 +8,7 @@ import {
   Gem,
   MessageCircle,
   Moon,
+  PackageCheck,
   Palette,
   ShieldCheck,
   Sparkles,
@@ -402,10 +403,14 @@ function DecorationArtwork({ product, nickname }) {
   );
 }
 
-function DecorationCard({ product, onPurchase, nickname }) {
+function DecorationCard({ product, onPurchase, onEquip, nickname, owned = false, collection = false }) {
   return (
     <article className="group relative flex min-h-[390px] flex-col overflow-hidden rounded-[30px] border border-white/80 bg-white/76 shadow-[0_18px_55px_rgba(88,95,142,0.13)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white/86 hover:shadow-[0_24px_65px_rgba(88,95,142,0.2)]">
-      {product.badge ? (
+      {owned ? (
+        <span className="absolute left-4 top-4 z-10 rounded-full border border-[#a8dfd1]/70 bg-[#e6f7f2] px-3 py-1.5 text-xs font-bold text-[#2d8c77] shadow-sm">
+          已拥有
+        </span>
+      ) : product.badge ? (
         <span className="absolute left-4 top-4 z-10 rounded-full border border-white/70 bg-white/78 px-3 py-1.5 text-xs font-bold text-[#6764c4] shadow-sm backdrop-blur-md">
           {product.badge}
         </span>
@@ -426,18 +431,22 @@ function DecorationCard({ product, onPurchase, nickname }) {
         <p className="mt-2 text-sm leading-6 text-stone-500">{product.description}</p>
         <button
           type="button"
-          onClick={() => onPurchase(product)}
-          className="aurora-dark mt-auto flex w-full items-center justify-center gap-2.5 rounded-2xl px-5 py-3.5 text-xl font-bold text-white shadow-glow transition hover:brightness-110 active:scale-[0.99]"
+          onClick={() => owned ? onEquip(product) : onPurchase(product)}
+          className={`mt-auto flex w-full items-center justify-center gap-2.5 rounded-2xl px-5 py-3.5 text-xl font-bold transition active:scale-[0.99] ${
+            owned
+              ? "bg-[#eeeaff] text-[#6b5ee7] hover:bg-[#e3ddff]"
+              : "aurora-dark text-white shadow-glow hover:brightness-110"
+          }`}
         >
-          <Gem size={21} />
-          {product.coinPrice} 互像币
+          {owned ? <PackageCheck size={21} /> : <Gem size={21} />}
+          {owned ? (collection ? "立即装扮" : "已拥有") : `${product.coinPrice} 互像币`}
         </button>
       </div>
     </article>
   );
 }
 
-export default function StoreView({ onBack, onToast, coinBalance, onSpendCoins }) {
+export default function StoreView({ onBack, onToast, coinBalance, ownedProductIds, onSpendCoins }) {
   const [section, setSection] = useState("recharge");
   const nickname = "同频相遇";
   const purchase = (product) => {
@@ -445,8 +454,10 @@ export default function StoreView({ onBack, onToast, coinBalance, onSpendCoins }
       onToast?.("MVP 暂不接入真实支付，可体验互像币装扮购买。");
       return;
     }
-    onSpendCoins(product);
+    if (onSpendCoins(product)) setSection("owned");
   };
+  const equip = (product) => onToast?.(`「${product.name}」已在你的装扮中，立即装扮功能将在后续版本开放。`);
+  const ownedProducts = decorationProducts.filter((product) => ownedProductIds.includes(product.id));
 
   return (
     <section className="mx-auto w-full max-w-6xl pb-36 pt-24">
@@ -466,7 +477,9 @@ export default function StoreView({ onBack, onToast, coinBalance, onSpendCoins }
             <p className="mt-2 text-sm text-stone-500">
               {section === "recharge"
                 ? "选择会员方案，或补充用于个性装扮的互像币。"
-                : "挑选聊天气泡、头像框与个性文字，装扮你的社交空间。"}
+                : section === "decorations"
+                  ? "挑选聊天气泡、头像框与个性文字，装扮你的社交空间。"
+                  : "查看已经收入囊中的装扮，穿戴功能将在后续版本开放。"}
             </p>
           </div>
         </div>
@@ -486,6 +499,7 @@ export default function StoreView({ onBack, onToast, coinBalance, onSpendCoins }
           {[
             { id: "recharge", label: "会员与互像币", Icon: Coins },
             { id: "decorations", label: "个性装扮", Icon: Palette },
+            { id: "owned", label: `我的装扮 ${ownedProducts.length}`, Icon: PackageCheck },
           ].map(({ id, label, Icon }) => {
             const selected = section === id;
             return (
@@ -509,15 +523,38 @@ export default function StoreView({ onBack, onToast, coinBalance, onSpendCoins }
         </div>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {section === "recharge"
-          ? products.map((product) => (
-              <ProductCard key={product.id} product={product} onPurchase={purchase} />
-            ))
-          : decorationProducts.map((product) => (
-              <DecorationCard key={product.id} product={product} onPurchase={purchase} nickname={nickname} />
-            ))}
-      </div>
+      {section === "owned" && !ownedProducts.length ? (
+        <div className="glass-panel rounded-[32px] px-6 py-16 text-center">
+          <PackageCheck className="mx-auto text-[#8b82e8]" size={34} />
+          <h2 className="mt-4 text-xl font-semibold text-stone-800">还没有收藏装扮</h2>
+          <p className="mt-2 text-sm text-stone-500">从个性装扮中挑一件喜欢的，它会出现在这里。</p>
+          <button
+            type="button"
+            onClick={() => setSection("decorations")}
+            className="aurora-dark mt-5 rounded-2xl px-5 py-3 font-semibold text-white shadow-glow transition hover:brightness-110"
+          >
+            去挑选装扮
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {section === "recharge"
+            ? products.map((product) => (
+                <ProductCard key={product.id} product={product} onPurchase={purchase} />
+              ))
+            : (section === "owned" ? ownedProducts : decorationProducts).map((product) => (
+                <DecorationCard
+                  key={product.id}
+                  product={product}
+                  onPurchase={purchase}
+                  onEquip={equip}
+                  nickname={nickname}
+                  owned={ownedProductIds.includes(product.id)}
+                  collection={section === "owned"}
+                />
+              ))}
+        </div>
+      )}
     </section>
   );
 }
