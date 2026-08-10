@@ -65,7 +65,7 @@ export default function AppShell({
       return (
         <FriendsView
           friends={friends}
-          onOpenNewFriends={() => onToast("暂时没有新的好友申请。")}
+          onOpenNewFriends={() => onToast("添加联系人功能稍后开放。")}
           onOpenChat={(friendId) => {
             setActiveChatFriendId(friendId);
             onNavigate("messages");

@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   Bell,
   Box,
   Camera,
@@ -27,6 +28,7 @@ import {
   Settings,
   Share2,
   Smile,
+  Smartphone,
   Star,
   Store,
   ThumbsUp,
@@ -636,8 +638,183 @@ export function MessagesView({
   );
 }
 
+const NEW_FRIEND_SECTIONS = [
+  {
+    title: "最近三天",
+    items: [
+      {
+        id: "request-linyu",
+        name: "林屿",
+        avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=new-friend-linyu",
+        message: "你好，在散步话题里看到你，想认识一下。",
+        status: "已添加",
+      },
+      {
+        id: "request-suwan",
+        name: "苏晚",
+        avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=new-friend-suwan",
+        message: "我们好像都喜欢轻音乐和夜晚电台。",
+        status: "申请已发送",
+      },
+    ],
+  },
+  {
+    title: "三天前",
+    items: [
+      {
+        id: "request-baiyu",
+        name: "白榆",
+        avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=new-friend-baiyu",
+        message: "从拼图房间来，之后也一起玩吧。",
+        status: "已添加",
+      },
+      {
+        id: "request-qiaoan",
+        name: "乔安",
+        avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=new-friend-qiaoan",
+        message: "你好，很喜欢你分享的城市观察。",
+        status: "已添加",
+      },
+      {
+        id: "request-jiangye",
+        name: "江野",
+        avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=new-friend-jiangye",
+        message: "我们在同一个语音房聊过。",
+        status: "已添加",
+      },
+      {
+        id: "request-mili",
+        name: "米粒",
+        avatar: "https://api.dicebear.com/9.x/thumbs/svg?seed=new-friend-mili",
+        message: "想和你交换最近循环播放的歌。",
+        status: "申请已发送",
+      },
+    ],
+  },
+];
+
+function NewFriendsView({ onBack, onAddContact }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
+  const visibleSections = NEW_FRIEND_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) =>
+      [item.name, item.message].some((value) =>
+        value.toLocaleLowerCase("zh-CN").includes(normalizedQuery),
+      ),
+    ),
+  })).filter((section) => section.items.length);
+
+  return (
+    <section className="mx-auto w-full max-w-4xl pb-32 pt-24">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/80 bg-white/58 text-stone-700 shadow-sm backdrop-blur-xl transition hover:bg-white"
+          aria-label="返回好友列表"
+        >
+          <ArrowLeft size={21} aria-hidden="true" />
+        </button>
+        <div className="min-w-0 text-center">
+          <h2 className="text-3xl font-semibold text-stone-800">新的朋友</h2>
+          <p className="mt-1 text-sm text-stone-500">查看好友申请与添加记录</p>
+        </div>
+        <button
+          type="button"
+          onClick={onAddContact}
+          className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-white/80 bg-white/58 px-4 text-sm font-semibold text-[#5d6387] shadow-sm backdrop-blur-xl transition hover:bg-white hover:text-[#6966dd]"
+        >
+          <UserPlus size={18} aria-hidden="true" />
+          <span className="hidden sm:inline">添加联系人</span>
+        </button>
+      </div>
+
+      <div className="glass-panel rounded-[32px] p-3 sm:p-4">
+        <label className="warm-field flex min-h-12 items-center gap-3 rounded-[22px] px-4 text-stone-500">
+          <Search size={20} aria-hidden="true" />
+          <span className="sr-only">搜索账号或手机号</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="搜索账号或手机号"
+            className="min-w-0 flex-1 bg-transparent text-stone-800 outline-none placeholder:text-stone-400"
+          />
+        </label>
+
+        <button
+          type="button"
+          onClick={onAddContact}
+          className="group mt-3 flex w-full items-center gap-4 rounded-[24px] border border-white/70 bg-white/48 p-3 text-left transition hover:bg-white/72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#dcf8ee] text-[#26866f]">
+            <Smartphone size={23} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-semibold text-stone-800">手机联系人</span>
+            <span className="mt-0.5 block text-xs text-stone-500">查找通讯录中已经加入 Uslike 的朋友</span>
+          </span>
+          <ChevronRight
+            size={21}
+            className="text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-[#6966dd]"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+
+      <div className="mt-5 overflow-hidden rounded-[32px] border border-white/75 bg-white/58 shadow-soft backdrop-blur-xl">
+        {visibleSections.length ? (
+          visibleSections.map((section) => (
+            <section key={section.title} aria-labelledby={`new-friend-${section.title}`}>
+              <h3
+                id={`new-friend-${section.title}`}
+                className="border-b border-white/70 bg-white/36 px-5 py-2.5 text-sm font-semibold text-[#7770d8]"
+              >
+                {section.title}
+              </h3>
+              {section.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 border-b border-white/70 bg-white/32 px-5 py-4 last:border-b-0"
+                >
+                  <Avatar src={item.avatar} name={item.name} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-lg font-semibold text-stone-800">{item.name}</p>
+                    <p className="mt-0.5 truncate text-sm text-stone-500">{item.message}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                      item.status === "已添加"
+                        ? "bg-[#dcf8ee] text-[#26866f]"
+                        : "bg-white/72 text-stone-500"
+                    }`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+            </section>
+          ))
+        ) : (
+          <div className="grid min-h-48 place-items-center px-8 py-12 text-center">
+            <div>
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white/76 text-[#7770d8] shadow-sm">
+                <UserPlus size={22} aria-hidden="true" />
+              </span>
+              <p className="mt-4 font-semibold text-stone-700">没有找到相关记录</p>
+              <p className="mt-1 text-sm text-stone-400">换个账号或手机号试试。</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
   const [query, setQuery] = useState("");
+  const [showNewFriends, setShowNewFriends] = useState(false);
   const visibleFriends = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
     if (!normalizedQuery) return friends;
@@ -659,6 +836,15 @@ export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
       block: "start",
     });
   };
+
+  if (showNewFriends) {
+    return (
+      <NewFriendsView
+        onBack={() => setShowNewFriends(false)}
+        onAddContact={onOpenNewFriends}
+      />
+    );
+  }
 
   return (
     <section className="mx-auto w-full max-w-4xl pb-32 pt-24">
@@ -682,7 +868,7 @@ export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
 
         <button
           type="button"
-          onClick={onOpenNewFriends}
+          onClick={() => setShowNewFriends(true)}
           className="group mt-3 flex w-full items-center gap-4 rounded-[24px] border border-white/70 bg-white/48 p-3 text-left transition hover:bg-white/72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
         >
           <span className="aurora-dark grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-glow">
