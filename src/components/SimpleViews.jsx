@@ -37,7 +37,7 @@ import {
   Video,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { filterFeedByChannel } from "../utils/feedFilter.js";
+import { filterFeedByChannel, filterInteractionsByFriendship } from "../utils/feedFilter.js";
 import { FRIEND_INDEX_LABELS, groupFriendsByInitial } from "../utils/friendIndex.js";
 import Avatar from "./Avatar.jsx";
 import AccountSettingsView from "./AccountSettingsView.jsx";
@@ -86,7 +86,9 @@ export function FeedView({ feed }) {
           </button>
           <div className="flex flex-wrap items-center gap-4">
             <button
+              type="button"
               onClick={() => setShowNonFriendComments((value) => !value)}
+              aria-pressed={showNonFriendComments}
               className="inline-flex items-center gap-2 text-sm font-medium text-stone-600 transition hover:text-stone-900"
             >
               <span
@@ -98,7 +100,7 @@ export function FeedView({ feed }) {
               >
                 <Check size={14} />
               </span>
-              显示非好友评论
+              显示非好友互动
             </button>
             <button
               className="rounded-full p-2 text-stone-400 transition hover:bg-white/70 hover:text-[#6966dd]"
@@ -123,7 +125,11 @@ export function FeedView({ feed }) {
             {visibleFeed.length} 条动态
           </span>
         </div>
-        {visibleFeed.length ? visibleFeed.map((item) => (
+        {visibleFeed.length ? visibleFeed.map((item) => {
+          const visibleLikes = filterInteractionsByFriendship(item.likes, showNonFriendComments);
+          const visibleComments = filterInteractionsByFriendship(item.comments, showNonFriendComments);
+
+          return (
           <article key={item.id} className="border-b border-stone-100/90 bg-white/64 px-5 py-6 last:border-b-0">
             <div className="flex items-start gap-3">
               <Avatar src={item.avatar} name={item.user} />
@@ -172,10 +178,23 @@ export function FeedView({ feed }) {
                   </div>
                 </div>
 
-                {item.likedBy ? (
+                {visibleLikes.length ? (
                   <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#587097]">
                     <ThumbsUp size={16} />
-                    {item.likedBy} 赞了
+                    {visibleLikes.map((like) => like.user).join("、")} 赞了
+                  </div>
+                ) : null}
+
+                {visibleComments.length ? (
+                  <div className="mt-4 space-y-2 rounded-2xl bg-white/48 px-4 py-3 backdrop-blur-xl">
+                    {visibleComments.map((comment) => (
+                      <div key={comment.id} className="flex items-start gap-2.5 text-sm">
+                        <p className="min-w-0 flex-1 leading-6 text-stone-600">
+                          <span className="font-semibold text-stone-800">{comment.user}：</span>
+                          {comment.text}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 ) : null}
 
@@ -186,7 +205,8 @@ export function FeedView({ feed }) {
               </div>
             </div>
           </article>
-        )) : (
+          );
+        }) : (
           <div className="grid min-h-52 place-items-center bg-white/54 px-6 py-12 text-center">
             <div>
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white/76 text-[#7770d8] shadow-sm">

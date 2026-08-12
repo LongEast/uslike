@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { filterFeedByChannel } from "./feedFilter.js";
+import { filterFeedByChannel, filterInteractionsByFriendship } from "./feedFilter.js";
 
 const feed = [
   { id: "friend-post", channel: "friends" },
@@ -19,4 +19,22 @@ test("filters the feed to discovery posts", () => {
 
 test("returns an empty feed for unsupported channels", () => {
   assert.deepEqual(filterFeedByChannel(feed, "unknown"), []);
+});
+
+test("hides non-friend interactions by default", () => {
+  const interactions = [
+    { id: "friend-like", isFriend: true },
+    { id: "non-friend-like", isFriend: false },
+  ];
+
+  assert.deepEqual(filterInteractionsByFriendship(interactions), [interactions[0]]);
+});
+
+test("shows non-friend interactions after opting in", () => {
+  const interactions = [
+    { id: "friend-comment", isFriend: true },
+    { id: "non-friend-comment", isFriend: false },
+  ];
+
+  assert.deepEqual(filterInteractionsByFriendship(interactions, true), interactions);
 });

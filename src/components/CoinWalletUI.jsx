@@ -35,7 +35,7 @@ export function CheckInCard({ wallet, onOpen, onClaim }) {
             </span>
             <span className="mt-0.5 block truncate text-[11px] text-stone-500">
               {status.checkedIn
-                ? `连续 ${wallet.streak} 天 · 明日 +${status.reward}`
+                ? `连续 ${wallet.streak} 天`
                 : `第 ${status.nextDay} 天 · 可领 +${status.reward} 币`}
             </span>
           </span>
