@@ -1014,6 +1014,8 @@ export function SettingsView({
   accountOpen,
   onOpenAccount,
   onCloseAccount,
+  friendCount,
+  onOpenFriendStatus,
 }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuGroups = [
@@ -1068,11 +1070,15 @@ export function SettingsView({
               <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
                 + 状态
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600">
+              <button
+                type="button"
+                onClick={onOpenFriendStatus}
+                className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:border-[#cfd0f5] hover:text-[#6966dd] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+              >
                 <Star size={15} className="text-[#6b73ff]" />
-                同频好友 6
+                同频好友 {friendCount}
                 <span className="h-2 w-2 rounded-full bg-[#f25d5d]" />
-              </span>
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-3 text-stone-400">
@@ -1121,6 +1127,96 @@ export function SettingsView({
             {isLoggingOut ? "正在退出…" : "退出登录"}
           </span>
         </button>
+      </div>
+    </section>
+  );
+}
+
+const FRIEND_STATUS_DETAILS = {
+  "friend-youbo": {
+    label: "美滋滋",
+    icon: Smile,
+    accent: "bg-[#eef0ff] text-[#716bd7]",
+  },
+  "room-7": {
+    label: "游戏中",
+    icon: Gamepad2,
+    accent: "bg-[#fff0f3] text-[#d66c93]",
+  },
+};
+
+export function FriendStatusView({ friends, onBack }) {
+  const statusFriends = friends
+    .filter((friend) => FRIEND_STATUS_DETAILS[friend.id])
+    .map((friend) => ({ ...friend, status: FRIEND_STATUS_DETAILS[friend.id] }));
+
+  return (
+    <section className="mx-auto w-full max-w-3xl pb-32 pt-24">
+      <header className="mb-5 flex items-center justify-between gap-4">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="返回设置"
+          className="grid h-10 w-10 place-items-center rounded-full border border-white/75 bg-white/52 text-stone-600 backdrop-blur-xl transition hover:bg-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+        >
+          <ArrowLeft size={19} />
+        </button>
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-stone-800">好友状态</h2>
+          <p className="mt-1 text-xs text-stone-400">看看同频好友此刻在做什么</p>
+        </div>
+        <button
+          type="button"
+          aria-label="更多状态选项"
+          className="grid h-10 w-10 place-items-center rounded-full text-stone-400 transition hover:bg-white/60 hover:text-stone-700"
+        >
+          <MoreHorizontal size={20} />
+        </button>
+      </header>
+
+      <div className="card-scroll flex gap-3 overflow-x-auto rounded-[24px] border border-stone-200/90 bg-white/38 p-3 backdrop-blur-xl">
+        <button
+          type="button"
+          className="group flex w-16 shrink-0 flex-col items-center gap-1.5 text-center"
+          aria-label="发布状态"
+        >
+          <span className="grid h-12 w-12 place-items-center rounded-full border border-dashed border-stone-300 bg-white/52 text-stone-400 transition group-hover:border-[#7770d8] group-hover:text-[#6966dd]">
+            <Plus size={20} />
+          </span>
+          <span className="text-xs font-medium text-stone-500">发状态</span>
+        </button>
+        {statusFriends.map(({ id, status }) => {
+          const Icon = status.icon;
+          return (
+            <div key={id} className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center">
+              <span className={`grid h-12 w-12 place-items-center rounded-full ${status.accent}`}>
+                <Icon size={20} />
+              </span>
+              <span className="line-clamp-2 text-xs font-medium text-stone-600">{status.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-[28px] border border-stone-200/90 bg-white/52 shadow-sm backdrop-blur-xl">
+        {statusFriends.map((friend) => {
+          const Icon = friend.status.icon;
+          return (
+            <section key={friend.id} className="flex items-center gap-4 border-b border-stone-200/80 px-5 py-4 last:border-b-0 sm:px-6">
+              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${friend.status.accent}`}>
+                <Icon size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-semibold text-stone-800">{friend.status.label}</h3>
+                <p className="mt-0.5 text-xs text-stone-400">{friend.name} 正在使用这个状态</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2.5">
+                <Avatar src={friend.avatar} name={friend.name} size="sm" />
+                <p className="w-12 truncate text-sm font-medium text-stone-600">{friend.name}</p>
+              </div>
+            </section>
+          );
+        })}
       </div>
     </section>
   );

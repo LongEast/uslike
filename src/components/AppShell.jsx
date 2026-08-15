@@ -4,7 +4,7 @@ import BottomNav from "./BottomNav.jsx";
 import { CheckInCard, CoinBalancePill } from "./CoinWalletUI.jsx";
 import HomeView from "./HomeView.jsx";
 import StoreView from "./StoreView.jsx";
-import { FeedView, FriendsView, MessagesView, SettingsView } from "./SimpleViews.jsx";
+import { FeedView, FriendStatusView, FriendsView, MessagesView, SettingsView } from "./SimpleViews.jsx";
 
 export default function AppShell({
   user,
@@ -74,6 +74,9 @@ export default function AppShell({
       );
     }
     if (activeView === "settings") {
+      if (settingsPage === "status") {
+        return <FriendStatusView friends={friends} onBack={() => setSettingsPage("hub")} />;
+      }
       return (
         <SettingsView
           user={user}
@@ -89,6 +92,8 @@ export default function AppShell({
           accountOpen={settingsPage === "account"}
           onOpenAccount={() => setSettingsPage("account")}
           onCloseAccount={() => setSettingsPage("hub")}
+          friendCount={friends.length}
+          onOpenFriendStatus={() => setSettingsPage("status")}
         />
       );
     }
