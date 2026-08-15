@@ -3,9 +3,16 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  findStoryLineIndex,
+  getStoryAdvanceAction,
   getStorySceneState,
+  groupStoryLineMeasurements,
   isContinueSequence,
   normalizeChoices,
+  normalizeStoryText,
+  recordNarrativeProgress,
+  resolveStoryPlaybackLine,
+  segmentStoryGraphemes,
   tokenizeText,
 } from "./interactiveStory.js";
 
@@ -35,6 +42,118 @@ test("tokenizeText falls back when Intl.Segmenter cannot be initialized", () => 
     { text: "中", newline: false },
     { text: "文", newline: false },
   ]);
+});
+
+test("story playback normalizes authoring whitespace before browser layout", () => {
+  assert.equal(
+    normalizeStoryText("  第一段\n第二段\t\n  third   line  "),
+    "第一段 第二段 third line",
+  );
+  assert.equal(normalizeStoryText(""), "");
+});
+
+test("grapheme segmentation preserves UTF-16 source offsets in the fallback", () => {
+  assert.deepEqual(
+    segmentStoryGraphemes("你🙂好", null),
+    [
+      { text: "你", start: 0, end: 1 },
+      { text: "🙂", start: 1, end: 3 },
+      { text: "好", start: 3, end: 4 },
+    ],
+  );
+});
+
+test("browser line measurements group by rendered top instead of punctuation or character count", () => {
+  const text = "莉莉娅looks远处，仍想说些什么";
+  const segments = segmentStoryGraphemes(text, null);
+  const splitOffset = text.indexOf("仍");
+  const measurements = segments.map((segment) => ({
+    ...segment,
+    top: segment.start < splitOffset ? 100 : 132,
+  }));
+
+  const lines = groupStoryLineMeasurements(text, measurements);
+  assert.deepEqual(lines, [
+    { start: 0, end: splitOffset, text: text.slice(0, splitOffset) },
+    { start: splitOffset, end: text.length, text: text.slice(splitOffset) },
+  ]);
+  assert.equal(findStoryLineIndex(lines, 0), 0);
+  assert.equal(findStoryLineIndex(lines, splitOffset), 1);
+  assert.equal(findStoryLineIndex(lines, text.length), 1);
+});
+
+test("reflow anchors completed playback to the read frontier without revealing new copy", () => {
+  const text = "abcdefghij";
+  const widerLines = [{ start: 0, end: 10, text }];
+  const narrowerLines = [
+    { start: 0, end: 4, text: "abcd" },
+    { start: 4, end: 7, text: "efg" },
+    { start: 7, end: 10, text: "hij" },
+  ];
+
+  assert.deepEqual(resolveStoryPlaybackLine(widerLines, text, {
+    cursor: 0,
+    displayedEnd: 4,
+    lineFinished: true,
+  }), { start: 0, end: 4, text: "abcd" });
+  assert.deepEqual(resolveStoryPlaybackLine(narrowerLines, text, {
+    cursor: 0,
+    displayedEnd: text.length,
+    lineFinished: true,
+  }), { start: 7, end: 10, text: "hij" });
+  assert.deepEqual(resolveStoryPlaybackLine(widerLines, text, {
+    cursor: 4,
+    displayedEnd: 4,
+    lineFinished: false,
+  }), { start: 4, end: 10, text: "efghij" });
+  assert.deepEqual(resolveStoryPlaybackLine(narrowerLines, text, {
+    cursor: 0,
+    displayedEnd: 0,
+    visibleEnd: 6,
+    lineFinished: false,
+  }), { start: 4, end: 7, text: "efg" });
+});
+
+test("narrative progress is monotonic and revisiting a scene does not duplicate it", () => {
+  const first = recordNarrativeProgress([], {
+    sceneKey: "media:1",
+    nodeId: "node-a",
+    displayedEnd: 12,
+  });
+  const unchanged = recordNarrativeProgress(first, {
+    sceneKey: "media:1",
+    nodeId: "node-a",
+    displayedEnd: 8,
+  });
+  const revisited = recordNarrativeProgress(unchanged, {
+    sceneKey: "media:1",
+    nodeId: "node-b",
+    displayedEnd: 20,
+  });
+
+  assert.equal(unchanged, first);
+  assert.deepEqual(revisited, [
+    { sceneKey: "media:1", nodeId: "node-b", displayedEnd: 20 },
+  ]);
+});
+
+test("story clicks finish the active line before moving and stop at the final line", () => {
+  assert.equal(getStoryAdvanceAction({ lineFinished: false, textLength: 100 }), "finish-line");
+  assert.equal(getStoryAdvanceAction({
+    lineFinished: true,
+    displayedEnd: 40,
+    textLength: 100,
+  }), "next-line");
+  assert.equal(getStoryAdvanceAction({
+    lineFinished: true,
+    displayedEnd: 100,
+    textLength: 100,
+  }), "none");
+  assert.equal(getStoryAdvanceAction({
+    blocked: true,
+    lineFinished: false,
+    textLength: 100,
+  }), "none");
 });
 
 test("normalizeChoices removes hidden choices and letter prefixes", () => {

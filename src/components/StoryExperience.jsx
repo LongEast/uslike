@@ -25,6 +25,7 @@ import {
   saveStorySession,
 } from "../utils/storySession.js";
 import InteractiveStory from "./InteractiveStory.jsx";
+import NotificationToast from "./NotificationToast.jsx";
 
 let fallbackMessageId = 0;
 
@@ -52,9 +53,10 @@ function getInitialState({ sessionId, userId, storyData, origin, partner }) {
 }
 
 function PartnerAvatar({ partner, size = "large" }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
   const large = size === "large";
-  const label = partner?.name || "相遇小助手";
+  const label = partner?.name || "故事搭档";
+  const avatarUrl = partner?.avatarUrl;
 
   return (
     <span
@@ -63,12 +65,12 @@ function PartnerAvatar({ partner, size = "large" }) {
         large ? "h-12 w-12 rounded-2xl text-base" : "h-8 w-8 rounded-xl text-xs"
       }`}
     >
-      {partner?.avatarUrl && !imageFailed ? (
+      {avatarUrl && failedAvatarUrl !== avatarUrl ? (
         <img
-          src={partner.avatarUrl}
+          src={avatarUrl}
           alt=""
           className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
+          onError={() => setFailedAvatarUrl(avatarUrl)}
         />
       ) : (
         label.slice(0, 1)
@@ -83,7 +85,7 @@ function ExperienceHeader({ partner, onExit }) {
       <div className="flex min-w-0 items-center gap-3">
         <span className="text-lg font-black tracking-[0.04em] text-stone-800">相遇</span>
         <span className="h-5 w-px bg-[#7a81a4]/25" />
-        <span className="truncate text-sm text-stone-500">AI 双人文游</span>
+        <span className="truncate text-sm text-stone-500">双人文游</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="hidden items-center gap-2 rounded-full border border-white/75 bg-white/55 py-1.5 pl-2 pr-3 text-xs text-stone-600 shadow-soft backdrop-blur-xl sm:flex">
@@ -106,20 +108,11 @@ function ExperienceHeader({ partner, onExit }) {
   );
 }
 
-function ProxyNotice({ partner }) {
-  if (partner.isAssistant) {
-    return (
-      <div className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/60 px-4 py-3 text-sm leading-6 text-[#5d6387] shadow-soft backdrop-blur-xl">
-        <Sparkles className="mt-0.5 shrink-0 text-[#746de0]" size={17} />
-        <span>相遇小助手会模拟搭档的发言，所有剧情决定仍由你作出。</span>
-      </div>
-    );
-  }
-
+function PartnerNotice({ partner }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/60 px-4 py-3 text-sm leading-6 text-[#5d6387] shadow-soft backdrop-blur-xl">
       <Sparkles className="mt-0.5 shrink-0 text-[#746de0]" size={17} />
-      <span>Demo 阶段由相遇小助手代理 {partner.name} 的发言与选择。</span>
+      <span>你将和 {partner.name} 分别扮演不同角色，一起推进这段故事。</span>
     </div>
   );
 }
@@ -131,7 +124,7 @@ function StyleSelection({ styles, partner, onSelect, onExit }) {
         <p className="mb-3 text-[11px] font-bold tracking-[0.24em] text-[#6b73d9]">STEP 01 · 选择剧本风格</p>
         <h1 className="text-3xl font-black tracking-tight text-stone-800 sm:text-5xl">今晚想经历怎样的故事？</h1>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-stone-500 sm:text-base">
-          你和搭档会分别扮演不同角色。Demo 先从一段科幻寓言开始。
+          你和 {partner.name} 会分别扮演不同角色。Demo 先从一段科幻寓言开始。
         </p>
       </div>
 
@@ -172,7 +165,7 @@ function StyleSelection({ styles, partner, onSelect, onExit }) {
       </div>
 
       <div className="mx-auto mt-6 w-full max-w-2xl">
-        <ProxyNotice partner={partner} />
+        <PartnerNotice partner={partner} />
       </div>
       <button type="button" onClick={() => onExit("exit")} className="sr-only">退出文游</button>
     </div>
@@ -195,7 +188,7 @@ function CharacterSelection({ characters, partner, roleMessage, onBack, onSelect
         <p className="mb-3 text-[11px] font-bold tracking-[0.24em] text-[#6b73d9]">STEP 02 · 分别选择角色</p>
         <h1 className="text-3xl font-black tracking-tight text-stone-800 sm:text-5xl">选择你要扮演的人</h1>
         <p className="mt-4 text-sm leading-6 text-stone-500 sm:text-base">
-          你扮演阿楠；阿美是搭档的独立角色，并不是两个人共同控制一个角色。
+          你扮演阿楠；{partner.name} 扮演阿美，你们各自控制自己的角色。
         </p>
       </div>
 
@@ -203,11 +196,9 @@ function CharacterSelection({ characters, partner, roleMessage, onBack, onSelect
         <div className="mx-auto mb-6 flex w-full max-w-xl items-start gap-3 rounded-[22px] border border-white/85 bg-white/65 p-4 shadow-[0_16px_50px_rgba(88,95,142,0.14)] backdrop-blur-xl">
           <PartnerAvatar partner={partner} />
           <div className="min-w-0">
-            <p className="mb-1 text-[11px] font-semibold text-[#6861ca]">相遇小助手</p>
+            <p className="mb-1 text-[11px] font-semibold text-[#6861ca]">{partner.name}</p>
             <p className="text-sm leading-6 text-stone-700">{roleMessage.text}</p>
-            {!partner.isAssistant ? (
-              <p className="mt-1 text-[10px] text-stone-400">正在代理 {partner.name} 演示搭档行为</p>
-            ) : null}
+            <p className="mt-1 text-[10px] text-stone-400">正在和你一起玩</p>
           </div>
         </div>
       ) : null}
@@ -220,7 +211,7 @@ function CharacterSelection({ characters, partner, roleMessage, onBack, onSelect
               key={character.id}
               type="button"
               onClick={() => onSelect(character)}
-              aria-label={`${character.name}，${isPlayer ? "可选择" : "由搭档扮演，暂未开放"}`}
+              aria-label={`${character.name}，${isPlayer ? "可选择" : `由 ${partner.name} 扮演，暂未开放`}`}
               className={`group relative min-h-[310px] overflow-hidden rounded-[28px] border p-6 text-left backdrop-blur-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7d73e6]/60 ${
                 isPlayer
                   ? "border-white/90 bg-white/70 shadow-[0_25px_80px_rgba(88,95,142,0.17)] hover:-translate-y-1 hover:border-[#9f95eb]/70 hover:bg-white/90"
@@ -243,7 +234,7 @@ function CharacterSelection({ characters, partner, roleMessage, onBack, onSelect
                   {isPlayer ? (
                     <><Check size={15} /> 由你扮演 · 开始故事</>
                   ) : (
-                    <><Users size={15} /> 搭档角色 · 暂未开放</>
+                    <><Users size={15} /> {partner.name} 的角色 · 暂未开放</>
                   )}
                 </span>
               </span>
@@ -277,9 +268,6 @@ export default function StoryExperience({
   }
 
   const [session, setSession] = useState(initialStateRef.current.session);
-  const [restoredPlaySession, setRestoredPlaySession] = useState(
-    initialStateRef.current.restored && initialStateRef.current.session.stage === STORY_STAGES.PLAY,
-  );
   const [toast, setToast] = useState("");
   const exitButtonRef = useRef(null);
   const onExitRef = useRef(onExit);
@@ -315,7 +303,6 @@ export default function StoryExperience({
       partner: partnerProp,
     });
     setSession(next.session);
-    setRestoredPlaySession(next.restored && next.session.stage === STORY_STAGES.PLAY);
   }, [origin, partnerProp, sessionId, storyData, userId]);
 
   useEffect(() => {
@@ -374,7 +361,6 @@ export default function StoryExperience({
       return;
     }
 
-    setRestoredPlaySession(false);
     setSession((current) => {
       const eventAlreadySeen = !roleEvent || current.seenPartnerEvents.includes(roleEvent.id);
       return {
@@ -393,11 +379,10 @@ export default function StoryExperience({
 
   const selectCharacter = (character) => {
     if (character.demoRole !== "player") {
-      showToast("暂未开放：Demo 中阿美由你的搭档选择。");
+      showToast(`暂未开放：Demo 中阿美由 ${partner.name} 选择。`);
       return;
     }
 
-    setRestoredPlaySession(false);
     setSession((current) => ({
       ...current,
       stage: STORY_STAGES.PLAY,
@@ -405,21 +390,21 @@ export default function StoryExperience({
       partnerCharacterId: storyData?.demo?.partnerCharacterId || "amei",
       currentNodeId: String(storyData.rootId),
       history: [],
+      narrativeHistory: [],
     }));
   };
 
   const updatePlaySession = useCallback((nextSession) => {
-    setRestoredPlaySession(false);
     setSession(nextSession);
   }, []);
 
   const restartPlaySession = useCallback(() => {
     const roleEventId = roleEvent?.id;
-    setRestoredPlaySession(false);
     setSession((current) => ({
       ...current,
       currentNodeId: String(storyData.rootId),
       history: [],
+      narrativeHistory: [],
       messages: roleEventId
         ? current.messages.filter((message) => message.eventId === roleEventId)
         : [],
@@ -453,7 +438,6 @@ export default function StoryExperience({
         onRestart={restartPlaySession}
         onExit={() => handleExit("exit")}
         partner={partner}
-        expandInitialText={restoredPlaySession}
         wordSpeed={wordSpeed}
       />
     );
@@ -484,11 +468,7 @@ export default function StoryExperience({
         />
       )}
 
-      {toast ? (
-        <div role="status" aria-live="polite" className="aurora-dark fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-1/2 z-50 -translate-x-1/2 rounded-full border border-white/40 px-5 py-3 text-sm font-semibold text-white shadow-glow backdrop-blur-xl motion-safe:animate-storyChat">
-          {toast}
-        </div>
-      ) : null}
+      <NotificationToast message={toast} placement="bottom" />
     </main>
   );
 }

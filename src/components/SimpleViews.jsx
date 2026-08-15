@@ -386,7 +386,6 @@ export function MessagesView({
     ? requestedActiveThreadId
     : threads[0]?.id || null;
   const activeThread = threads.find((thread) => thread.id === activeThreadId) || null;
-  const isAssistantThread = activeThread?.id === "thread-welcome";
   const draft = drafts[activeThreadId] || "";
 
   useEffect(() => {
@@ -496,18 +495,14 @@ export function MessagesView({
         {activeThread ? (
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex shrink-0 items-center gap-3 border-b border-white/70 pb-4">
-              {isAssistantThread ? (
+              <button
+                type="button"
+                onClick={() => setFriendActions(activeThread)}
+                aria-label={`打开 ${activeThread.name} 的好友操作`}
+                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+              >
                 <Avatar src={activeThread.avatar} name={activeThread.name} />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setFriendActions(activeThread)}
-                  aria-label={`打开 ${activeThread.name} 的好友操作`}
-                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
-                >
-                  <Avatar src={activeThread.avatar} name={activeThread.name} />
-                </button>
-              )}
+              </button>
               <div>
                 <h3 className="text-xl font-semibold text-stone-800">{activeThread.name}</h3>
                 <p className="text-xs text-stone-500">{activeThread.subtitle}</p>
@@ -517,42 +512,6 @@ export function MessagesView({
             {activeThread.decorHint ? (
               <div className="mb-4 flex h-24 items-center justify-center rounded-[28px] border border-dashed border-[#9ca3d6]/60 bg-white/42 text-sm text-stone-500">
                 开始装点属于你们的空间吧！
-              </div>
-            ) : null}
-            {isAssistantThread ? (
-              <div className="mt-4 grid shrink-0 gap-3 sm:grid-cols-2">
-                {[
-                  { label: "购买月卡", hint: "解锁更多权益" },
-                  { label: "个性商城", hint: "装扮头像与聊天空间" },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={onOpenStore}
-                    className="assistant-store-action ink-glass text-left transition hover:-translate-y-0.5 hover:brightness-110"
-                  >
-                    <span className="block text-sm font-semibold text-stone-800">{item.label}</span>
-                    <span className="assistant-action-hint mt-0.5 block text-xs">{item.hint}</span>
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={(event) => onOpenStory?.(activeThread, event.currentTarget)}
-                  data-story-entry-thread-id={activeThread.id}
-                  aria-label="付费进入 AI 互动文游"
-                  title="Demo 模式，不会实际扣费"
-                  className="aurora-dark flex items-center gap-4 rounded-3xl px-5 py-4 text-left text-white shadow-glow transition hover:-translate-y-1 hover:brightness-110 sm:col-span-2"
-                >
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15">
-                    <PenLine size={21} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-base font-semibold">AI 互动文游</span>
-                    <span className="mt-1 block text-sm text-white/70">
-                      进入《冰人文明》 · 付费进入（Demo 不实际扣费）
-                    </span>
-                  </span>
-                  <ChevronRight className="ml-auto shrink-0" size={19} />
-                </button>
               </div>
             ) : null}
             <div
@@ -604,39 +563,37 @@ export function MessagesView({
                 className="hidden"
                 onChange={uploadImage}
               />
-              {!isAssistantThread ? (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setGamePicker(activeThread)}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
-                      gamePicker
-                        ? "glass-choice-active"
-                        : "border border-stone-200 bg-white/82 text-stone-800 shadow-sm hover:bg-white"
-                    }`}
-                  >
-                    <Gamepad2 size={16} />
-                    双人游戏
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(event) => onOpenStory?.(activeThread, event.currentTarget)}
-                    data-story-entry-thread-id={activeThread.id}
-                    aria-label="付费进入互动文游"
-                    title="Demo 模式，不会实际扣费"
-                    className="glass-choice-active inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition"
-                  >
-                    <PenLine size={16} />
-                    付费进入
-                  </button>
-                  <button
-                    onClick={() => setWaveRoomPicker(activeThread)}
-                    className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/82 px-4 py-2.5 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-white"
-                  >
-                    <Radio size={16} />
-                    电波一下
-                  </button>
-                </div>
-              ) : null}
+              <div className="mb-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setGamePicker(activeThread)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                    gamePicker
+                      ? "glass-choice-active"
+                      : "border border-stone-200 bg-white/[.82] text-stone-800 shadow-sm hover:bg-white"
+                  }`}
+                >
+                  <Gamepad2 size={16} />
+                  双人游戏
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => onOpenStory?.(activeThread, event.currentTarget)}
+                  data-story-entry-thread-id={activeThread.id}
+                  aria-label="付费进入互动文游"
+                  title="Demo 模式，不会实际扣费"
+                  className="glass-choice-active inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition"
+                >
+                  <PenLine size={16} />
+                  付费进入
+                </button>
+                <button
+                  onClick={() => setWaveRoomPicker(activeThread)}
+                  className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/[.82] px-4 py-2.5 text-sm font-semibold text-stone-800 shadow-sm transition hover:bg-white"
+                >
+                  <Radio size={16} />
+                  电波一下
+                </button>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onToast("按住说话功能稍后开放。")}

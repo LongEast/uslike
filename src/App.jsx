@@ -17,6 +17,7 @@ import Landing from "./components/Landing.jsx";
 import MeetModal from "./components/MeetModal.jsx";
 import Modal from "./components/Modal.jsx";
 import MvpSplash from "./components/MvpSplash.jsx";
+import NotificationToast from "./components/NotificationToast.jsx";
 import RoomDiscovery from "./components/RoomDiscovery.jsx";
 import {
   CooldownModal,
@@ -950,16 +951,7 @@ export default function App() {
           {economyModals}
         </>
       ) : null}
-      <Toast message={toast} />
+      <NotificationToast message={toast} />
     </>
-  );
-}
-
-function Toast({ message }) {
-  if (!message) return null;
-  return (
-    <div className="fixed left-1/2 top-6 z-[120] -translate-x-1/2 animate-pop whitespace-pre-line rounded-full border border-white/55 bg-white/72 px-5 py-3 text-center text-sm font-semibold text-stone-800 shadow-[0_18px_48px_rgba(88,95,142,0.16)] backdrop-blur-xl">
-      {message}
-    </div>
   );
 }

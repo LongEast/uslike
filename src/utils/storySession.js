@@ -15,6 +15,49 @@ function cleanString(value, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
+function getNormalizedMediaText(storyData, nodeId) {
+  const node = storyData?.nodes?.[nodeId];
+  const media = node && storyData?.media?.[String(node.mediaRef)];
+  return String(media?.text ?? "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeNarrativeHistory(value, storyData, nodes) {
+  if (!Array.isArray(value)) return [];
+
+  const entriesBySceneKey = new Map();
+
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+
+    const sceneKey = cleanString(entry.sceneKey);
+    const nodeId = entry.nodeId == null ? "" : cleanString(String(entry.nodeId));
+    if (
+      !sceneKey
+      || !nodeId
+      || !nodes?.[nodeId]
+      || !Number.isInteger(entry.displayedEnd)
+      || entry.displayedEnd < 0
+    ) {
+      continue;
+    }
+
+    const displayedEnd = Math.min(
+      entry.displayedEnd,
+      getNormalizedMediaText(storyData, nodeId).length,
+    );
+    const existing = entriesBySceneKey.get(sceneKey);
+
+    if (existing) {
+      existing.nodeId = nodeId;
+      existing.displayedEnd = Math.max(existing.displayedEnd, displayedEnd);
+    } else {
+      entriesBySceneKey.set(sceneKey, { sceneKey, nodeId, displayedEnd });
+    }
+  }
+
+  return [...entriesBySceneKey.values()];
+}
+
 function getDefaultStorage() {
   try {
     return globalThis.sessionStorage;
@@ -74,6 +117,7 @@ export function createStorySession({
     partnerCharacterId: null,
     currentNodeId: rootId,
     history: [],
+    narrativeHistory: [],
     messages: [],
     seenPartnerEvents: [],
     origin: normalizeStoryOrigin(origin),
@@ -114,6 +158,7 @@ export function normalizeStorySession(value, {
       .map(String)
       .filter((nodeId) => nodeId && (!nodes || Boolean(nodes[nodeId])))
     : [];
+  const narrativeHistory = normalizeNarrativeHistory(value.narrativeHistory, storyData, nodes);
   const messages = Array.isArray(value.messages)
     ? value.messages.flatMap((message, index) => {
       if (!message || typeof message !== "object") return [];
@@ -141,6 +186,7 @@ export function normalizeStorySession(value, {
     partnerCharacterId: cleanString(value.partnerCharacterId) || null,
     currentNodeId,
     history,
+    narrativeHistory,
     messages,
     seenPartnerEvents,
     origin: normalizeStoryOrigin(value.origin, normalizeStoryOrigin(origin)),

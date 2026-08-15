@@ -10,17 +10,29 @@ const resolveElement = (target) => {
   return candidate?.current ?? candidate ?? null;
 };
 
-const getTargetRect = (target) => {
-  const element = resolveElement(target);
-  if (!element) return null;
+const resolveTargets = (targets) => targets
+  .map((target) => ({ target, element: resolveElement(target) }))
+  .filter(({ element }) => element?.isConnected && typeof element.getBoundingClientRect === "function");
+
+const getTargetRect = ({ target, element }, viewport) => {
   const bounds = element.getBoundingClientRect();
   return getSpotlightRect(
     bounds,
-    VIEWPORT_RECT(),
+    viewport,
     target?.padding ?? 8,
     target?.radius ?? 20,
   );
 };
+
+const isOutsideViewport = (element, viewport) => {
+  const bounds = element.getBoundingClientRect();
+  return bounds.top < 0
+    || bounds.left < 0
+    || bounds.bottom > viewport.height
+    || bounds.right > viewport.width;
+};
+
+const stopTutorialClick = (event) => event.stopPropagation();
 
 export default function SpotlightTutorial({
   step,
@@ -35,31 +47,87 @@ export default function SpotlightTutorial({
 }) {
   const targetsRef = useRef(targets);
   targetsRef.current = targets;
+  const scheduleMeasureRef = useRef(null);
   const [viewport, setViewport] = useState(VIEWPORT_RECT);
   const [holes, setHoles] = useState([]);
 
   useLayoutEffect(() => {
     let frame = 0;
-    let observer;
+    let shouldEnsureTargetIsVisible = true;
+    let observedElements = new Set();
+    const observer = new ResizeObserver(() => scheduleMeasure());
 
-    const measure = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        setViewport(VIEWPORT_RECT());
-        setHoles(targetsRef.current.map(getTargetRect).filter((rect) => rect?.width && rect?.height));
+    const syncObservedElements = (resolvedTargets) => {
+      const nextElements = new Set(resolvedTargets.map(({ element }) => element));
+      let changed = nextElements.size !== observedElements.size;
+
+      observedElements.forEach((element) => {
+        if (nextElements.has(element)) return;
+        observer.unobserve(element);
+        changed = true;
       });
+      nextElements.forEach((element) => {
+        if (observedElements.has(element)) return;
+        observer.observe(element);
+        changed = true;
+      });
+      observedElements = nextElements;
+      return changed;
     };
 
-    const firstTarget = targetsRef.current.map(resolveElement).find(Boolean);
-    const firstBounds = firstTarget?.getBoundingClientRect();
-    if (firstBounds && (firstBounds.top < 0 || firstBounds.bottom > window.innerHeight)) {
-      firstTarget.scrollIntoView({ block: "center", inline: "nearest" });
+    const measure = () => {
+      const nextViewport = VIEWPORT_RECT();
+      const resolvedTargets = resolveTargets(targetsRef.current);
+      const targetsChanged = syncObservedElements(resolvedTargets);
+
+      if (shouldEnsureTargetIsVisible || targetsChanged) {
+        shouldEnsureTargetIsVisible = false;
+        const outsideTarget = resolvedTargets
+          .map(({ element }) => element)
+          .find((element) => isOutsideViewport(element, nextViewport));
+        if (outsideTarget) {
+          outsideTarget.scrollIntoView({ block: "center", inline: "nearest" });
+          scheduleMeasure();
+          return;
+        }
+      }
+
+      setViewport(nextViewport);
+      setHoles(resolvedTargets
+        .map((resolvedTarget) => getTargetRect(resolvedTarget, nextViewport))
+        .filter((rect) => rect.width && rect.height));
+    };
+
+    function scheduleMeasure({ ensureTargetIsVisible = false } = {}) {
+      shouldEnsureTargetIsVisible ||= ensureTargetIsVisible;
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
     }
-    measure();
-    observer = new ResizeObserver(measure);
-    targetsRef.current.map(resolveElement).filter(Boolean).forEach((element) => observer.observe(element));
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
+
+    const mutationObserver = new MutationObserver((mutations) => {
+      const hasRelevantMutation = mutations.some((mutation) => {
+        const mutationElement = mutation.target instanceof Element
+          ? mutation.target
+          : mutation.target.parentElement;
+        return !mutationElement?.closest?.("[data-tutorial-ui]");
+      });
+      if (hasRelevantMutation) scheduleMeasure();
+    });
+    mutationObserver.observe(document.body, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+
+    scheduleMeasureRef.current = scheduleMeasure;
+    scheduleMeasure({ ensureTargetIsVisible: true });
+    const handleResize = () => scheduleMeasure({ ensureTargetIsVisible: true });
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", scheduleMeasure, true);
 
     const containEvent = (event) => {
       if (event.key === "Tab") {
@@ -80,13 +148,19 @@ export default function SpotlightTutorial({
     document.addEventListener("keydown", containEvent, true);
 
     return () => {
+      scheduleMeasureRef.current = null;
       window.cancelAnimationFrame(frame);
-      observer?.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
+      mutationObserver.disconnect();
+      observer.disconnect();
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", scheduleMeasure, true);
       document.removeEventListener("keydown", containEvent, true);
     };
   }, [step]);
+
+  useLayoutEffect(() => {
+    scheduleMeasureRef.current?.();
+  }, [targets]);
 
   const primaryHole = holes[0];
   const targetIsLow = primaryHole && primaryHole.y + primaryHole.height / 2 > viewport.height / 2;
@@ -100,7 +174,12 @@ export default function SpotlightTutorial({
   ].join(" ");
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-0 z-[100]" data-tutorial-step={step} data-tutorial-ui>
+    <div
+      className="pointer-events-none fixed inset-0 z-[100]"
+      data-tutorial-step={step}
+      data-tutorial-ui
+      onClick={stopTutorialClick}
+    >
       <svg
         className="pointer-events-none fixed inset-0 h-full w-full"
         width={viewport.width}
@@ -118,8 +197,12 @@ export default function SpotlightTutorial({
       {holes.map((hole, index) => (
         <span
           key={`${step}-${index}`}
+          data-tutorial-ui
           className={`tutorial-spotlight fixed ${showContinue ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
-          onClick={showContinue ? onContinue : undefined}
+          onClick={showContinue ? (event) => {
+            event.stopPropagation();
+            onContinue?.();
+          } : undefined}
           style={{
             left: hole.x,
             top: hole.y,

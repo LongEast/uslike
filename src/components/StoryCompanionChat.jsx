@@ -12,11 +12,10 @@ import {
   getUnreadPartnerMessageIds,
 } from "../utils/storyChat.js";
 
-const ASSISTANT_NAME = "相遇小助手";
-
 function PartnerAvatar({ compact = false, partner }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const label = partner?.isAssistant ? "遇" : (partner?.name || "遇").slice(0, 1);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
+  const label = (partner?.name || "搭").slice(0, 1);
+  const avatarUrl = partner?.avatarUrl;
 
   return (
     <span
@@ -25,12 +24,12 @@ function PartnerAvatar({ compact = false, partner }) {
         compact ? "h-7 w-7 rounded-lg text-[9px]" : "h-11 w-11 rounded-[14px] text-sm"
       }`}
     >
-      {partner?.avatarUrl && !partner.isAssistant && !imageFailed ? (
+      {avatarUrl && failedAvatarUrl !== avatarUrl ? (
         <img
-          src={partner.avatarUrl}
+          src={avatarUrl}
           alt=""
           className="h-full w-full rounded-[inherit] object-cover"
-          onError={() => setImageFailed(true)}
+          onError={() => setFailedAvatarUrl(avatarUrl)}
         />
       ) : label}
       {!compact ? (
@@ -46,17 +45,16 @@ export default function StoryCompanionChat({
   partner,
   pendingReplyCount = 0,
   resetKey = 0,
+  onOpenChange,
 }) {
   const panelId = useId();
   const normalizedPartner = useMemo(() => ({
     id: partner?.id || "meet-assistant",
-    name: partner?.name || ASSISTANT_NAME,
+    name: partner?.name || "故事搭档",
     avatarUrl: partner?.avatarUrl || partner?.avatar || null,
     isAssistant: partner?.isAssistant !== false,
   }), [partner]);
-  const partnerStatus = normalizedPartner.isAssistant
-    ? "正在和你一起玩"
-    : `代 ${normalizedPartner.name} 模拟搭档`;
+  const partnerStatus = "正在和你一起玩";
   const [chatOpen, setChatOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
@@ -65,11 +63,16 @@ export default function StoryCompanionChat({
   const messagesRef = useRef(null);
   const inputRef = useRef(null);
   const launcherRef = useRef(null);
+  const previousChatOpenRef = useRef(chatOpen);
 
   useEffect(() => {
     chatOpenRef.current = chatOpen;
     if (chatOpen) setUnreadCount(0);
-  }, [chatOpen]);
+    if (previousChatOpenRef.current !== chatOpen) {
+      previousChatOpenRef.current = chatOpen;
+      onOpenChange?.(chatOpen);
+    }
+  }, [chatOpen, onOpenChange]);
 
   useEffect(() => {
     knownPartnerMessageIdsRef.current = new Set(getPartnerMessageIds(messages));
@@ -127,22 +130,26 @@ export default function StoryCompanionChat({
 
   const unreadLabel = formatStoryUnreadCount(unreadCount);
   const launcherLabel = chatOpen
-    ? `收起${ASSISTANT_NAME}聊天`
-    : `打开${ASSISTANT_NAME}聊天${unreadCount ? `，${unreadCount} 条未读消息` : ""}`;
+    ? `收起与 ${normalizedPartner.name} 的聊天`
+    : `打开与 ${normalizedPartner.name} 的聊天${unreadCount ? `，${unreadCount} 条未读消息` : ""}`;
 
   return (
-    <aside className="absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-[max(0.75rem,env(safe-area-inset-right))] z-40 flex flex-col items-end gap-3 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-[max(1.5rem,env(safe-area-inset-right))]">
+    <aside
+      data-story-interactive
+      onClick={(event) => event.stopPropagation()}
+      className="absolute right-[max(0.75rem,env(safe-area-inset-right))] top-[max(5rem,calc(env(safe-area-inset-top)+4rem))] z-40 flex flex-col items-end gap-3 sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-[max(1.5rem,env(safe-area-inset-right))] sm:top-auto"
+    >
       {chatOpen ? (
         <section
           id={panelId}
-          aria-label={`${ASSISTANT_NAME}聊天`}
+          aria-label={`与 ${normalizedPartner.name} 的聊天`}
           className="flex h-[min(52dvh,380px)] w-[min(360px,calc(100vw-24px))] origin-bottom-right flex-col overflow-hidden rounded-[19px] border border-white/10 bg-[#0c0e15]/90 shadow-[0_25px_80px_rgba(0,0,0,0.42)] backdrop-blur-2xl motion-safe:animate-storyChat sm:h-[min(480px,calc(100dvh-130px))]"
         >
           <div className="flex h-[68px] shrink-0 items-center justify-between border-b border-white/[0.08] px-3 py-2.5">
             <div className="flex items-center gap-2.5">
               <PartnerAvatar partner={normalizedPartner} />
               <div>
-                <strong className="block text-xs font-semibold">{ASSISTANT_NAME}</strong>
+                <strong className="block text-xs font-semibold">{normalizedPartner.name}</strong>
                 <span className="mt-1 flex items-center gap-1.5 text-[9px] text-white/45">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#6de39a]" />
                   {partnerStatus}
@@ -152,7 +159,7 @@ export default function StoryCompanionChat({
             <button
               type="button"
               onClick={closeChat}
-              aria-label="收起小助手聊天"
+              aria-label={`收起与 ${normalizedPartner.name} 的聊天`}
               className="grid h-9 w-9 place-items-center rounded-[10px] text-white/50 transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             >
               <X size={18} />
@@ -179,7 +186,7 @@ export default function StoryCompanionChat({
                 ) : null}
                 <div className="max-w-[78%]">
                   <p className={`mb-1 text-[9px] text-white/40 ${message.sender === "user" ? "text-right" : ""}`}>
-                    {message.sender === "user" ? "你" : ASSISTANT_NAME}
+                    {message.sender === "user" ? "你" : normalizedPartner.name}
                   </p>
                   <p className={`rounded-[5px_13px_13px_13px] px-3 py-2 text-xs leading-[1.55] text-white/90 ${
                     message.sender === "user"
@@ -193,10 +200,10 @@ export default function StoryCompanionChat({
             ))}
 
             {pendingReplyCount > 0 ? (
-              <div className="mb-4 flex gap-2" aria-label={`${ASSISTANT_NAME}正在输入`}>
+              <div className="mb-4 flex gap-2" aria-label={`${normalizedPartner.name}正在输入`}>
                 <PartnerAvatar compact partner={normalizedPartner} />
                 <div>
-                  <p className="mb-1 text-[9px] text-white/40">{ASSISTANT_NAME}</p>
+                  <p className="mb-1 text-[9px] text-white/40">{normalizedPartner.name}</p>
                   <div className="flex h-8 w-[52px] items-center gap-1 rounded-[5px_13px_13px_13px] bg-white/[0.075] pl-3">
                     {[0, 1, 2].map((index) => (
                       <span
@@ -219,14 +226,14 @@ export default function StoryCompanionChat({
               ref={inputRef}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              aria-label="给相遇小助手发送消息"
-              placeholder="和小助手说点什么…"
+              aria-label={`给 ${normalizedPartner.name} 发送消息`}
+              placeholder={`和 ${normalizedPartner.name} 说点什么…`}
               className="h-[38px] min-w-0 flex-1 rounded-xl border border-white/[0.09] bg-white/[0.055] px-3 text-[11px] text-white outline-none placeholder:text-white/30 focus:border-[#a689ff]/50"
             />
             <button
               type="submit"
               disabled={!draft.trim()}
-              aria-label="发送消息"
+              aria-label={`发送给 ${normalizedPartner.name}`}
               className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#765eff] to-[#b45bf0] text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-default disabled:opacity-30"
             >
               <Send size={15} />
@@ -246,7 +253,7 @@ export default function StoryCompanionChat({
       >
         <PartnerAvatar partner={normalizedPartner} />
         <span className="hidden flex-col items-start gap-0.5 sm:flex">
-          <strong className="text-xs font-semibold">{ASSISTANT_NAME}</strong>
+          <strong className="text-xs font-semibold">{normalizedPartner.name}</strong>
           <span className="text-[9px] text-white/45">{partnerStatus}</span>
         </span>
         {!chatOpen && unreadCount > 0 ? (

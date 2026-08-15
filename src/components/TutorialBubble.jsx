@@ -13,8 +13,10 @@ export default function TutorialBubble({
 }) {
   return (
     <div
+      data-tutorial-ui
       className={`z-[90] w-[min(340px,calc(100vw-32px))] rounded-[24px] border border-[#bdb8ff]/70 bg-white/[0.96] p-4 text-left shadow-[0_22px_70px_rgba(88,95,142,0.28)] backdrop-blur-xl ${className}`}
       role="status"
+      onClick={(event) => event.stopPropagation()}
     >
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="rounded-full bg-[#eeeaff] px-3 py-1 text-xs font-bold text-[#6b5ee7]">
@@ -22,6 +24,7 @@ export default function TutorialBubble({
         </span>
         <button
           type="button"
+          data-tutorial-ui
           onClick={(event) => {
             event.stopPropagation();
             onDismiss?.();
@@ -38,7 +41,11 @@ export default function TutorialBubble({
       {onContinue ? (
         <button
           type="button"
-          onClick={onContinue}
+          data-tutorial-ui
+          onClick={(event) => {
+            event.stopPropagation();
+            onContinue?.();
+          }}
           className="mt-3 ml-auto flex items-center gap-1 rounded-full bg-[#eeeaff] px-4 py-2 text-sm font-semibold text-[#6b5ee7] shadow-sm transition hover:bg-[#e4dfff] hover:text-[#594bd6]"
         >
           {continueLabel || "下一步"}
@@ -48,6 +55,7 @@ export default function TutorialBubble({
       {actionLabel ? (
         <button
           type="button"
+          data-tutorial-ui
           onClick={(event) => {
             event.stopPropagation();
             onAction?.();

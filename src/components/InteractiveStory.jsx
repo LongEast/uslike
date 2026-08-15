@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  History,
   RotateCcw,
   X,
 } from "lucide-react";
@@ -11,14 +12,21 @@ import {
   useState,
 } from "react";
 import defaultStoryData from "../data/story_safe.json";
+import useStoryDisplayLines from "../hooks/useStoryDisplayLines.js";
 import { resolveApiAssetUrl } from "../services/auth.js";
 import {
+  getStoryAdvanceAction,
+  getStorySceneKey,
   getStorySceneState,
   isContinueSequence,
   normalizeChoices,
+  normalizeStoryText,
+  recordNarrativeProgress,
+  resolveStoryPlaybackLine,
   tokenizeText,
 } from "../utils/interactiveStory.js";
 import StoryCompanionChat from "./StoryCompanionChat.jsx";
+import StoryHistoryPanel from "./StoryHistoryPanel.jsx";
 
 const DEFAULT_WORD_SPEED = 21;
 const ASSISTANT_NAME = "相遇小助手";
@@ -31,6 +39,24 @@ const FOCUSABLE_SELECTOR = [
   "select:not([disabled]):not([tabindex='-1'])",
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
+const STORY_INTERACTIVE_SELECTOR = [
+  "button",
+  "a[href]",
+  "input",
+  "textarea",
+  "select",
+  "summary",
+  "details",
+  "[contenteditable='true']",
+  "[role='dialog']",
+  "[role='alertdialog']",
+  "[role='menu']",
+  "[role='listbox']",
+  "[data-story-scroll]",
+  "[data-story-interactive]",
+  "[data-tutorial-ui]",
+].join(",");
+const STORY_TEXT_TYPOGRAPHY = "text-[clamp(18px,1.45vw,23px)] font-normal leading-[1.72] tracking-[0.018em]";
 const NOISE_BACKGROUND =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.45'/%3E%3C/svg%3E\")";
 
@@ -62,6 +88,25 @@ function getChoiceTarget(choice) {
   return String(targets[Math.floor(Math.random() * targets.length)]);
 }
 
+function isInteractiveStoryTarget(target, root) {
+  if (!(target instanceof Element)) return false;
+  const boundary = target.closest(STORY_INTERACTIVE_SELECTOR);
+  return Boolean(boundary && boundary !== root);
+}
+
+function getSceneHistoryView(entry, storyData) {
+  const node = storyData?.nodes?.[String(entry?.nodeId || "")];
+  const text = normalizeStoryText(storyData?.media?.[String(node?.mediaRef)]?.text);
+  const displayedEnd = Math.min(text.length, Math.max(0, Number(entry?.displayedEnd) || 0));
+  return {
+    sceneKey: entry?.sceneKey,
+    nodeId: entry?.nodeId,
+    title: node?.title || `Scene ${entry?.nodeId || "—"}`,
+    text: text.slice(0, displayedEnd).trim(),
+    complete: Boolean(text) && displayedEnd >= text.length,
+  };
+}
+
 export default function InteractiveStory({
   onExit,
   onRestart,
@@ -70,7 +115,6 @@ export default function InteractiveStory({
   partner,
   storyData = defaultStoryData,
   initialNodeId,
-  expandInitialText = false,
   wordSpeed = DEFAULT_WORD_SPEED,
 }) {
   const resolvedInitialNodeId = useMemo(
@@ -80,23 +124,30 @@ export default function InteractiveStory({
   const [localSession, setLocalSession] = useState(() => ({
     currentNodeId: resolvedInitialNodeId,
     history: [],
+    narrativeHistory: [],
     messages: [],
     seenPartnerEvents: [],
   }));
-  const [visibleTokenCount, setVisibleTokenCount] = useState(0);
+  const [activeLineStart, setActiveLineStart] = useState(0);
+  const [, setVisibleTokenCount] = useState(0);
   const [streamFinished, setStreamFinished] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [pendingReplyCount, setPendingReplyCount] = useState(0);
   const [selectedChoiceText, setSelectedChoiceText] = useState(null);
   const [imageFailed, setImageFailed] = useState(false);
   const [presentationVersion, setPresentationVersion] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
   );
 
-  const activeSession = session || localSession;
+  const activeSession = session ?? localSession;
   const currentNodeId = String(activeSession.currentNodeId || resolvedInitialNodeId);
-  const history = Array.isArray(activeSession.history) ? activeSession.history : [];
+  const navigationHistory = Array.isArray(activeSession.history) ? activeSession.history : [];
+  const narrativeHistory = Array.isArray(activeSession.narrativeHistory)
+    ? activeSession.narrativeHistory
+    : [];
   const messages = Array.isArray(activeSession.messages) ? activeSession.messages : [];
   const seenPartnerEvents = Array.isArray(activeSession.seenPartnerEvents)
     ? activeSession.seenPartnerEvents
@@ -107,32 +158,83 @@ export default function InteractiveStory({
     avatarUrl: partner?.avatarUrl || partner?.avatar || null,
     isAssistant: partner?.isAssistant !== false,
   }), [partner]);
+
   const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const storyTextRef = useRef(null);
   const sceneFallbackRef = useRef(null);
-  const storyAutoScrollRef = useRef(true);
   const streamTimerRef = useRef(null);
   const transitionTimerRef = useRef(null);
   const navigationLockedRef = useRef(false);
+  const advanceFrameLockedRef = useRef(false);
   const replyTimersRef = useRef(new Set());
   const onExitRef = useRef(onExit);
   const onRestartRef = useRef(onRestart);
   const onSessionChangeRef = useRef(onSessionChange);
+  const controlledSessionRef = useRef(session != null);
   const activeSessionRef = useRef(activeSession);
-  const expandedInitialNodeRef = useRef(expandInitialText ? currentNodeId : null);
+  const historyOpenRef = useRef(historyOpen);
+  const streamFinishedRef = useRef(streamFinished);
+  const advanceStoryRef = useRef(() => {});
+  const pointerStartRef = useRef(null);
+  const progressRef = useRef({ sceneKey: "", displayedEnd: 0 });
+  const visibleProgressRef = useRef({ sceneKey: "", displayedEnd: 0 });
+  const presentationNodeRef = useRef("");
 
   const nodes = storyData?.nodes;
-  const node = nodes?.[String(currentNodeId)] || null;
+  const node = nodes?.[currentNodeId] || null;
   const media = node ? storyData?.media?.[String(node.mediaRef)] || null : null;
-  const sceneText = typeof media?.text === "string" ? media.text.trim() : "";
-  const hasUsableText = Boolean(sceneText);
+  const storyText = normalizeStoryText(media?.text);
+  const hasUsableText = Boolean(storyText);
   const sceneState = getStorySceneState(node, media, imageFailed);
   const isVisualEnding = sceneState === "visual-ending";
   const resolvedSceneImage = resolveApiAssetUrl(node?.image?.src || "");
+  const sceneKey = getStorySceneKey(node, currentNodeId);
+  const persistedProgress = narrativeHistory.find((entry) => entry.sceneKey === sceneKey)?.displayedEnd || 0;
+  const readFrontier = Math.min(
+    storyText.length,
+    Math.max(
+      persistedProgress,
+      progressRef.current.sceneKey === sceneKey ? progressRef.current.displayedEnd : 0,
+    ),
+  );
+  const visibleFrontier = Math.min(
+    storyText.length,
+    Math.max(
+      readFrontier,
+      visibleProgressRef.current.sceneKey === sceneKey
+        ? visibleProgressRef.current.displayedEnd
+        : 0,
+    ),
+  );
+  const {
+    containerRef: lineWidthRef,
+    measurementRef: lineMeasurementRef,
+    lines: storyLines,
+    ready: storyLinesReady,
+  } = useStoryDisplayLines(storyText);
+  const activeLine = resolveStoryPlaybackLine(storyLines, storyText, {
+    cursor: activeLineStart,
+    displayedEnd: readFrontier,
+    visibleEnd: visibleFrontier,
+    lineFinished: streamFinished,
+  });
   const tokens = useMemo(
-    () => hasUsableText ? tokenizeText(sceneText) : [],
-    [hasUsableText, sceneText],
+    () => activeLine?.text ? tokenizeText(activeLine.text) : [],
+    [activeLine?.text],
+  );
+  const tokenEndOffsets = useMemo(() => {
+    if (!activeLine?.text) return [];
+    const source = storyText.slice(activeLine.start, activeLine.end);
+    const leadingWhitespace = source.length - source.trimStart().length;
+    let offset = activeLine.start + leadingWhitespace;
+    return tokens.map((token) => {
+      offset += token.text.length;
+      return offset;
+    });
+  }, [activeLine?.end, activeLine?.start, activeLine?.text, storyText, tokens]);
+  const renderedTokenCount = tokenEndOffsets.reduce(
+    (count, end) => count + (end <= visibleFrontier ? 1 : 0),
+    0,
   );
   const choices = useMemo(() => normalizeChoices(node?.choices), [node]);
   const isContinueScene = isContinueSequence(choices);
@@ -152,6 +254,14 @@ export default function InteractiveStory({
     [currentNodeId, playPartnerEvents],
   );
   const safeWordSpeed = Math.max(12, Number(wordSpeed) || DEFAULT_WORD_SPEED);
+  const sceneFullyRead = Boolean(
+    storyLinesReady
+    && activeLine
+    && streamFinished
+    && readFrontier >= storyText.length,
+  );
+
+  controlledSessionRef.current = session != null;
 
   useEffect(() => {
     onExitRef.current = onExit;
@@ -169,19 +279,24 @@ export default function InteractiveStory({
     activeSessionRef.current = activeSession;
   }, [activeSession]);
 
+  useEffect(() => {
+    historyOpenRef.current = historyOpen;
+  }, [historyOpen]);
+
+  useEffect(() => {
+    streamFinishedRef.current = streamFinished;
+  }, [streamFinished]);
+
   const updateSession = useCallback((update) => {
     const current = activeSessionRef.current;
     const next = typeof update === "function" ? update(current) : update;
     if (!next || next === current) return current;
     activeSessionRef.current = next;
 
-    if (session) {
-      onSessionChangeRef.current?.(next);
-    } else {
-      setLocalSession(next);
-    }
+    if (controlledSessionRef.current) onSessionChangeRef.current?.(next);
+    else setLocalSession(next);
     return next;
-  }, [session]);
+  }, []);
 
   const clearStreamTimer = useCallback(() => {
     if (streamTimerRef.current == null) return;
@@ -200,25 +315,31 @@ export default function InteractiveStory({
     replyTimersRef.current.clear();
   }, []);
 
-  const resetScenePresentation = useCallback(() => {
+  const setFinished = useCallback((finished) => {
+    streamFinishedRef.current = finished;
+    setStreamFinished(finished);
+  }, []);
+
+  const resetTransientPresentation = useCallback(() => {
     clearStreamTimer();
-    storyAutoScrollRef.current = true;
+    visibleProgressRef.current = { sceneKey: "", displayedEnd: 0 };
+    setActiveLineStart(0);
     setVisibleTokenCount(0);
-    setStreamFinished(false);
+    setFinished(false);
     setSelectedChoiceText(null);
     setImageFailed(false);
-  }, [clearStreamTimer]);
+    setHistoryOpen(false);
+  }, [clearStreamTimer, setFinished]);
 
   const focusScene = () => {
     window.requestAnimationFrame(() => {
-      (storyTextRef.current || sceneFallbackRef.current)?.focus({ preventScroll: true });
+      (dialogRef.current || sceneFallbackRef.current)?.focus({ preventScroll: true });
     });
   };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     if (!mediaQuery) return undefined;
-
     const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
     mediaQuery.addEventListener?.("change", updatePreference);
     return () => mediaQuery.removeEventListener?.("change", updatePreference);
@@ -231,13 +352,30 @@ export default function InteractiveStory({
     document.body.style.overflow = "hidden";
 
     const focusFrame = window.requestAnimationFrame(() => {
-      (closeButtonRef.current || dialog)?.focus({ preventScroll: true });
+      (dialog || closeButtonRef.current)?.focus({ preventScroll: true });
     });
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && !event.defaultPrevented && !event.isComposing && !event.repeat) {
         event.preventDefault();
+        if (historyOpenRef.current) {
+          setHistoryOpen(false);
+          return;
+        }
         onExitRef.current?.();
+        return;
+      }
+
+      if (
+        ["Enter", " "].includes(event.key)
+        && !event.defaultPrevented
+        && !event.isComposing
+        && !event.repeat
+        && !historyOpenRef.current
+        && !isInteractiveStoryTarget(document.activeElement, dialog)
+      ) {
+        event.preventDefault();
+        advanceStoryRef.current?.();
         return;
       }
 
@@ -284,27 +422,92 @@ export default function InteractiveStory({
   }, [clearReplyTimers, clearStreamTimer, clearTransitionTimer]);
 
   useEffect(() => {
-    resetScenePresentation();
+    clearStreamTimer();
+    const storedEntry = (activeSessionRef.current.narrativeHistory || [])
+      .find((entry) => entry.sceneKey === sceneKey);
+    const storedEnd = Math.min(storyText.length, Math.max(0, Number(storedEntry?.displayedEnd) || 0));
+    progressRef.current = { sceneKey, displayedEnd: storedEnd };
+    presentationNodeRef.current = currentNodeId;
+    const restoredComplete = Boolean(storyText.length && storedEnd >= storyText.length);
+    visibleProgressRef.current = { sceneKey, displayedEnd: storedEnd };
+    setActiveLineStart(restoredComplete ? storyText.length - 1 : storedEnd);
+    setVisibleTokenCount(0);
+    setFinished(restoredComplete);
+    setSelectedChoiceText(null);
+    setImageFailed(false);
+    setHistoryOpen(false);
+  }, [clearStreamTimer, currentNodeId, presentationVersion, sceneKey, setFinished, storyText]);
+
+  const recordVisibleEnd = useCallback((displayedEnd) => {
+    const safeEnd = Math.min(storyText.length, Math.max(0, Math.trunc(Number(displayedEnd) || 0)));
+    if (visibleProgressRef.current.sceneKey !== sceneKey) {
+      visibleProgressRef.current = { sceneKey, displayedEnd: 0 };
+    }
+    visibleProgressRef.current.displayedEnd = Math.max(
+      visibleProgressRef.current.displayedEnd,
+      safeEnd,
+    );
+  }, [sceneKey, storyText.length]);
+
+  const recordDisplayedEnd = useCallback((displayedEnd) => {
+    const safeEnd = Math.min(storyText.length, Math.max(0, Math.trunc(Number(displayedEnd) || 0)));
+    if (!safeEnd) return;
+    if (progressRef.current.sceneKey !== sceneKey) {
+      progressRef.current = { sceneKey, displayedEnd: 0 };
+    }
+    progressRef.current.displayedEnd = Math.max(progressRef.current.displayedEnd, safeEnd);
+    recordVisibleEnd(safeEnd);
+
+    updateSession((current) => {
+      const nextHistory = recordNarrativeProgress(current.narrativeHistory, {
+        sceneKey,
+        nodeId: currentNodeId,
+        displayedEnd: safeEnd,
+      });
+      if (nextHistory === current.narrativeHistory) return current;
+      return { ...current, narrativeHistory: nextHistory };
+    });
+  }, [currentNodeId, recordVisibleEnd, sceneKey, storyText.length, updateSession]);
+
+  useEffect(() => {
+    clearStreamTimer();
+    const initiallyVisibleCount = tokenEndOffsets.reduce(
+      (count, end) => count + (end <= visibleFrontier ? 1 : 0),
+      0,
+    );
+    setVisibleTokenCount(initiallyVisibleCount);
+    setFinished(false);
 
     if (
-      !node
+      presentationNodeRef.current !== currentNodeId
+      || !node
+      || !storyLinesReady
+      || !activeLine
       || !tokens.length
-      || prefersReducedMotion
-      || expandedInitialNodeRef.current === currentNodeId
-    ) {
+    ) return undefined;
+
+    const alreadyDisplayed = progressRef.current.sceneKey === sceneKey
+      && progressRef.current.displayedEnd >= activeLine.end;
+    const alreadyVisible = visibleProgressRef.current.sceneKey === sceneKey
+      && visibleProgressRef.current.displayedEnd >= activeLine.end;
+    if (alreadyDisplayed || alreadyVisible || prefersReducedMotion) {
       setVisibleTokenCount(tokens.length);
-      setStreamFinished(true);
+      setFinished(true);
+      if (!alreadyDisplayed) recordDisplayedEnd(activeLine.end);
       return undefined;
     }
 
-    let current = 0;
+    let current = initiallyVisibleCount;
     const timer = window.setInterval(() => {
       current += 1;
-      setVisibleTokenCount(Math.min(current, tokens.length));
+      const nextCount = Math.min(current, tokens.length);
+      recordVisibleEnd(tokenEndOffsets[nextCount - 1] || activeLine.start);
+      setVisibleTokenCount(nextCount);
       if (current >= tokens.length) {
         window.clearInterval(timer);
         if (streamTimerRef.current === timer) streamTimerRef.current = null;
-        setStreamFinished(true);
+        setFinished(true);
+        recordDisplayedEnd(activeLine.end);
       }
     }, safeWordSpeed);
     streamTimerRef.current = timer;
@@ -313,20 +516,27 @@ export default function InteractiveStory({
       window.clearInterval(timer);
       if (streamTimerRef.current === timer) streamTimerRef.current = null;
     };
-  }, [currentNodeId, node, prefersReducedMotion, presentationVersion, resetScenePresentation, safeWordSpeed, tokens]);
+  }, [
+    activeLine?.end,
+    activeLine?.start,
+    activeLine?.text,
+    clearStreamTimer,
+    currentNodeId,
+    node,
+    prefersReducedMotion,
+    recordDisplayedEnd,
+    recordVisibleEnd,
+    safeWordSpeed,
+    sceneKey,
+    setFinished,
+    storyLinesReady,
+    tokenEndOffsets,
+    tokens,
+    visibleFrontier,
+  ]);
 
   useEffect(() => {
-    if (!storyAutoScrollRef.current || !storyTextRef.current) return undefined;
-    const frame = window.requestAnimationFrame(() => {
-      if (storyTextRef.current) storyTextRef.current.scrollTop = storyTextRef.current.scrollHeight;
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [currentNodeId, visibleTokenCount]);
-
-  useEffect(() => {
-    // Let the player reach the scene context before the partner comments on it.
-    if (!pendingPartnerEvent || !streamFinished || isTransitioning) return undefined;
-
+    if (!pendingPartnerEvent || !sceneFullyRead || isTransitioning) return undefined;
     const eventId = pendingPartnerEvent.id;
     updateSession((current) => {
       const seen = Array.isArray(current.seenPartnerEvents) ? current.seenPartnerEvents : [];
@@ -346,21 +556,70 @@ export default function InteractiveStory({
       };
     });
     return undefined;
-  }, [isTransitioning, pendingPartnerEvent, streamFinished, updateSession]);
+  }, [isTransitioning, pendingPartnerEvent, sceneFullyRead, updateSession]);
 
-  const finishTextImmediately = () => {
-    if (streamFinished) return;
+  const finishTextImmediately = useCallback(() => {
+    if (streamFinishedRef.current || !activeLine) return;
     clearStreamTimer();
     setVisibleTokenCount(tokens.length);
-    setStreamFinished(true);
-  };
+    setFinished(true);
+    recordDisplayedEnd(activeLine.end);
+  }, [activeLine, clearStreamTimer, recordDisplayedEnd, setFinished, tokens.length]);
+
+  const advanceStoryLine = useCallback(() => {
+    const blocked = (
+      advanceFrameLockedRef.current
+      || navigationLockedRef.current
+      || isTransitioning
+      || historyOpenRef.current
+      || !storyLinesReady
+      || !activeLine
+    );
+    const displayedEnd = activeLine
+      ? Math.max(progressRef.current.displayedEnd, activeLine.end)
+      : 0;
+    const action = getStoryAdvanceAction({
+      blocked,
+      lineFinished: streamFinishedRef.current,
+      displayedEnd,
+      textLength: storyText.length,
+    });
+    if (action === "none") return;
+
+    advanceFrameLockedRef.current = true;
+    window.requestAnimationFrame(() => {
+      advanceFrameLockedRef.current = false;
+    });
+
+    if (action === "finish-line") {
+      finishTextImmediately();
+      return;
+    }
+
+    const nextLine = storyLines.find((line) => line.end > displayedEnd);
+    if (!nextLine) return;
+
+    clearStreamTimer();
+    setActiveLineStart(Math.max(displayedEnd, nextLine.start));
+    setVisibleTokenCount(0);
+    setFinished(false);
+  }, [
+    activeLine,
+    clearStreamTimer,
+    finishTextImmediately,
+    isTransitioning,
+    setFinished,
+    storyLines,
+    storyLinesReady,
+    storyText.length,
+  ]);
+  advanceStoryRef.current = advanceStoryLine;
 
   const choose = (choice) => {
-    if (navigationLockedRef.current || isTransitioning || !streamFinished) return;
+    if (navigationLockedRef.current || isTransitioning || !sceneFullyRead) return;
     const nextNodeId = getChoiceTarget(choice);
     if (!nextNodeId) return;
 
-    expandedInitialNodeRef.current = null;
     navigationLockedRef.current = true;
     setSelectedChoiceText(choice.displayText);
     setIsTransitioning(true);
@@ -369,12 +628,13 @@ export default function InteractiveStory({
     clearTransitionTimer();
     transitionTimerRef.current = window.setTimeout(() => {
       transitionTimerRef.current = null;
-      resetScenePresentation();
+      resetTransientPresentation();
       updateSession((current) => ({
         ...current,
         currentNodeId: nextNodeId,
         history: [...(Array.isArray(current.history) ? current.history : []), currentNodeId],
       }));
+      setPresentationVersion((current) => current + 1);
       navigationLockedRef.current = false;
       setIsTransitioning(false);
       focusScene();
@@ -382,18 +642,18 @@ export default function InteractiveStory({
   };
 
   const back = () => {
-    if (!history.length || navigationLockedRef.current || isTransitioning) return;
-    const previousNodeId = history[history.length - 1];
+    if (!navigationHistory.length || navigationLockedRef.current || isTransitioning) return;
+    const previousNodeId = navigationHistory[navigationHistory.length - 1];
     navigationLockedRef.current = true;
-    expandedInitialNodeRef.current = null;
     clearReplyTimers();
     setPendingReplyCount(0);
-    resetScenePresentation();
+    resetTransientPresentation();
     updateSession((current) => ({
       ...current,
       history: (Array.isArray(current.history) ? current.history : []).slice(0, -1),
       currentNodeId: previousNodeId,
     }));
+    setPresentationVersion((current) => current + 1);
     window.requestAnimationFrame(() => {
       navigationLockedRef.current = false;
       focusScene();
@@ -402,8 +662,7 @@ export default function InteractiveStory({
 
   const restart = () => {
     navigationLockedRef.current = false;
-    expandedInitialNodeRef.current = null;
-    resetScenePresentation();
+    resetTransientPresentation();
     clearTransitionTimer();
     clearReplyTimers();
     if (onRestartRef.current) {
@@ -413,10 +672,12 @@ export default function InteractiveStory({
         ...current,
         currentNodeId: resolvedInitialNodeId,
         history: [],
+        narrativeHistory: [],
         messages: [],
         seenPartnerEvents: [],
       }));
     }
+    progressRef.current = { sceneKey: "", displayedEnd: 0 };
     setPendingReplyCount(0);
     setIsTransitioning(false);
     setPresentationVersion((current) => current + 1);
@@ -439,7 +700,6 @@ export default function InteractiveStory({
     const replyText = activePartnerEvent?.chatReply
       || storyData?.demo?.defaultChatReply
       || "这个决定还是交给你吧。";
-
     const timer = window.setTimeout(() => {
       replyTimersRef.current.delete(timer);
       setPendingReplyCount((current) => Math.max(0, current - 1));
@@ -447,24 +707,45 @@ export default function InteractiveStory({
         ...current,
         messages: [
           ...(Array.isArray(current.messages) ? current.messages : []),
-          {
-            id: createMessageId("partner"),
-            sender: "partner",
-            text: replyText,
-          },
+          { id: createMessageId("partner"), sender: "partner", text: replyText },
         ],
       }));
     }, 850);
     replyTimersRef.current.add(timer);
   };
 
-  const handleStoryTextKeyDown = (event) => {
-    if (streamFinished || !["Enter", " "].includes(event.key)) return;
-    event.preventDefault();
-    finishTextImmediately();
+  const handlePointerDown = (event) => {
+    if (event.button !== 0) return;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
   };
 
-  const sceneLabel = String(node?.title ?? currentNodeId ?? "—").padStart(2, "0");
+  const handleBackgroundClick = (event) => {
+    if (
+      event.defaultPrevented
+      || event.button !== 0
+      || historyOpenRef.current
+      || isInteractiveStoryTarget(event.target, event.currentTarget)
+    ) return;
+    const pointerStart = pointerStartRef.current;
+    pointerStartRef.current = null;
+    if (pointerStart && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 6) return;
+    const selection = window.getSelection?.();
+    if (selection && !selection.isCollapsed) return;
+    advanceStoryLine();
+  };
+
+  const liveDisplayedEnd = visibleFrontier;
+  const currentHistoryScene = {
+    sceneKey,
+    nodeId: currentNodeId,
+    title: node?.title || `Scene ${currentNodeId || "—"}`,
+    text: storyText.slice(0, liveDisplayedEnd).trim(),
+    complete: Boolean(storyText) && liveDisplayedEnd >= storyText.length,
+  };
+  const previousHistoryScenes = narrativeHistory
+    .filter((entry) => entry.sceneKey !== sceneKey)
+    .map((entry) => getSceneHistoryView(entry, storyData));
+  const sceneLabel = String(node?.title ?? currentNodeId ?? "—");
 
   return (
     <main
@@ -472,7 +753,10 @@ export default function InteractiveStory({
       role="dialog"
       aria-modal="true"
       aria-label="冰人文明互动文游"
+      data-story-root
       tabIndex={-1}
+      onPointerDown={handlePointerDown}
+      onClick={handleBackgroundClick}
       className={`absolute inset-0 h-[100dvh] w-full overflow-hidden bg-[#090b12] font-sans text-[#f7f8fb] outline-none transition duration-300 motion-reduce:transition-none ${
         isTransitioning ? "scale-[1.012] opacity-0" : "scale-100 opacity-100"
       }`}
@@ -489,21 +773,21 @@ export default function InteractiveStory({
         />
       ) : null}
 
-      <div className={`absolute inset-0 hidden md:block ${
+      <div className={`pointer-events-none absolute inset-0 hidden md:block ${
         isVisualEnding
-          ? "bg-[linear-gradient(90deg,rgba(5,7,13,0.42)_0%,rgba(7,9,15,0.13)_45%,rgba(8,10,16,0.08)_100%)]"
-          : "bg-[linear-gradient(90deg,rgba(5,7,13,0.97)_0%,rgba(7,9,15,0.89)_32%,rgba(8,10,16,0.48)_60%,rgba(8,10,16,0.15)_100%)]"
+          ? "bg-[linear-gradient(180deg,rgba(5,7,13,0.22)_0%,rgba(7,9,15,0.06)_54%,rgba(8,10,16,0.54)_100%)]"
+          : "bg-[linear-gradient(180deg,rgba(5,7,13,0.28)_0%,rgba(7,9,15,0.02)_44%,rgba(8,10,16,0.76)_100%)]"
       }`} />
-      <div className={`absolute inset-0 md:hidden ${
+      <div className={`pointer-events-none absolute inset-0 md:hidden ${
         isVisualEnding
           ? "bg-[linear-gradient(180deg,rgba(6,8,14,0.26)_0%,rgba(6,8,14,0.08)_45%,rgba(6,8,14,0.58)_100%)]"
-          : "bg-[linear-gradient(180deg,rgba(6,8,14,0.55)_0%,rgba(6,8,14,0.78)_34%,rgba(6,8,14,0.96)_75%,rgba(6,8,14,0.98)_100%)]"
+          : "bg-[linear-gradient(180deg,rgba(6,8,14,0.36)_0%,rgba(6,8,14,0.06)_38%,rgba(6,8,14,0.86)_100%)]"
       }`} />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
-          background: "linear-gradient(180deg, rgba(0,0,0,.45) 0%, transparent 20%, transparent 65%, rgba(0,0,0,.7) 100%), radial-gradient(circle at center, transparent 40%, rgba(0,0,0,.38) 100%)",
+          background: "linear-gradient(180deg, rgba(0,0,0,.4) 0%, transparent 20%, transparent 66%, rgba(0,0,0,.62) 100%), radial-gradient(circle at center, transparent 42%, rgba(0,0,0,.34) 100%)",
         }}
       />
       <div
@@ -512,7 +796,10 @@ export default function InteractiveStory({
         style={{ backgroundImage: NOISE_BACKGROUND }}
       />
 
-      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 pb-5 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:pb-7 sm:pl-[max(2rem,env(safe-area-inset-left))] sm:pr-[max(2rem,env(safe-area-inset-right))] sm:pt-[max(1.75rem,env(safe-area-inset-top))]">
+      <header
+        data-story-interactive
+        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 pb-5 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:pb-7 sm:pl-[max(2rem,env(safe-area-inset-left))] sm:pr-[max(2rem,env(safe-area-inset-right))] sm:pt-[max(1.75rem,env(safe-area-inset-top))]"
+      >
         <div className="flex min-w-0 items-center gap-3 tracking-[0.04em]">
           <span className="text-[17px] font-extrabold">相遇</span>
           <span className="h-[17px] w-px bg-white/25" />
@@ -524,13 +811,13 @@ export default function InteractiveStory({
             <span className="h-[7px] w-[7px] rounded-full bg-[#65e598] shadow-[0_0_0_4px_rgba(101,229,152,0.12)]" />
             与 {partnerInfo.name} 同行
           </span>
-          <span className="grid h-8 place-items-center rounded-full border border-white/10 bg-[#07090e]/40 px-3 text-[11px] font-bold tracking-[0.11em] text-white/50 backdrop-blur-xl">
-            DEMO
-          </span>
           <button
             ref={closeButtonRef}
             type="button"
-            onClick={() => onExitRef.current?.()}
+            onClick={(event) => {
+              event.stopPropagation();
+              onExitRef.current?.();
+            }}
             aria-label="退出文游并返回聊天"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-[#07090e]/55 text-white/70 backdrop-blur-xl transition hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           >
@@ -539,122 +826,155 @@ export default function InteractiveStory({
         </div>
       </header>
 
-      {history.length ? (
+      <div
+        data-story-interactive
+        className="absolute left-[max(1.25rem,env(safe-area-inset-left))] top-[max(4.75rem,calc(env(safe-area-inset-top)+4rem))] z-30 flex items-center gap-2 sm:left-[max(2rem,env(safe-area-inset-left))]"
+      >
         <button
           type="button"
-          onClick={back}
-          disabled={isTransitioning}
-          aria-label="返回上一幕"
-          className="absolute left-5 top-[86px] z-20 grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-[#07090e]/40 text-white backdrop-blur-xl transition hover:-translate-x-0.5 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-wait disabled:opacity-40 sm:left-8 sm:top-[94px]"
+          onClick={(event) => {
+            event.stopPropagation();
+            setHistoryOpen((value) => !value);
+          }}
+          aria-expanded={historyOpen}
+          className="inline-flex h-10 items-center gap-2 rounded-full border border-white/15 bg-[#07090e]/52 px-3.5 text-xs font-semibold text-white/76 backdrop-blur-xl transition hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
-          <ArrowLeft size={18} />
+          <History size={15} />
+          剧情回顾
         </button>
-      ) : null}
+        {navigationHistory.length ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              back();
+            }}
+            disabled={isTransitioning}
+            aria-label="返回上一幕"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-[#07090e]/52 text-white/76 backdrop-blur-xl transition hover:-translate-x-0.5 hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:cursor-wait disabled:opacity-40"
+          >
+            <ArrowLeft size={17} />
+          </button>
+        ) : null}
+      </div>
+
+      <StoryHistoryPanel
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        currentScene={currentHistoryScene}
+        previousScenes={previousHistoryScenes}
+      />
 
       {node && hasUsableText ? (
-        <section className="relative z-10 flex h-full w-full flex-col justify-end overflow-y-auto pb-[max(112px,calc(env(safe-area-inset-bottom)+88px))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-24 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:w-[min(760px,62vw)] md:justify-center md:pb-[105px] md:pl-[clamp(52px,7vw,120px)] md:pr-10 md:pt-[110px]">
-          <div className="mb-5 flex items-baseline gap-2 text-[10px] tracking-[0.19em] text-white/45">
-            <span>SCENE</span>
-            <strong className="text-[13px] text-white/80">{sceneLabel}</strong>
-          </div>
-
-          <div
-            ref={storyTextRef}
-            role={streamFinished ? undefined : "button"}
-            tabIndex={streamFinished ? -1 : 0}
-            aria-label={streamFinished ? undefined : "故事正文，按回车或空格立即展开全文"}
-            onClick={streamFinished ? undefined : finishTextImmediately}
-            onKeyDown={handleStoryTextKeyDown}
-            onWheel={() => { storyAutoScrollRef.current = false; }}
-            onTouchStart={() => { storyAutoScrollRef.current = false; }}
-            className={`max-h-[min(37vh,440px)] max-w-[690px] overflow-y-auto whitespace-pre-wrap pr-4 text-[17px] font-normal leading-[1.78] tracking-[0.018em] text-white/[0.94] [scrollbar-width:none] [text-shadow:0_2px_20px_rgba(0,0,0,0.72)] [&::-webkit-scrollbar]:hidden md:max-h-[min(44vh,440px)] md:text-[clamp(18px,1.55vw,24px)] ${
-              streamFinished ? "" : "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55"
-            }`}
-          >
-            {tokens.slice(0, visibleTokenCount).map((token, index) => (
-              token.newline ? (
-                <br key={`line-${index}`} />
-              ) : (
-                <span key={`word-${index}`} className="motion-safe:animate-storyWord">
-                  {token.text}
-                </span>
-              )
-            ))}
-            {!streamFinished ? (
-              <span className="ml-1 inline-block h-[1.12em] w-[7px] translate-y-[0.17em] rounded-sm bg-white/70 motion-safe:animate-storyCursor" />
-            ) : null}
-          </div>
-
-          {!streamFinished ? (
-            <button
-              type="button"
-              onClick={finishTextImmediately}
-              className="mt-4 w-fit text-[11px] text-white/35 transition hover:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55"
+        <section className={`absolute inset-x-0 bottom-[clamp(6.5rem,15vh,10rem)] z-10 px-[max(1rem,env(safe-area-inset-left))] transition-[padding] duration-300 sm:px-[max(2rem,env(safe-area-inset-left))] ${
+          chatOpen ? "md:pr-[390px]" : ""
+        }`}>
+          <div className="relative mx-auto w-full max-w-[1040px]">
+            <div
+              ref={lineMeasurementRef}
+              aria-hidden="true"
+              className={`invisible fixed -left-[10000px] top-0 pointer-events-none ${STORY_TEXT_TYPOGRAPHY}`}
+              style={{ overflowWrap: "anywhere", whiteSpace: "normal" }}
             >
-              点击正文立即展开
-            </button>
-          ) : null}
+              {storyText}
+            </div>
 
-          <div
-            aria-hidden={!streamFinished}
-            className={`mt-7 max-w-[590px] transition duration-500 motion-reduce:transition-none ${
-              streamFinished ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
-            }`}
-          >
-            {node.isEnding || !choices.length ? (
-              <div className="max-w-[500px] pt-1">
-                <div className="mb-2 text-[10px] tracking-[0.24em] text-[#c3afff]">
-                  {node.isEnding ? "ENDING" : "STORY PAUSED"}
-                </div>
-                <h2 className="mb-5 text-2xl font-semibold">
-                  {node.isEnding ? "故事抵达一个结局" : "当前节点没有可用选项"}
-                </h2>
-                <button
-                  type="button"
-                  tabIndex={streamFinished ? 0 : -1}
-                  onClick={restart}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.09] px-5 py-3 font-semibold text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                >
-                  <RotateCcw size={16} />
-                  重新开始
-                </button>
+            <div className="relative overflow-hidden rounded-[18px] bg-[linear-gradient(90deg,transparent_0%,rgba(6,8,14,0.38)_12%,rgba(6,8,14,0.58)_50%,rgba(6,8,14,0.38)_88%,transparent_100%)] px-5 py-5 text-center shadow-[0_18px_70px_rgba(0,0,0,0.16)] sm:px-8 sm:py-6">
+              <div className="mb-2 flex items-center justify-center gap-2 text-[9px] tracking-[0.15em] text-white/38">
+                <span className="font-semibold text-[#d2c8ff]">旁白</span>
+                <span aria-hidden="true">·</span>
+                <span className="max-w-48 truncate">{sceneLabel}</span>
               </div>
-            ) : (
-              <>
-                {!isContinueScene ? (
-                  <p className="mb-3 text-xs text-white/50">你会怎么做？</p>
+              <p
+                ref={lineWidthRef}
+                aria-live="polite"
+                className={`min-h-[1.72em] select-text overflow-hidden whitespace-nowrap text-center text-white/[0.95] [text-shadow:0_2px_18px_rgba(0,0,0,0.74)] ${STORY_TEXT_TYPOGRAPHY}`}
+              >
+                {storyLinesReady ? tokens.slice(0, renderedTokenCount).map((token, index) => (
+                  <span key={`${activeLine?.start || 0}-${index}`} className="motion-safe:animate-storyWord">
+                    {token.text}
+                  </span>
+                )) : (
+                  <span className="text-white/35">正在排版…</span>
+                )}
+                {storyLinesReady && !streamFinished ? (
+                  <span className="ml-1 inline-block h-[1.06em] w-[6px] translate-y-[0.15em] rounded-sm bg-white/65 motion-safe:animate-storyCursor" />
                 ) : null}
-                <div className="grid gap-2.5">
-                  {choices.map((choice, index) => {
-                    const selected = selectedChoiceText === choice.displayText;
-                    return (
-                      <button
-                        key={choice.id || choice.displayText}
-                        type="button"
-                        tabIndex={streamFinished ? 0 : -1}
-                        disabled={isTransitioning}
-                        onClick={() => choose(choice)}
-                        aria-label={isContinueScene ? "点击继续" : undefined}
-                        className={`group min-h-[60px] w-full items-center rounded-[15px] border border-white/15 bg-[#0a0c13]/55 px-3 py-3 backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/75 disabled:cursor-wait ${
-                          isContinueScene
-                            ? "flex justify-center text-center"
-                            : "grid grid-cols-[36px_minmax(0,1fr)] gap-3 text-left"
-                        } ${selected ? "ring-2 ring-white/75" : ""}`}
-                      >
-                        {!isContinueScene ? (
-                          <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-white/[0.07] text-xs font-bold text-white/65">
-                            {String.fromCharCode(65 + index)}
-                          </span>
-                        ) : null}
-                        <span className="min-w-0 text-sm font-semibold leading-6 text-white/90 sm:text-[15px]">
-                          {isContinueScene ? "点击继续" : choice.displayText}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+              </p>
+              {!sceneFullyRead ? (
+                <span className="mt-2 block text-[9px] tracking-[0.08em] text-white/30">
+                  {streamFinished ? "点击空白处继续" : "点击空白处显示整行"}
+                </span>
+              ) : null}
+            </div>
+
+            {sceneFullyRead ? (
+              <div
+                data-story-interactive
+                className="mx-auto mt-3 max-w-[780px] rounded-[18px] border border-white/12 bg-[#080b12]/68 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl motion-safe:animate-storyChat sm:p-4"
+              >
+                {node.isEnding || !choices.length ? (
+                  <div className="flex flex-wrap items-center justify-between gap-4 px-1">
+                    <div>
+                      <div className="mb-1 text-[9px] tracking-[0.24em] text-[#c3afff]">
+                        {node.isEnding ? "ENDING" : "STORY PAUSED"}
+                      </div>
+                      <h2 className="text-base font-semibold sm:text-lg">
+                        {node.isEnding ? "故事抵达一个结局" : "当前节点没有可用选项"}
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        restart();
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.09] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    >
+                      <RotateCcw size={15} />
+                      重新开始
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {!isContinueScene ? (
+                      <p className="mb-2.5 px-1 text-[11px] text-white/45">你会怎么做？</p>
+                    ) : null}
+                    <div className={`grid gap-2.5 ${isContinueScene ? "" : "sm:grid-cols-2"}`}>
+                      {choices.map((choice, index) => {
+                        const selected = selectedChoiceText === choice.displayText;
+                        return (
+                          <button
+                            key={choice.id || choice.displayText}
+                            type="button"
+                            disabled={isTransitioning}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              choose(choice);
+                            }}
+                            aria-label={isContinueScene ? "进入下一幕" : undefined}
+                            className={`group min-h-[50px] w-full items-center rounded-[14px] border border-white/15 bg-white/[0.065] px-3 py-2.5 backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/75 disabled:cursor-wait ${
+                              isContinueScene
+                                ? "flex justify-center text-center"
+                                : "grid grid-cols-[32px_minmax(0,1fr)] gap-3 text-left"
+                            } ${selected ? "ring-2 ring-white/75" : ""}`}
+                          >
+                            {!isContinueScene ? (
+                              <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-white/[0.08] text-[11px] font-bold text-white/65">
+                                {String.fromCharCode(65 + index)}
+                              </span>
+                            ) : null}
+                            <span className="min-w-0 text-sm font-semibold leading-6 text-white/90">
+                              {isContinueScene ? "进入下一幕" : choice.displayText}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
         </section>
       ) : isVisualEnding ? (
@@ -662,11 +982,15 @@ export default function InteractiveStory({
           ref={sceneFallbackRef}
           tabIndex={-1}
           aria-label="图片结局"
+          data-story-interactive
           className="relative z-10 flex h-full items-end px-[max(1.25rem,env(safe-area-inset-left))] pb-[max(2rem,env(safe-area-inset-bottom))] pt-28 outline-none sm:px-8 sm:pb-10 md:items-center md:px-[clamp(52px,7vw,120px)]"
         >
           <button
             type="button"
-            onClick={restart}
+            onClick={(event) => {
+              event.stopPropagation();
+              restart();
+            }}
             className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-[#090b12]/65 px-5 py-3 font-semibold text-white shadow-2xl backdrop-blur-xl transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           >
             <RotateCcw size={16} />
@@ -678,15 +1002,16 @@ export default function InteractiveStory({
           <div
             ref={sceneFallbackRef}
             tabIndex={-1}
-            className="max-w-md rounded-[24px] border border-white/15 bg-[#0b0d13]/85 p-7 outline-none shadow-2xl backdrop-blur-xl"
+            data-story-interactive
+            className="max-w-md rounded-[24px] border border-[#c6a9ff]/25 bg-[linear-gradient(145deg,rgba(31,22,47,.92),rgba(18,17,34,.94))] p-7 outline-none shadow-[0_24px_80px_rgba(75,45,120,.32)] backdrop-blur-xl"
           >
-            <p className="text-xs font-semibold tracking-[0.2em] text-[#c3afff]">STORY ERROR</p>
+            <p className="text-xs font-semibold tracking-[0.2em] text-[#d5b9ff]">STORY ERROR</p>
             <h1 className="mt-3 text-xl font-semibold">
               {sceneState === "missing-ending-image"
                 ? "结局插图暂时无法加载"
                 : node ? "这一幕缺少可用正文" : "找不到故事节点"}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-white/55">
+            <p className="mt-2 text-sm leading-6 text-[#e8ddf7]/65">
               {sceneState === "missing-ending-image"
                 ? "请稍后重试，或重新开始故事。"
                 : node
@@ -697,8 +1022,11 @@ export default function InteractiveStory({
               {resolvedInitialNodeId ? (
                 <button
                   type="button"
-                  onClick={restart}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/15"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    restart();
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#aa78e8]/20 px-4 py-2.5 text-sm font-semibold text-[#f2eaff] hover:bg-[#b887f0]/28"
                 >
                   <RotateCcw size={16} />
                   重新开始
@@ -706,8 +1034,11 @@ export default function InteractiveStory({
               ) : null}
               <button
                 type="button"
-                onClick={() => onExitRef.current?.()}
-                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/10"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onExitRef.current?.();
+                }}
+                className="rounded-xl border border-[#d5b9ff]/20 px-4 py-2.5 text-sm font-semibold text-[#eadff8]/80 hover:bg-[#b887f0]/12"
               >
                 返回聊天
               </button>
@@ -716,22 +1047,14 @@ export default function InteractiveStory({
         </section>
       )}
 
-      {node && hasUsableText ? (
-        <footer className="absolute bottom-8 left-[clamp(52px,7vw,120px)] z-20 hidden items-center gap-2 text-[10px] tracking-[0.03em] text-white/35 md:flex">
-          <span className="h-px w-7 bg-white/25" />
-          <span>你是故事的主角</span>
-          <span className="opacity-50">·</span>
-          <span>选择会改变之后的剧情</span>
-        </footer>
-      ) : null}
-
-      {node && hasUsableText ? (
+      {node ? (
         <StoryCompanionChat
           messages={messages}
           onSendMessage={sendMessage}
           partner={partnerInfo}
           pendingReplyCount={pendingReplyCount}
           resetKey={presentationVersion}
+          onOpenChange={setChatOpen}
         />
       ) : null}
     </main>
