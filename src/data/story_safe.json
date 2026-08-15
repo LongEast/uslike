@@ -1,0 +1,1824 @@
+{
+  "schemaVersion": "2.0-safe",
+  "type": "interactive-fiction",
+  "source": {
+    "platform": "bilibili",
+    "bvid": "BV1kU4y177hK",
+    "aid": 674769749,
+    "title": "【打泥泥】这场真人秀的内容，是毁掉一个文明！",
+    "originalUrl": "https://www.bilibili.com/video/BV1kU4y177hK",
+    "graphVersion": 551024
+  },
+  "story": {
+    "id": "ice-civilization",
+    "title": "冰人文明",
+    "genre": "科幻寓言",
+    "subtitle": "当一个文明被迫成为真人秀，你会遵从规则，还是殊死抵抗？",
+    "intro": "你与搭档将分别扮演阿楠和阿美，在一百年的倒计时中共同见证冰人文明的选择。"
+  },
+  "styles": [
+    {
+      "id": "science-fiction-fable",
+      "name": "科幻寓言",
+      "title": "《冰人文明》",
+      "description": "文明存亡、自由意志与一场残酷的宇宙真人秀。",
+      "available": true
+    },
+    {
+      "id": "urban-romance",
+      "name": "都市情感",
+      "title": "霓虹心事",
+      "description": "在城市的相遇与错过中，寻找彼此真正的答案。",
+      "available": false
+    },
+    {
+      "id": "mystery",
+      "name": "悬疑推理",
+      "title": "雾中来信",
+      "description": "和搭档交换线索，拼出被刻意藏起的真相。",
+      "available": false
+    },
+    {
+      "id": "fantasy-adventure",
+      "name": "奇幻冒险",
+      "title": "群星之外",
+      "description": "踏入未知大陆，在旅途中决定彼此的命运。",
+      "available": false
+    }
+  ],
+  "characters": [
+    {
+      "id": "anan",
+      "name": "阿楠",
+      "role": "冰人跑者 · 玩家主角",
+      "description": "生长在冰冻星球小镇的年轻冰人。善良、执着，也会在使命与个人选择之间动摇。",
+      "demoRole": "player"
+    },
+    {
+      "id": "amei",
+      "name": "阿美",
+      "role": "机械天才 · 搭档主角",
+      "description": "阿楠自幼相伴的好友，热烈而勇敢，对机械有非凡天赋，总想主动改变命运。",
+      "demoRole": "partner"
+    },
+    {
+      "id": "ice-leader",
+      "name": "冰人首领",
+      "role": "文明领袖",
+      "description": "背负整个族群未来的老人。他坚持训练计划，也藏着无法轻易说出口的忧虑。",
+      "demoRole": "supporting"
+    },
+    {
+      "id": "uncle-wang",
+      "name": "王叔",
+      "role": "知情者",
+      "description": "亲历人类降临的年长冰人，知道挑战背后的真相，却不愿无偿透露秘密。",
+      "demoRole": "supporting"
+    },
+    {
+      "id": "earth-boy",
+      "name": "地球男孩",
+      "role": "真人秀观众",
+      "description": "永生时代前出生的最后一批孩子之一，仍以好奇的目光观看冰人的故事。",
+      "demoRole": "supporting"
+    },
+    {
+      "id": "earth-sister",
+      "name": "地球姐姐",
+      "role": "真人秀观众",
+      "description": "比男孩更熟悉节目规则，冷静地解释冰人文明，却也逐渐被他们的选择触动。",
+      "demoRole": "supporting"
+    },
+    {
+      "id": "earth-president",
+      "name": "地球总统",
+      "role": "规则制定者",
+      "description": "高高在上地审视冰人挑战，将一个文明的命运当作供人观看的节目。",
+      "demoRole": "supporting"
+    },
+    {
+      "id": "earth-guard",
+      "name": "地球守卫",
+      "role": "最终阻拦者",
+      "description": "持枪守在地球内部通道，以明星合约与死亡威胁逼迫阿楠和阿美作出选择。",
+      "demoRole": "supporting"
+    }
+  ],
+  "demo": {
+    "visibleCharacterIds": [
+      "anan",
+      "amei"
+    ],
+    "playerCharacterId": "anan",
+    "partnerCharacterId": "amei",
+    "defaultChatReply": "我在听。这个决定还是交给你，选你真正想走的方向吧。",
+    "partnerEvents": [
+      {
+        "id": "role-select-amei",
+        "stage": "role",
+        "message": "我想选阿美，我们一起玩吧。"
+      },
+      {
+        "id": "uncle-wang-hint",
+        "stage": "play",
+        "nodeIds": [
+          "19716699"
+        ],
+        "message": "王叔现在是在暗示我们要钱吧，要不要给他一点？",
+        "chatReply": "我觉得他是在等我们表示一下。不过最后怎么选，你来决定。"
+      },
+      {
+        "id": "earth-guard-resistance",
+        "stage": "play",
+        "nodeIds": [
+          "19716722",
+          "19716723"
+        ],
+        "message": "他拿枪挡着我们，我想反击。阿楠，你怎么决定？",
+        "chatReply": "我想反击，但剧情只会按你点下的选项走。你来决定吧。"
+      }
+    ]
+  },
+  "rootId": "1",
+  "stats": {
+    "nodeCount": 45,
+    "edgeCount": 57,
+    "endingCount": 14,
+    "sharedNodeCount": 13,
+    "uniqueCidCount": 28,
+    "cidWithSubtitle": 27,
+    "cidNeedsTranscription": 0,
+    "crawlErrorCount": 0
+  },
+  "endingIds": [
+    "19716713",
+    "19716715",
+    "19716701",
+    "19716694",
+    "19716695",
+    "19716727",
+    "19716728",
+    "19716705",
+    "19716707",
+    "19716691",
+    "19716702",
+    "19716718",
+    "19716719",
+    "true-end-finale"
+  ],
+  "sharedNodeIds": [
+    "19716724",
+    "19716725",
+    "19716722",
+    "19716723",
+    "19716691",
+    "19716692",
+    "19716702",
+    "19716703",
+    "19716718",
+    "19716719",
+    "19716708",
+    "19716709",
+    "true-end-01"
+  ],
+  "nodes": {
+    "1": {
+      "id": "1",
+      "edgeId": 1,
+      "cid": 388167597,
+      "mediaRef": "388167597",
+      "title": "序章 · 文明抉择",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388167597_screenshot.jpg",
+        "alt": "1",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "1:0:0",
+          "text": "A 挑战（遵从规则）",
+          "to": "19716712",
+          "expectedCid": 388167418,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "1:0:1",
+          "text": "B 毁灭（殊死抵抗）",
+          "to": "19716713",
+          "expectedCid": 388167844,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 0,
+      "isShared": false
+    },
+    "19716691": {
+      "id": "19716691",
+      "edgeId": 19716691,
+      "cid": 388171234,
+      "mediaRef": "388171234",
+      "title": "25",
+      "image": {
+        "src": "/api/uploads/story/endings/59c21a46-6fd2-4369-92ef-f3cbf96e03f9.png",
+        "alt": "私奔并共同迎接终结",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716692": {
+      "id": "19716692",
+      "edgeId": 19716692,
+      "cid": 388171044,
+      "mediaRef": "388171044",
+      "title": "26",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388171044_screenshot.jpg",
+        "alt": "26",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716692:0:0",
+          "text": "A 说",
+          "to": "19716708",
+          "expectedCid": 388171823,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716692:0:1",
+          "text": "B 不说",
+          "to": "19716709",
+          "expectedCid": 388171383,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716693": {
+      "id": "19716693",
+      "edgeId": 19716693,
+      "cid": 388169190,
+      "mediaRef": "388169190",
+      "title": "12",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388169190_screenshot.jpg",
+        "alt": "12",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716693:0:0",
+          "text": "A “你不会杀我们的”",
+          "to": "19716722",
+          "expectedCid": 388170170,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716693:0:1",
+          "text": "B “你怎么知道有炸弹”",
+          "to": "19716723",
+          "expectedCid": 388170301,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716694": {
+      "id": "19716694",
+      "edgeId": 19716694,
+      "cid": 388169370,
+      "mediaRef": "388169370",
+      "title": "13",
+      "image": {
+        "src": "/api/uploads/story/endings/bf004755-8e11-4792-9dbe-f6fe9b8156e4.png",
+        "alt": "亲眼见证冰人文明毁灭",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716695": {
+      "id": "19716695",
+      "edgeId": 19716695,
+      "cid": 388169495,
+      "mediaRef": "388169495",
+      "title": "14",
+      "image": {
+        "src": "/api/uploads/story/endings/bf004755-8e11-4792-9dbe-f6fe9b8156e4.png",
+        "alt": "亲眼见证冰人文明毁灭",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716696": {
+      "id": "19716696",
+      "edgeId": 19716696,
+      "cid": 388170445,
+      "mediaRef": "388170445",
+      "title": "19",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170445_screenshot.jpg",
+        "alt": "19",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716696:0:0",
+          "text": "A “一起走吧！”（为了爱情私奔）",
+          "to": "19716691",
+          "expectedCid": 388171234,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716696:0:1",
+          "text": "B 沉默（为了使命留下）",
+          "to": "19716692",
+          "expectedCid": 388171044,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716697": {
+      "id": "19716697",
+      "edgeId": 19716697,
+      "cid": 388170634,
+      "mediaRef": "388170634",
+      "title": "20",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170634_screenshot.jpg",
+        "alt": "20",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716697:0:0",
+          "text": "A “一起走吧！”（为了爱情私奔）",
+          "to": "19716702",
+          "expectedCid": 388171234,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716697:0:1",
+          "text": "B 沉默（为了使命留下）",
+          "to": "19716703",
+          "expectedCid": 388171044,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716698": {
+      "id": "19716698",
+      "edgeId": 19716698,
+      "cid": 388167935,
+      "mediaRef": "388167935",
+      "title": "4",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388167935_screenshot.jpg",
+        "alt": "4",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716698:0:0",
+          "text": "A “抱歉”",
+          "to": "19716720",
+          "expectedCid": 388168227,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716698:0:1",
+          "text": "B 沉默",
+          "to": "19716721",
+          "expectedCid": 388168434,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716699": {
+      "id": "19716699",
+      "edgeId": 19716699,
+      "cid": 388168117,
+      "mediaRef": "388168117",
+      "title": "5",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168117_screenshot.jpg",
+        "alt": "5",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716699:0:0",
+          "text": "A “咋滴，手指抽筋了？”",
+          "to": "19716716",
+          "expectedCid": 388168605,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716699:0:1",
+          "text": "B 给他钱",
+          "to": "19716717",
+          "expectedCid": 388168715,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716700": {
+      "id": "19716700",
+      "edgeId": 19716700,
+      "cid": 388168847,
+      "mediaRef": "388168847",
+      "title": "10",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168847_screenshot.jpg",
+        "alt": "10",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716700:0:0",
+          "text": "A 想",
+          "to": "19716724",
+          "expectedCid": 388169671,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716700:0:1",
+          "text": "B 不想",
+          "to": "19716725",
+          "expectedCid": 388169891,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716701": {
+      "id": "19716701",
+      "edgeId": 19716701,
+      "cid": 388169084,
+      "mediaRef": "388169084",
+      "title": "11",
+      "image": {
+        "src": "/api/uploads/story/endings/bf004755-8e11-4792-9dbe-f6fe9b8156e4.png",
+        "alt": "亲眼见证冰人文明毁灭",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716702": {
+      "id": "19716702",
+      "edgeId": 19716702,
+      "cid": 388171234,
+      "mediaRef": "388171234",
+      "title": "25",
+      "image": {
+        "src": "/api/uploads/story/endings/59c21a46-6fd2-4369-92ef-f3cbf96e03f9.png",
+        "alt": "私奔并共同迎接终结",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716703": {
+      "id": "19716703",
+      "edgeId": 19716703,
+      "cid": 388171044,
+      "mediaRef": "388171044",
+      "title": "26",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388171044_screenshot.jpg",
+        "alt": "26",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716703:0:0",
+          "text": "A 说",
+          "to": "19716708",
+          "expectedCid": 388171823,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716703:0:1",
+          "text": "B 不说",
+          "to": "19716709",
+          "expectedCid": 388171383,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716704": {
+      "id": "19716704",
+      "edgeId": 19716704,
+      "cid": 388170833,
+      "mediaRef": "388170833",
+      "title": "21",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170833_screenshot.jpg",
+        "alt": "21",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716704:0:0",
+          "text": "A 顺从",
+          "to": "19716718",
+          "expectedCid": 388170966,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716704:0:1",
+          "text": "B 反抗",
+          "to": "19716719",
+          "expectedCid": 388170944,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716705": {
+      "id": "19716705",
+      "edgeId": 19716705,
+      "cid": 388170887,
+      "mediaRef": "388170887",
+      "title": "22",
+      "image": {
+        "src": "/api/uploads/story/endings/19b2f3a8-2bc3-43e1-add7-b4fb98c99216.png",
+        "alt": "与人类一同引爆炸弹",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716706": {
+      "id": "19716706",
+      "edgeId": 19716706,
+      "cid": 388170833,
+      "mediaRef": "388170833",
+      "title": "21",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170833_screenshot.jpg",
+        "alt": "21",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716706:0:0",
+          "text": "A 顺从",
+          "to": "19716718",
+          "expectedCid": 388170966,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716706:0:1",
+          "text": "B 反抗",
+          "to": "19716719",
+          "expectedCid": 388170944,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716707": {
+      "id": "19716707",
+      "edgeId": 19716707,
+      "cid": 388170887,
+      "mediaRef": "388170887",
+      "title": "22",
+      "image": {
+        "src": "/api/uploads/story/endings/19b2f3a8-2bc3-43e1-add7-b4fb98c99216.png",
+        "alt": "与人类一同引爆炸弹",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716708": {
+      "id": "19716708",
+      "edgeId": 19716708,
+      "cid": 388171823,
+      "mediaRef": "388171823",
+      "title": "27",
+      "image": {
+        "src": "/api/uploads/story/endings/64879a8e-891e-4b6d-bbb4-936ae6f8e4e2.png",
+        "alt": "海中孤岛上的方块房子",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716708:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-01",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716709": {
+      "id": "19716709",
+      "edgeId": 19716709,
+      "cid": 388171383,
+      "mediaRef": "388171383",
+      "title": "28",
+      "image": {
+        "src": "/api/uploads/story/endings/64879a8e-891e-4b6d-bbb4-936ae6f8e4e2.png",
+        "alt": "海中孤岛上的方块房子",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716709:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-01",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "true-end-01": {
+      "id": "true-end-01",
+      "edgeId": "true-end-01",
+      "cid": null,
+      "mediaRef": "true-end-slide-01",
+      "title": "TRUE END · 01",
+      "image": {
+        "src": "/api/uploads/story/endings/59b34a13-f5fe-4c3d-adc6-11ffa703cae5.png",
+        "alt": "冰人胚胎容器",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "true-end-01:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-02",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "true-end-02": {
+      "id": "true-end-02",
+      "edgeId": "true-end-02",
+      "cid": null,
+      "mediaRef": "true-end-slide-02",
+      "title": "TRUE END · 02",
+      "image": {
+        "src": "/api/uploads/story/endings/93d449ad-7519-4b95-868f-2b3f9810ef25.png",
+        "alt": "首领重述挑战",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "true-end-02:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-03",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "true-end-03": {
+      "id": "true-end-03",
+      "edgeId": "true-end-03",
+      "cid": null,
+      "mediaRef": "true-end-slide-03",
+      "title": "TRUE END · 03",
+      "image": {
+        "src": "/api/uploads/story/endings/8306073b-e095-4d33-9a52-2a3e64687b7a.png",
+        "alt": "冰人冲出星系",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "true-end-03:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-04",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "true-end-04": {
+      "id": "true-end-04",
+      "edgeId": "true-end-04",
+      "cid": null,
+      "mediaRef": "true-end-slide-04",
+      "title": "TRUE END · 04",
+      "image": {
+        "src": "/api/uploads/story/endings/f2a573fc-23e2-4c53-8add-c602c8474932.png",
+        "alt": "冰人文明飞向新的恒星",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "true-end-04:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-05",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "true-end-05": {
+      "id": "true-end-05",
+      "edgeId": "true-end-05",
+      "cid": null,
+      "mediaRef": "true-end-slide-05",
+      "title": "TRUE END · 05",
+      "image": {
+        "src": "/api/uploads/story/endings/28bd060d-07ce-44ee-a099-a2ccfbd78d5c.png",
+        "alt": "总统确认冰人成功",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "true-end-05:continue",
+          "kind": "continue",
+          "text": "点击继续",
+          "to": "true-end-finale",
+          "expectedCid": null,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "true-end-finale": {
+      "id": "true-end-finale",
+      "edgeId": "true-end-finale",
+      "cid": null,
+      "mediaRef": "true-end-finale",
+      "title": "TRUE END",
+      "presentation": "visual-ending",
+      "image": {
+        "src": "/api/uploads/story/endings/ca7c2a5b-75f9-49f9-b7be-4b23db1f5b72.png",
+        "alt": "冰人文明 True End",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716710": {
+      "id": "19716710",
+      "edgeId": 19716710,
+      "cid": 388170445,
+      "mediaRef": "388170445",
+      "title": "19",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170445_screenshot.jpg",
+        "alt": "19",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716710:0:0",
+          "text": "A “一起走吧！”（为了爱情私奔）",
+          "to": "19716691",
+          "expectedCid": 388171234,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716710:0:1",
+          "text": "B 沉默（为了使命留下）",
+          "to": "19716692",
+          "expectedCid": 388171044,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716711": {
+      "id": "19716711",
+      "edgeId": 19716711,
+      "cid": 388170634,
+      "mediaRef": "388170634",
+      "title": "20",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170634_screenshot.jpg",
+        "alt": "20",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716711:0:0",
+          "text": "A “一起走吧！”（为了爱情私奔）",
+          "to": "19716702",
+          "expectedCid": 388171234,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716711:0:1",
+          "text": "B 沉默（为了使命留下）",
+          "to": "19716703",
+          "expectedCid": 388171044,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716712": {
+      "id": "19716712",
+      "edgeId": 19716712,
+      "cid": 388167418,
+      "mediaRef": "388167418",
+      "title": "阿楠 · 起跑线",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388167418_screenshot.jpg",
+        "alt": "2",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716712:0:0",
+          "text": "A 继续跑",
+          "to": "19716698",
+          "expectedCid": 388167935,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716712:0:1",
+          "text": "B 陪着阿美一起跑",
+          "to": "19716699",
+          "expectedCid": 388168117,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716713": {
+      "id": "19716713",
+      "edgeId": 19716713,
+      "cid": 388167844,
+      "mediaRef": "388167844",
+      "title": "3",
+      "image": {
+        "src": "/api/uploads/story/endings/df38faee-baa1-48c9-8c71-b925ec76d4ad.png",
+        "alt": "殊死抵抗",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716714": {
+      "id": "19716714",
+      "edgeId": 19716714,
+      "cid": 388168847,
+      "mediaRef": "388168847",
+      "title": "10",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168847_screenshot.jpg",
+        "alt": "10",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716714:0:0",
+          "text": "A 想",
+          "to": "19716724",
+          "expectedCid": 388169671,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716714:0:1",
+          "text": "B 不想",
+          "to": "19716725",
+          "expectedCid": 388169891,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716715": {
+      "id": "19716715",
+      "edgeId": 19716715,
+      "cid": 388169084,
+      "mediaRef": "388169084",
+      "title": "11",
+      "image": {
+        "src": "/api/uploads/story/endings/bf004755-8e11-4792-9dbe-f6fe9b8156e4.png",
+        "alt": "亲眼见证冰人文明毁灭",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716716": {
+      "id": "19716716",
+      "edgeId": 19716716,
+      "cid": 388168605,
+      "mediaRef": "388168605",
+      "title": "8",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168605_screenshot.jpg",
+        "alt": "8",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716716:0:0",
+          "text": "A 答应",
+          "to": "19716693",
+          "expectedCid": 388169190,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716716:0:1",
+          "text": "B 拒绝",
+          "to": "19716694",
+          "expectedCid": 388169370,
+          "condition": "$aQHz_35_7B0YS<50.00",
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        },
+        {
+          "id": "19716716:0:2",
+          "text": "C 拒绝",
+          "to": "19716695",
+          "expectedCid": 388169495,
+          "condition": "$aQHz_35_7B0YS>=51.00",
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716717": {
+      "id": "19716717",
+      "edgeId": 19716717,
+      "cid": 388168715,
+      "mediaRef": "388168715",
+      "title": "9",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168715_screenshot.jpg",
+        "alt": "9",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716717:0:0",
+          "text": "A 答应",
+          "to": "19716726",
+          "expectedCid": 388169190,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716717:0:1",
+          "text": "B 拒绝",
+          "to": "19716727",
+          "expectedCid": 388169370,
+          "condition": "$aQHz_35_7B0YS<50.00",
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        },
+        {
+          "id": "19716717:0:2",
+          "text": "C 拒绝",
+          "to": "19716728",
+          "expectedCid": 388169495,
+          "condition": "$aQHz_35_7B0YS>=51.00",
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716718": {
+      "id": "19716718",
+      "edgeId": 19716718,
+      "cid": 388170966,
+      "mediaRef": "388170966",
+      "title": "24",
+      "image": {
+        "src": "/api/uploads/story/endings/790a4c59-7408-4447-8cf7-f29e9da9b2af.png",
+        "alt": "投敌人类",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716719": {
+      "id": "19716719",
+      "edgeId": 19716719,
+      "cid": 388170944,
+      "mediaRef": "388170944",
+      "title": "23",
+      "presentation": "visual-ending",
+      "image": {
+        "src": "/api/uploads/story/endings/19b2f3a8-2bc3-43e1-add7-b4fb98c99216.png",
+        "alt": "与人类一同引爆炸弹",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716720": {
+      "id": "19716720",
+      "edgeId": 19716720,
+      "cid": 388168227,
+      "mediaRef": "388168227",
+      "title": "6",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168227_screenshot.jpg",
+        "alt": "6",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716720:0:0",
+          "text": "A 去",
+          "to": "19716714",
+          "expectedCid": 388168847,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716720:0:1",
+          "text": "B 不去",
+          "to": "19716715",
+          "expectedCid": 388169084,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716721": {
+      "id": "19716721",
+      "edgeId": 19716721,
+      "cid": 388168434,
+      "mediaRef": "388168434",
+      "title": "7",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388168434_screenshot.jpg",
+        "alt": "7",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716721:0:0",
+          "text": "A 去",
+          "to": "19716700",
+          "expectedCid": 388168847,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716721:0:1",
+          "text": "B 不去",
+          "to": "19716701",
+          "expectedCid": 388169084,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716722": {
+      "id": "19716722",
+      "edgeId": 19716722,
+      "cid": 388170170,
+      "mediaRef": "388170170",
+      "title": "17",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170170_screenshot.jpg",
+        "alt": "17",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716722:0:0",
+          "text": "A 犹豫",
+          "to": "19716704",
+          "expectedCid": 388170833,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716722:0:1",
+          "text": "B 攻击",
+          "to": "19716705",
+          "expectedCid": 388170887,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716723": {
+      "id": "19716723",
+      "edgeId": 19716723,
+      "cid": 388170301,
+      "mediaRef": "388170301",
+      "title": "18",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388170301_screenshot.jpg",
+        "alt": "18",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716723:0:0",
+          "text": "A 犹豫",
+          "to": "19716706",
+          "expectedCid": 388170833,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716723:0:1",
+          "text": "B 攻击",
+          "to": "19716707",
+          "expectedCid": 388170887,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716724": {
+      "id": "19716724",
+      "edgeId": 19716724,
+      "cid": 388169671,
+      "mediaRef": "388169671",
+      "title": "15",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388169671_screenshot.jpg",
+        "alt": "15",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716724:0:0",
+          "text": "A “也不是没可能…”",
+          "to": "19716710",
+          "expectedCid": 388170445,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716724:0:1",
+          "text": "B 姐姐说的没错",
+          "to": "19716711",
+          "expectedCid": 388170634,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716725": {
+      "id": "19716725",
+      "edgeId": 19716725,
+      "cid": 388169891,
+      "mediaRef": "388169891",
+      "title": "16",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388169891_screenshot.jpg",
+        "alt": "16",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716725:0:0",
+          "text": "A “也不是没可能…”",
+          "to": "19716696",
+          "expectedCid": 388170445,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716725:0:1",
+          "text": "B 姐姐说的没错",
+          "to": "19716697",
+          "expectedCid": 388170634,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 2,
+      "isShared": true
+    },
+    "19716726": {
+      "id": "19716726",
+      "edgeId": 19716726,
+      "cid": 388169190,
+      "mediaRef": "388169190",
+      "title": "12",
+      "image": {
+        "src": "https://i0.hdslb.com/bfs/steins-gate/388169190_screenshot.jpg",
+        "alt": "12",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": false,
+      "choices": [
+        {
+          "id": "19716726:0:0",
+          "text": "A “你不会杀我们的”",
+          "to": "19716722",
+          "expectedCid": 388170170,
+          "condition": null,
+          "effect": null,
+          "isDefault": true,
+          "isHidden": false
+        },
+        {
+          "id": "19716726:0:1",
+          "text": "B “你怎么知道有炸弹”",
+          "to": "19716723",
+          "expectedCid": 388170301,
+          "condition": null,
+          "effect": null,
+          "isDefault": false,
+          "isHidden": false
+        }
+      ],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716727": {
+      "id": "19716727",
+      "edgeId": 19716727,
+      "cid": 388169370,
+      "mediaRef": "388169370",
+      "title": "13",
+      "image": {
+        "src": "/api/uploads/story/endings/bf004755-8e11-4792-9dbe-f6fe9b8156e4.png",
+        "alt": "亲眼见证冰人文明毁灭",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    },
+    "19716728": {
+      "id": "19716728",
+      "edgeId": 19716728,
+      "cid": 388169495,
+      "mediaRef": "388169495",
+      "title": "14",
+      "image": {
+        "src": "/api/uploads/story/endings/bf004755-8e11-4792-9dbe-f6fe9b8156e4.png",
+        "alt": "亲眼见证冰人文明毁灭",
+        "referrerPolicy": "no-referrer"
+      },
+      "isEnding": true,
+      "choices": [],
+      "incoming": 1,
+      "isShared": false
+    }
+  },
+  "media": {
+    "388167418": {
+      "cid": 388167418,
+      "text": "冰人首领毫不迟疑\n选择了挑战\n当人类出现在可观测范围时\n就有学者断定\n以人类的科技水平毁灭冰人易如反掌\n首领知道他唯一的责任就是不惜一切代价\n让文明存续下去\n于是早已做好了顺从人类的打算\n得到答复后\n总统一笑\n做出思考状\n嘴里嘀咕着\n我想想该给你们什么挑战好\n你出生时\n地球就已经在那\n长辈们都不愿提及关于那颗星球的故事\n他们只说那是20年前出现的\n你要继续问\n长辈们\n通常就会甩下一句\n别问那么多\n好好练跑步\n长大为病人争口气\n从你出生时\n周围最常被提到的词汇就是跑步\n通过课堂学到的知识\n你知道冰人的身体结构很适合奔跑\n你们自古以来也有奔跑的传统\n但像现在这样以社会停摆作为代价\n压缩所有时间\n全民练习长跑的疯狂行为\n是从20年前开始\n你知道这一切肯定与地球出现有关\n你爱跑步\n这种热爱不受长辈劝告和社会风向的影响\n只是单纯爱跑步\n或许是这个原因\n你比其他靠忍耐硬撑着的人跑得更轻松\n也更快\n与你一起长大的阿美逐渐追不上你了\n你回头他正喘着气\n让你别等自己继续跑吧",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881674180908ea0a920ada9d4ed4c2eb79474dd1?auth_key=1786758319-ab29e43d5eb14c869d247eb605c22c5e-0-fdfb376b8087e14c875fd90d2086b915",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388167597": {
+      "cid": 388167597,
+      "text": "宇宙中有各式各样文明\n由冰晶构成身体\n生活在冰冻星球的冰人\n也有蓄意毁灭冰冻星球的人类\n人类科技极度发达\n在成功攻克永生难题之后的一段时间\n人类无需对生存担忧\n拥有无限的时间\n享受着各样的娱乐\n逐渐变得乏味\n社会成了一潭死水\n那时的人们会为了一点新鲜感\n不惜付出生命\n地球人口在那短短几十年间锐减近半\n就在这时\n一位综艺导演成为了地球联邦的总统\n他懂得如何娱乐大众\n同时足够残暴\n他开始了一场以宇宙为舞台的真人秀\n以毁灭其他文明的方式娱乐大众\n当一个个低等文明在人类眼前碎裂消失时\n几十亿人类为之疯狂\n人类从宇宙深处驶来\n身后是文明的焦土\n无一幸免\n此时人类那被改造成巨炮的母星\n已经靠近了这颗星球\n这是他们的下一个目标\n总统坐在地球最高的建筑之上\n脚下是如蚂蚁般密密麻麻的人群\n总统脚落地，地面开始震动\n那是全球几十亿人类\n同时在为这场节目欢呼惊叫\n他对着一个面向冰冻星球的传声装置\n说出了那句在人类眼中无比熟悉的真人秀\n开场白\n挑战还是毁灭\n你们选一个吧\n声音经过翻译\n瞬间传遍冰冻星球的每个角落",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881675974489025475a81c6f5a7975a5a2cbe8df?auth_key=1786758318-c0756a4e864045feb96bc8dbfccf9d4a-0-6eb584627c6032feadc4f35b860f7ac3",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388167844": {
+      "cid": 388167844,
+      "text": "冰人首领只下达了一个命令\n殊死抵抗\n当人类出现在可观测范围时\n冰人就已经做好抵抗的准备\n战壕碉堡遍布大地\n士兵们蹲守在各自的岗位\n手持武器等待敌人的到来\n看到这种景象\n总统兴致寥寥地挥了挥手\n身后的助手立刻传达出了一条命令\n启动地球大炮",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388167844391aeadecd60bfc5984bf6c2269ab8c2?auth_key=1786758320-717e731058f140c2a7ffa5b660a46a02-0-29d5439a350e0444f9a56d30d7e5e6d0",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388167935": {
+      "cid": 388167935,
+      "text": "你继续向前跑\n告诉阿美会在前面等待\n你的速度\n超越了身边正值壮年的所有长辈\n你逐渐发现自己是周围跑得最快的人\n你被选进了一所特别的学校\n在那里你看到了自己的同类\n这里都是真正爱跑步的人\n你也终于遇到了比你速度更快的对手\n之后的几年里\n在专业的训练下\n你的速度和耐力都大有提升\n你不是这所学校跑得最快的\n但也能排进前列\n校长带着队伍来到了海边\n你不知道为什么来这，校长没有解释\n他只让你们沿着海岸线向前跑500\n众人很快进入状态\n当你跑完全程冲过终点线时\n你发现自己是第一名\n看来队伍中有人中途出现了失误\n让你侥幸得到了第一名\n你躺在地上一动不动\n身体临近极限后的疲劳\n让你想永远就这么躺着\n很快你注意到了不远处的人影\n当你看清来人身份时\n竟奇迹般爬了起来\n因为你认出了其中的冰人首领\n在这之前\n你只在别人口中听过他的名字\n你们排成一排\n首领挨个给你们鼓励\n当他走到你面前\n对你说出你们是病人的希望\n要继续跑下去\n以及各种认同鼓励的话语时\n你的情绪却意外地没有想象中兴奋\n因为你从首领的笑容中读到了隐藏极深的颓丧与失望",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388167935f6bbd4f0be908efb51fbf18f29c8281e?auth_key=1786758321-7f31b0bd66d9489186cf4b1204c943c2-0-48293a72f67c2975ef676fb0a8f73075",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388168117": {
+      "cid": 388168117,
+      "text": "你没有继续前进\n而是留下来和阿美一起跑\n你也许能跑得更快\n但你只想留在阿美身边\n在天亮之前\n你们回到生活的小镇\n各自回家\n吃些简单的食物\n然后休息\n等待第二天黑夜的到来\n又继续进行下一次长跑\n每天做着同样的事\n甚至跑步路线都相差无几\n要没有阿美\n你无法想象这生活该会有多无聊\n年轻人总充满好奇\n你和阿美都想知道跑步的原因\n可身边的大人们都不愿说\n你们只能自己去找\n你们知道这和地球的出现有关\n而那些地球人\n是在20年前初次抵达冰冻星球时\n与冰人产生过交流\n你们找到了一个叫王叔的人\n他以前是士兵\n地球降临时\n他肯定目睹了全程\n王叔听完你们的问题也不作声\n只是伸出手指摩挲起来",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388168117998aee10193bc507a28967271936e8d7?auth_key=1786758321-42c365676fa24862bdb7d1cbc9a08f7b-0-1d3c20631d4cca13f7ec2eebad787630",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388168227": {
+      "cid": 388168227,
+      "text": "在首领还没走开之前\n你说了声抱歉\n首领并未惊讶你突如其来的道歉\n他只是摇头说\n孩子你误会了\n你不必感到愧疚\n事实上你们所有人都很优秀\n刚刚那些话并不是客套\n那确实是对你们最真挚的寄托\n继续跑下去吧\n尽管前路漫漫\n此后的日子里\n你从未放弃奔跑\n但与训练量不成正比的是\n你的提升越来越小\n生活似乎陷入了某种无意义的循环\n你的热情在被一点点消磨\n你趁着一个假期回到了家乡\n当你走到亲人面前时\n天已经快亮了\n除了重逢的激动\n他们眼中还有对其他事物的担忧\n一番询问才知道\n在得知你回来的消息后\n阿美就出门去接你\n可现在你已经到了\n阿美却还没回来\n你看着地平线下逐渐放亮的天空\n心里慌了起来\n第一缕阳光照到了你的脚边\n人们纷纷躲进屋\n身为冰人\n阳光给你带来的是原子基因深处的恐惧\n地球上的一个小男孩看着投影画面问：“冰人很怕阳光吗？”\n他是永生之前出生的最后一批孩子\n心智和身体不会长大\n他是永远的孩子\n一旁大她几岁的姐姐说\n你没发现他们都是昼伏夜出吗\n病人要是长时间暴露在阳光下\n就会溶解死亡\n对于病人来说\n时刻躲避阳光\n就像我们人类持续保持呼吸般平常",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388168227ecae993cd281c4be5625d85c1543a978?auth_key=1786758322-8cc9f76eb38f4cfb9127074bf625576a-0-82d2165ff1418d0a01c8dbf215fe33e6",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388168434": {
+      "cid": 388168434,
+      "text": "不知道为什么\n当你察觉首领的这种情绪后\n你心中隐约产生了担忧\n这种担忧覆盖了整个冰人种族\n此刻才被你发觉\n此后的日子里\n你从未放弃奔跑\n但与训练量不成正比的是\n你的提升越来越小\n生活似乎陷入了某种无意义的循环\n你的热情在被一点点消磨\n你趁着一个假期回到了家乡\n当你走到亲人面前时\n天已经快亮了\n除了重逢的激动\n他们眼中还有对其他事物的担忧\n一番询问才知道\n在得知你回来的消息后\n阿美就出门去接你\n可现在你已经到了\n阿美却还没回来\n你看着地平线下逐渐放亮的天空\n心里慌了起来\n第一缕阳光照到了你的脚边\n人们纷纷躲进屋\n身为冰人\n阳光给你带来的是原子基因深处的恐惧\n地球上的一个小男孩看着投影画面问冰人很怕阳光\n他是永生之前出生的最后一批孩子\n心智和身体不会长大\n他是永远的孩子\n一旁大她几岁的姐姐说\n你没发现他们都是昼伏夜出吗\n病人要是长时间暴露在阳光下\n就会溶解死亡\n对于病人来说\n时刻躲避阳光\n就像我们人类持续保持呼吸般平常",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388168434547e6a8239e356954fd87026fd2de43c?auth_key=1786758323-1c0412ed219f426c992e31987c1f070c-0-c67a7c8c08e99715341ee76d5bfa13e7",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388168605": {
+      "cid": 388168605,
+      "text": "王叔直截了当\n别装傻\n你掏出几张钞票\n王叔接过才说\n还有这一切都是人类害的就行\n他们用武力胁迫我们定下的一个冰人不可能完成的目标\n目的就是为了折磨我们\n以此取乐\n而这一切在人类眼中只是一场真人秀\n100年过去后\n我们注定只有死路一条\n你问真人秀是什么\n王叔说不知道\n但当时人类就是这么说的\n也许他说的是真的\n因为年龄稍微大一点\n亲身经历过那件事的人\n或许他们早就知道目标不可能达成\n才对这一切失去了动力\n通过其他人的描述\n你们越来越肯定了这个想法\n你们为了完成任务\n每天仍麻木地长跑\n某天阿美突然对你说\n我们应该去教训一下那些人类\n他拿出一张图纸说\n这是一架飞行器\n跟我一起去吗",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388168605bc32c6dabc6b02f6f284953b392b85b2?auth_key=1786758324-a6ba0b80404740b8aee1eef0c300da27-0-596c08b8368ae52b2391a534d65ba4cb",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388168715": {
+      "cid": 388168715,
+      "text": "你掏出几张钞票\n王叔接过才说\n你们只需知道练习跑步毫无意义\n还有这一切都是人类害的就行\n他们用武力胁迫我们\n定下了一个冰人不可能完成的目标\n目的就是为了折磨我们\n以此取乐\n而这一切在人类眼中只是一场真人秀\n100年过去后\n我们注定只有死路一条\n你问真人秀是什么\n王叔说不知道\n但当时人类就是这么说的\n也许他说的是真的\n因为年龄稍微大一点\n亲身经历过那件事的人\n都对练习跑步嗤之以鼻\n或许他们早就知道目标不可能达成\n才对这一切失去了动力\n通过其他人的描述\n你们越来越肯定了这个想法\n你们为了完成任务\n每天仍麻木地长跑\n某天阿美突然对你说\n我们没必要折磨自己\n我们应该去教训一下那些人类\n他拿出一张图纸说\n这是一架飞行器\n跟我一起去吗",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388168715c9d31ee6ec8a5914819f0d78c7694849?auth_key=1786758324-0061a31c5ccd4019b7f3737463d8a838-0-41adcc1efe891c7332cde57de6f961dc",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388168847": {
+      "cid": 388168847,
+      "text": "你压下心中的恐惧\n迈入阳光之下\n你呼喊着阿美的名字\n全力奔跑\n太阳快要升起来了，你一步摆脱地平线的遮挡\n阳光和热照射在你的身上\n也照射在这片土地的每个角落\n你能感到那代表着死亡的温度\n你的双脚重复着那个简单的动作\n时间正在随之流逝\n你感到身体越来越热\n长辈们说过\n这是濒死前最后的感觉\n不知跑了多久\n你终于找到了阿美，她抱着脚踝倒在路边\n已经失去了意识\n阳光照射下的身体出现了溶解的征兆\n你冲上去抱起她\n用身体为她遮盖阳光\n回到房屋\n你将阿美交给别人\n就躺倒在地\n经过一番检查\n因为你及时赶到\n阿美并没有大碍\n看到倒在地上的你\n有人开始默哀\n有人哭了起来\n他们知道没有病人能在阳光下活这么久\n有人翻过你的身体\n胆小的孩子捂住了眼睛\n所有人都以为会看到被溶解的后背\n翻过去后\n却发现你的后背依旧和原来一样完好无损\n甚至全身上下也没找到一点伤口\n这些动静也将你吵醒\n你自己同样惊奇\n自己没有死\n只是累得睡着了\n众人看你的眼神充满了难以置信\n仿佛在看某个从未见过的珍奇生物\n医生拿着你的检测报告满脸惊讶\n他说你身体发生了前所未见的病变\n以冰人的科技无法查出病因\n但值得庆幸的是\n这种病变并没有让你失去什么\n反而让你的皮肤拥有了抵御阳光的能力\n世上出现了一个不怕阳光的病人\n这个消息很快被传开\n你是病人的希望\n这一次你确确实实从首领眼中看到了喜悦和希望\n尽管不知缘由\n但你也笑了\n与首领独处时\n你才能发觉他也是个老人的事实\n他嘘寒问暖就像个普通的长辈\n但某一刻\n他突然郑重其事地问\n你想成为冰人的英雄",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/67476974938816884775d6052590a0ed59b3eb0f0cfd3523d0?auth_key=1786758325-1ffec8f6792747a78f0829c99e111170-0-974110e7a5660a5f230ce795b42e5258",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388169084": {
+      "cid": 388169084,
+      "text": "你满怀期待地等待\n阿美只是去了其他地方\n但他最后也没有出现\n等人们找到他时\n他已经死了\n阿美因你而死\n你心里时常愧疚\n长时间的精神负担\n让你无法奔跑\n你被迫离开了那所学校\n回到了小镇\n往后的人生\n你一直活得浑浑噩噩\n10年20年70年\n你活到了冰冻星球被毁灭的那天",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/67476974938816908490b7850fedd888d3709f906b25fc91cb?auth_key=1786758326-73c6e59c74a647a2b83ad609e832e4e8-0-0df4fa25a5606795a61b7ff25e2a1e86",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388169190": {
+      "cid": 388169190,
+      "text": "你接受了他的邀请\n你第一次发现阿美还有机械方面的天赋\n你们耗时5年\n将那个飞行器从图纸变成了现实\n5年在冰人300年的寿命里并不算长\n你们的热血也还没被消磨殆尽\n在一个平静的夜晚\n你们驾驶着飞行器朝着地球出发了\n当你推动旋钮飞行器缓缓上升时\n那是你们一生中最激动的时刻\n望向窗外\n你第一次以这种视角观察着自己生活的星球\n它比在陆地时看到的更壮观\n也更珍视这样的家乡\n你更不容许被人类摧毁\n阿美让你快回头\n不知不觉你们已经接近了地球\n此时正有两束激光自地球表面朝你们射来\n你迅速转向\n成功规避\n紧接着又冒出几架飞行器对你们进行阻挠\n不过你通过高超的驾驶技术\n顺利将他们甩在身后\n飞船成功降落在地球表面的移动建筑上\n地球的表面被钢铁和玻璃覆盖\n比你们在望远镜里看到的更冰冷黑暗\n不过你们并未在周围看到人类的身影\n与阿美猜测的一样\n这是地球的最外层\n而人类应该生活在这层铁皮之下\n很快你们在周围发现了一扇门\n你们走了进去\n这是一条通道\n似乎能通向铁皮内部。尽头的黑暗中走出一个人类\n这是你们第一次见到真正的人类\n这个人类用你们的语言说\n到此为止了\n你们身上带着炸弹\n不能再继续前进",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/67476974938816919048e9917541a76fa5c1b561b5cfd79bdf?auth_key=1786758327-37518c40b488486c90e98230cedbf29c-0-7d0f8069450290d57b4c975e23f83603",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388169370": {
+      "cid": 388169370,
+      "text": "你拒绝了她的邀请\n阿美用了半年的时间把飞行器从图纸变成了现实\n起飞那天你去看了他的飞行器\n成功降落在了地球\n至于后面发生了什么\n你就不知道了\n只是自那天以后\n原本说用于联系的通讯设备也从没传来过消息\n往后的人生\n你一直活得浑浑噩噩\n但你仍会时不时看向地球\n不切实际地期待着什么\n10年20年\n70年\n你活到了冰冻星球被毁灭的那天",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388169370933f321b534e1b42a4174e75d49d4d81?auth_key=1786758328-d1f84e4962084e898bf374b7c4972f51-0-e6d7a3183c8c3a24a26b1a49e0f488fd",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388169495": {
+      "cid": 388169495,
+      "text": "你拒绝了他的邀请\n阿美用了半年的时间把飞行器从图纸变成了现实\n起飞那天你去看了他的飞行器\n成功降落在了地球\n至于后面发生了什么\n你就不知道了\n只是自那天以后\n原本说用于联系的通讯设备也从没传来过消息\n往后的人生\n你一直活得浑浑噩噩\n但你仍会时不时看向地球\n不切实际地期待着什么\n某天你用望远镜看到地球上飞着一个飞艇\n而那个飞艇上竟然印着阿美的照片\n以后想来你仍觉得不可思议\n你想应该是看错了\n10年20年70年\n你活到了冰冻星球被毁灭的那天",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881694954e4facaf0afa9910ecd2753e7c038960?auth_key=1786758329-b0465525a83a45cca035cf475f6243cc-0-58beaf86408f128040e00ccdfeaab36b",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388169671": {
+      "cid": 388169671,
+      "text": "你本能地点头\n首领说\n你知道我们为什么要练习跑步\n你又摇头\n25年前\n人类出现\n迫使我们做出选择\n人类的科技我们无法比拟\n为了文明得以延续\n我们选择了挑战\n于是早已做好了顺从人类的打算\n得到答复后\n总统一笑\n做出思考状\n嘴里嘀咕着\n我想想该给你们什么挑战\n好\n真人秀永远不能少的就是折磨嘉宾的环节\n很快总统似乎有了主意\n观测表明你们这个种族很善于奔跑\n那就来一场前所未有的长跑吧\n总统透过玻璃\n看着远处与地球大小相近的冰冻星球\n和那片辽阔的大陆\n不借助任何辅助\n仅凭肉体沿着这颗星球的海岸线跑上一圈\n如果有冰人能完成这项挑战\n我们将立刻离开\n总统看着病人绝望的表情\n很高兴\n他深知设定一个不可能完成的目标\n然后看着嘉宾挣扎\n也是真人秀最大的看点\n待摄影机捕捉完这些绝望的表情后\n总统又开了口\n我们人类最不缺的就是时间\n我可以给你们100年的准备期限\n百年以后如果没有冰人能做到\n你们这颗星球就将彻底消失在宇宙中\n首领讲完了那个发生在25年前的故事\n或许是因为他眼中的希望\n让你没有被那个不可能完成的目标吓到\n首领看着你的表现\n很高兴\n地球上的男孩看着投影画面\n在心里自言自语\n我们为什么要这么折磨那些冰块人\n一旁的姐姐则是直接将此刻的想法说了出来\n以这些病人的科技水平\n他们不可能在100年内\n培育出速度和耐力达标的变异者\n而且直到现在\n他们甚至都还没那个打算\n现在这副身体\n他们练到死也不可能完成挑战",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881696719f2f475132ec4232086cf89e0253db88?auth_key=1786758331-c7efa252c1534b19b59742a203051165-0-0626a5c0e9002757b43daa958fb0ce10",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388169891": {
+      "cid": 388169891,
+      "text": "你说不想\n首领突然抓着你的肩膀说\n你必须想\n你必须要成为英雄\n你被他的气势吓到了\n默默地点了点头\n他这才松开你\n他说你知道我们为什么要练习跑步\n你又摇头\n25年前\n人类出现\n迫使我们做出选择\n人类的科技我们无法比拟\n为了文明得以延续\n我们选择了挑战\n于是早已做好了顺从人类的打算\n得到答复后\n总统一笑\n做出思考状\n嘴里嘀咕着\n我想想该给你们什么挑战\n好\n真人秀永远不能少的就是折磨嘉宾的环节\n很快总统似乎有了主意\n观测表明你们这个种族很善于奔跑\n那就来一场前所未有的长跑吧\n总统透过玻璃\n看着远处与地球大小相近的冰冻星球\n和那片辽阔的大陆\n不借助任何辅助\n仅凭肉体沿着这颗星球的海岸线跑上一圈\n如果有冰人能完成这项挑战\n我们将立刻离开\n总统看着病人绝望的表情\n很高兴\n他深知设定一个不可能完成的目标\n然后看着嘉宾挣扎\n也是真人秀最大的看点\n待摄影机捕捉完这些绝望的表情后\n总统又开了口\n我们人类最不缺的就是时间\n我可以给你们100年的准备期限\n百年以后如果没有冰人能做到\n你们这颗星球就将彻底消失在宇宙中\n首领讲完了那个发生在25年前的故事\n或许是因为首领眼中的希望\n让你没有被那个不可能完成的目标吓到\n首领看着你的表现\n很高兴\n地球上的男孩看着投影画面\n在心里自言自语\n我们为什么要这么折磨那些冰块人\n一旁的姐姐则是直接将此刻的想法说了出来\n以这些病人的科技水平\n他们不可能在100年内\n培育出速度和耐力达标的变异者\n而且直到现在\n他们甚至都还没那个打算\n现在这副身体\n他们练到死也不可能完成挑战",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388169891a83c9bb78cea34cb26dd210cb333b121?auth_key=1786758332-8137c1675fd14457aaf8773c9abf5a57-0-f5971f3bf4a48e6804825e93b5409916",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170170": {
+      "cid": 388170170,
+      "text": "你不会杀我们的\n否则你早该动手\n还有别忘了我身上的炸弹\n必要时刻我会与你同归于尽的\n人类说\n你太低估我们了\n你那原始的炸药只会炸死你们自己\n除此之外\n甚至连墙壁都造不出一丝划痕\n而我开不开枪\n完全取决于你们接下来的选择\n因为之前闯进地球那一路的精彩表现\n全球几十亿人都在为你们欢呼\n当然你们得明白那点象征性的小阻挠\n只不过是节目效果罢了\n人类扔出两个玩偶\n那玩偶的模样正是你和阿美\n看看你们现在有多火\n你们的周边产品已经被订购了上千万份\n我给你们的第一个选择就是留在地球上成为明星\n靠你们这张脸\n你们能过得很舒服\n另一个选择就是我现在开枪\n当场打死你们\n或者你们自己引爆炸弹离开\n你看阿美，她眼神中充满着愤怒\n他给你使了个眼色\n那是准备出手攻击的意思",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388170170d81a594964e5c656168276b4d44c44a6?auth_key=1786758332-efc3b185f14f4cb6b8951cd31e392fe5-0-e9a0e0291b0ebd33b0ba43f3f4904b6d",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170301": {
+      "cid": 388170301,
+      "text": "你疑惑他怎么会知道\n人类翻了个白眼\n似乎连解释的打算都没有\n你威胁他\n如果不放下武器\n你就引爆炸弹\n人类说你太低估我们了\n你那原始的炸药只会炸死你们自己\n除此之外\n甚至连墙壁都造不出一丝划痕\n而我开不开枪\n完全取决于你们接下来的选择\n因为之前闯进地球那一路的精彩表现\n全球几十亿人都在为你们欢呼\n当然你们得明白那点象征性的小阻挠\n只不过是节目效果罢了\n人类扔出两个玩偶\n那玩偶的模样正是你和阿美\n看看你们现在有多火\n你们的周边产品已经被订购了上千万份\n我给你们的第一个选择就是留在地球上成为明星\n靠你们这张脸\n你们能过得很舒服\n另一个选择就是我现在开枪\n当场打死你们\n或者你们自己引爆炸弹\n你看见阿美\n她眼神中充满了愤怒\n他给你使了个眼色\n那是准备出手攻击的意思",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388170301675020730aa962a0a0b21b8efbc34470?auth_key=1786758333-498cff28ac904d49945bfcb6a89571c1-0-2bd69b20cee9592b04e9543eab7ff567",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170445": {
+      "cid": 388170445,
+      "text": "男孩小声嘀咕也不是没可能\n毕竟他们跑步很厉害\n转眼过去10年\n在冰人300余年的寿命里\n10年不算长也不算短\n经过这10年\n阳光不再让你恐惧\n你熟悉了在灼热光线下跑步的感觉\n你顶着烈日跑过空旷的街道\n你没有固定的路线\n任由双脚带着你往前跑\n你跑过了10年前训练的学校\n那里早已荒废\n你了解那些跑者\n不是他们放弃了\n是这所学校被放弃了\n或者说全民跑步的方案被放弃了\n病人们有了新的目标\n跑步不再被提倡\n跑步的人越来越少\n全民跑步的热潮变成了全民工作的热潮\n人们都去了远方\n听说那里有了做不完的工作\n太阳落山后不久，你已跑回了家乡的小镇\n这里比10年前荒了\n大部分居民远走他乡\n去远方工作了\n剩下这部分人也有了远行的打算\n回家途中\n你遇到了阿美\n她低着头\n声音很小\n我分配到了远方的工作\n我要走了\n她最后那声再见\n带着哭腔\n等你回过神时\n只剩一个背影",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388170445bc946c6be870804f8c0b91c095d4bd28?auth_key=1786758334-5142c5ec954b491bbf7955389db102d6-0-6b5d07f8626f94481292281830f7b9da",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170634": {
+      "cid": 388170634,
+      "text": "男孩虽不情愿\n但也不得不承认\n姐姐说的确实没错\n转眼过去10年\n在冰人300余年的寿命里\n10年不算长也不算短\n经过这10年\n阳光不再让你恐惧\n你熟悉了在灼热光线下跑步的感觉\n你顶着烈日跑过空旷的街道\n你没有固定的路线\n任由双脚带着你往前跑\n你跑过了10年前训练的学校\n那里早已荒废\n你了解那些跑者\n不是他们放弃了\n是这所学校被放弃了\n或者说全民跑步的方案被放弃了\n病人们有了新的目标\n跑步不再被提倡\n跑步的人越来越少\n全民跑步的热潮变成了全民工作的热潮\n人们都去了远方\n听说那里有了做不完的工作\n太阳落山后不久，你已跑回了家乡的小镇\n这里比10年前荒了\n大部分居民远走他乡\n去远方工作了\n剩下这部分人也有了远行的打算\n回家途中\n你遇到了阿美\n她低着头\n声音很小\n我分配到了远方的工作\n我要走了\n她最后那声再见\n带着哭腔\n等你回过神时\n只剩一个背影",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881706348959b4d9d02345b6d82fc41e1f897bcf?auth_key=1786758334-d340e3cc6fd84f9f9bc7bee357e9f5d5-0-46d83e5c74a59f5a868bd097d7e98da4",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170833": {
+      "cid": 388170833,
+      "text": "你稍一犹豫\n阿美却已撞上去\n引爆了身上的炸弹\n一切发生在瞬间\n当四散的冰晶从你眼前飞过时\n你才反应过来\n阿美已经死了\n那人类从尘埃中走出来\n身上毫发无损\n他看着你\n似乎在等待你的选择",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881708338270b42cdb433cd75e5168ab27380b7b?auth_key=1786758336-c2033fe8f9574faabfc8888340121bfb-0-612e55319cf99b2ec36a6c177a5d307d",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170887": {
+      "cid": 388170887,
+      "text": "你和阿美同时冲了出去\n那人类动也不动\n就站在那\n但无论如何攻击你的拳头都碰不到\n人类扣下扳机之前\n你看阿美将手摸向了炸弹\n那一刻\n你竟没感到恐惧\n也毫不迟疑\n一同引爆了炸弹",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881708879d188bab1a070d44cd4715e64bad1863?auth_key=1786758337-fce2b648ad734fb09e666351c571c81e-0-92b2bf452a49ed72204fb564b6f54892",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388170944": {
+      "cid": 388170944,
+      "text": "",
+      "textSource": null,
+      "language": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    },
+    "388170966": {
+      "cid": 388170966,
+      "text": "你站在巨大的落地窗前\n看着远方的冰冻星球\n你将亲眼见证故乡的消亡",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388170966abc84aeff4aa06ba45689bfc615d16a8?auth_key=1786758341-43c72e9cdd2946c18348b3255566ffb3-0-b4cb73bcd0bc4cfaf20ffb3dea1e0790",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388171044": {
+      "cid": 388171044,
+      "text": "你目送阿美离开\n最终也没有开口\n你阴着脸对首领说\n不想干了\n首领安抚\n跑下去吧\n你会成为英雄的\n他这种仿佛在哄孩子的回答\n让你彻底爆发\n此时在你眼中\n她不再是首领\n只是个招人厌的老头\n你将压抑已久的话都说了出来\n”你从一开始就错了\n海岸线有200000km长\n相当于绕着这颗星球跑五圈\n想通过普通的肉体训练完成这个挑战\n简直痴人说梦“\n你消沉了两天\n没人来打扰你\n但跑步早已成了习惯\n你还是继续跑了下去\n时间转眼过了20年\n你也麻木地跑了20年\n小镇只剩你一个人\n所有人都去了远方工作\n起初几年你和阿美还有些联系\n后来她说自己工作越来越忙\n联系也断了\n你为自己放了几天的假\n你去远方找了阿美\n她好像从来就没有变过\n但不可否认你们都已经长大了\n你想阿美应该已经在这结了婚\n毕竟她也到了那个年纪\n但现在才知道她还是孤身一人\n这城市人很多\n阿美他们在建造巨大的烟囱\n那些烟囱遍布大地\n阿美说\n这只是雏形\n未来还要用几十年的时间来完善它\n在离开之前\n你心里憋着一句话\n一直想对阿美说",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388171044de7ab25fb1dd19a3b0b207dccaaeb61a?auth_key=1786758339-0f441a502a084edb808336bcce05d2f5-0-a37ea754816f03ed6507257a64a0be90",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388171234": {
+      "cid": 388171234,
+      "text": "你说我和你一起走\n阿美脚步停了下来\n他犹豫着说\n可首领要你继续练习\n跑步的这种练习毫无意义\n到头来终是一死\n还不如我们一起平静地度过这最后的时光\n你和阿美逃走\n逃离了使命的约束\n但你很快发现这一举动的后果比想象中更严重\n首领在你失踪后的第三天\n发布了最高级的通缉令\n甚至不惜出动军队\n要将你抓获\n你知道已经没有退路可言\n好在冰冻星球拥有大片未开发的区域\n你们辗转来到了冰块丛林\n在这里建起房子\n没人能找到你们\n10年20年70年\n你们一起生活到了冰冻星球被毁灭的那天\n你们依靠在一起\n光线洒下\n从容迎接了死亡",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/6747697493881712341f1c98e77ebe00f11147a61af7f08827?auth_key=1786758338-f1af9c829622410d925a84467b7b754c-0-969761bd82929d5d45a1bb699dd9f305",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388171383": {
+      "cid": 388171383,
+      "text": "你最终也没有开口\n但看着阿美介绍工作成果时开心的模样\n你也释怀了\n你正要走远\n阿美叫住了你\n她问你还在跑步吗\n你一愣\n那还算跑步吗\n那只是在重复一项乏味的任务\n你笑了笑\n还在跑\n但是阿美打断你的话\n那就继续跑下去吧\n那不是你热爱的事吗\n你沿着海岸线向前奔跑\n不求成绩\n也不为什么\n只是如最初那样做着自己热爱的事\n10年不长\n几十年也是一转眼\n在挑战期限的最后几年\n阿美发来了一张照片\n照片里那些烟囱完成了\n他站在烟囱前笑着\n面容多了一层时间留下的痕迹\n但依旧那么美\n首领带着你来到一座方块房子\n告诉你以后就住在这里\n你走进这栋奇怪房子",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/674769749388171383933f8664df075da921110d6e8b4a62a7?auth_key=1786758343-01f6f23a821a43e4be6ab6517e5012e6-0-fbf33734aa8424392fafc5c7f28bf85b",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "388171823": {
+      "cid": 388171823,
+      "text": "你说出了那句话\n要不一起走\n阿美却笑着拒绝了\n她说来到这里\n我才发现\n比起跑步\n我对这些图纸更感兴趣\n你正要走远\n阿美叫住了你\n他问你还在跑步吗\n你一愣\n那还算跑步吗\n那只是在重复一项乏味的任务\n你笑了笑\n还在跑\n但是阿美打断你的话\n那就继续跑下去吧\n那不是你热爱的事吗\n你沿着海岸线向前奔跑\n不求成绩\n也不为什么\n只是如最初那样做着自己热爱的事\n10年不长\n几十年也是一转眼\n在挑战期限的最后几年\n阿美发来了一张照片\n照片里那些烟囱完成了\n他站在烟囱前笑着\n面容多了一层时间留下的痕迹\n但依旧那么美\n首领带着你来到一座方块房子\n告诉你以后就住在这里\n你走进这栋奇怪房子",
+      "textSource": "bilibili-player-subtitle",
+      "language": "中文",
+      "subtitleUrl": "https://aisubtitle.hdslb.com/bfs/ai_subtitle/prod/67476974938817182301581c25192bd17c42c86106facc278f?auth_key=1786758342-b1f8e40064764b399172ea14578e75de-0-f43396b3b3ced6942526e617e50d8fb4",
+      "hasSubtitle": true,
+      "needsTranscription": false
+    },
+    "true-end-slide-01": {
+      "cid": null,
+      "text": "姐姐：“那是冰人的胚胎状态\n它们大概率在考虑后事了吧”",
+      "textSource": "editorial",
+      "language": "中文",
+      "subtitleUrl": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    },
+    "true-end-slide-02": {
+      "cid": null,
+      "text": "首领：“还记得挑战的内容吗？”\n你回答：“沿着这个星球的海岸线跑上一圈。”",
+      "textSource": "editorial",
+      "language": "中文",
+      "subtitleUrl": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    },
+    "true-end-slide-03": {
+      "cid": null,
+      "text": "弟弟：“他们想逃走吗？”\n姐姐：“不会的。一旦他们有任何一个个体尝试逃出他们的星系，就会被直接击毙，他们这样无异于葬送了整个星球。”\n",
+      "textSource": "editorial",
+      "language": "中文",
+      "subtitleUrl": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    },
+    "true-end-slide-04": {
+      "cid": null,
+      "text": "弟弟：“不，他们成功了。”",
+      "textSource": "editorial",
+      "language": "中文",
+      "subtitleUrl": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    },
+    "true-end-slide-05": {
+      "cid": null,
+      "text": "总统也说出了同样的话：\n他们成功了。",
+      "textSource": "editorial",
+      "language": "中文",
+      "subtitleUrl": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    },
+    "true-end-finale": {
+      "cid": null,
+      "text": "",
+      "textSource": "visual-ending",
+      "language": null,
+      "subtitleUrl": null,
+      "hasSubtitle": false,
+      "needsTranscription": false
+    }
+  },
+  "crawlErrors": []
+}

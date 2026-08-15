@@ -5,9 +5,20 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, File, HTTPException, Path as ApiPath, Response, UploadFile, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    HTTPException,
+    Path as ApiPath,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -39,6 +50,8 @@ from .security import create_access_token, hash_access_token, hash_password, ver
 
 SESSION_TTL = timedelta(days=7)
 MAX_AVATAR_BYTES = 2 * 1024 * 1024
+FRONTEND_DIST_ENV = "USLIKE_FRONTEND_DIST_PATH"
+DEFAULT_FRONTEND_DIST_PATH = Path(__file__).resolve().parents[2] / "dist"
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
@@ -133,10 +146,73 @@ def onboarding_response(module: str, state: dict[str, Any] | None) -> Onboarding
     )
 
 
-def create_app(database_path: str | Path | None = None) -> FastAPI:
-    resolved_path = Path(database_path or os.getenv("USLIKE_DATABASE_PATH", "backend/data/uslike.json"))
-    database = JsonDatabase(resolved_path)
+def resolve_frontend_dist_path(
+    frontend_dist_path: str | Path | None,
+) -> Path | None:
+    environment_path = os.getenv(FRONTEND_DIST_ENV)
+    if frontend_dist_path is not None:
+        configured_path = frontend_dist_path
+        source = "create_app(frontend_dist_path=...)"
+    elif environment_path is not None:
+        configured_path = environment_path
+        source = FRONTEND_DIST_ENV
+    else:
+        configured_path = DEFAULT_FRONTEND_DIST_PATH
+        source = None
+
+    if isinstance(configured_path, str) and not configured_path.strip():
+        raise RuntimeError(f"Frontend dist path from {source} must not be empty")
+
+    resolved_path = Path(configured_path).expanduser().resolve()
+    index_path = resolved_path / "index.html"
+
+    if resolved_path.is_dir() and index_path.is_file():
+        resolved_index_path = index_path.resolve()
+        try:
+            resolved_index_path.relative_to(resolved_path)
+        except ValueError as error:
+            raise RuntimeError(
+                f"Frontend dist index.html from {source or 'the default path'} "
+                f"resolves outside the dist directory: {resolved_index_path}"
+            ) from error
+        return resolved_path
+    if source is None:
+        # A source checkout may run the API before the frontend has been built.
+        return None
+
+    if not resolved_path.exists():
+        reason = "does not exist"
+    elif not resolved_path.is_dir():
+        reason = "is not a directory"
+    else:
+        reason = "does not contain index.html"
+    raise RuntimeError(f"Frontend dist path from {source} {reason}: {resolved_path}")
+
+
+def create_app(
+    database_path: str | Path | None = None,
+    *,
+    frontend_dist_path: str | Path | None = None,
+) -> FastAPI:
+    resolved_path = Path(
+        database_path or os.getenv("USLIKE_DATABASE_PATH", "backend/data/uslike.json")
+    ).expanduser().resolve()
+    resolved_frontend_dist_path = resolve_frontend_dist_path(frontend_dist_path)
     uploads_directory = resolved_path.parent / "uploads"
+    if resolved_frontend_dist_path is not None:
+        for private_label, private_path in (
+            ("database", resolved_path),
+            ("uploads directory", uploads_directory.resolve()),
+        ):
+            try:
+                private_path.relative_to(resolved_frontend_dist_path)
+            except ValueError:
+                continue
+            raise RuntimeError(
+                f"Frontend dist must not contain the {private_label}: {private_path}"
+            )
+
+    database = JsonDatabase(resolved_path)
     avatar_directory = uploads_directory / "avatars"
     avatar_directory.mkdir(parents=True, exist_ok=True)
     app = FastAPI(
@@ -155,9 +231,39 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
     )
     app.state.database = database
     app.state.avatar_directory = avatar_directory
+    app.state.frontend_dist_path = resolved_frontend_dist_path
     app.mount("/api/uploads", StaticFiles(directory=uploads_directory), name="uploads")
+
+    async def frontend_aware_http_exception_handler(
+        request: Request,
+        error: StarletteHTTPException,
+    ) -> Response:
+        if (
+            resolved_frontend_dist_path is not None
+            and error.status_code == status.HTTP_404_NOT_FOUND
+            and request.method in {"GET", "HEAD"}
+        ):
+            frontend_path = request.url.path.lstrip("/")
+            first_path_segment = frontend_path.partition("/")[0]
+            if first_path_segment not in {"api", "docs", "redoc", "openapi.json"}:
+                requested_path = (resolved_frontend_dist_path / frontend_path).resolve()
+                try:
+                    requested_path.relative_to(resolved_frontend_dist_path)
+                except ValueError:
+                    pass
+                else:
+                    if requested_path.is_file():
+                        return FileResponse(requested_path)
+                    if first_path_segment != "assets":
+                        frontend_index_path = (
+                            resolved_frontend_dist_path / "index.html"
+                        ).resolve()
+                        return FileResponse(frontend_index_path, media_type="text/html")
+
+        return await http_exception_handler(request, error)
+
     app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
-    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+    app.add_exception_handler(StarletteHTTPException, frontend_aware_http_exception_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
     app.add_middleware(
         CORSMiddleware,

@@ -9,6 +9,7 @@ import {
   loadAuthSession,
   logoutAndClearSession,
   normalizePhone,
+  resolveApiAssetUrl,
   saveAuthSession,
   updateStoredAuthUser,
   uploadAccountAvatar,
@@ -32,6 +33,14 @@ test("phone validation matches backend rules before onboarding starts", () => {
   assert.equal(validatePhone("12+345678"), false);
   assert.equal(validatePhone("1380013800a"), false);
   assert.equal(validatePhone("123456789012345678901"), false);
+});
+
+test("API upload assets work for same-origin and independently hosted APIs", () => {
+  const path = "/api/uploads/story/endings/example.webp";
+  assert.equal(resolveApiAssetUrl(path, ""), path);
+  assert.equal(resolveApiAssetUrl(path, "https://api.uslike.test"), `https://api.uslike.test${path}`);
+  assert.equal(resolveApiAssetUrl(path, "https://api.uslike.test/"), `https://api.uslike.test${path}`);
+  assert.equal(resolveApiAssetUrl("https://cdn.test/ending.webp", "https://api.uslike.test"), "https://cdn.test/ending.webp");
 });
 
 test("registration and values-test payloads are decoupled", () => {

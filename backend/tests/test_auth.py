@@ -14,11 +14,6 @@ def database_path(tmp_path):
 
 
 @pytest.fixture
-def anyio_backend():
-    return "asyncio"
-
-
-@pytest.fixture
 async def client(database_path):
     app = create_app(database_path)
     transport = httpx.ASGITransport(app=app)
@@ -71,7 +66,7 @@ async def test_register_persists_complete_private_metadata(client, database_path
 
     persisted_text = database_path.read_text(encoding="utf-8")
     persisted = json.loads(persisted_text)
-    assert persisted["metadata"]["schema_version"] == 2
+    assert persisted["metadata"]["schema_version"] == 3
     assert persisted["users"][0]["real_name"] == {"status": "unverified", "verified_at": None}
     assert persisted["users"][0]["values_test"]["answers"] == []
     assert persisted["users"][0]["values_test"]["completed_at"] is None

@@ -11,7 +11,6 @@ import {
   Image,
   ImagePlus,
   Link,
-  Lock,
   LogOut,
   MessageCircle,
   Mic,
@@ -36,14 +35,28 @@ import {
   Users,
   Video,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { filterFeedByChannel, filterInteractionsByFriendship } from "../utils/feedFilter.js";
 import { FRIEND_INDEX_LABELS, groupFriendsByInitial } from "../utils/friendIndex.js";
 import Avatar from "./Avatar.jsx";
 import AccountSettingsView from "./AccountSettingsView.jsx";
+import { CheckInCard } from "./CoinWalletUI.jsx";
 import Modal from "./Modal.jsx";
+import PublicProfileDetails, { normalizePublicProfile } from "./PublicProfileDetails.jsx";
 
-export function FeedView({ feed }) {
+const getFeedAuthorProfile = (item) => normalizePublicProfile({
+  id: item.authorId || `feed-author-${item.user}`,
+  nickname: item.user,
+  avatar: item.avatar,
+  age: item.age,
+  gender: item.gender,
+  region: item.region,
+  interests: item.interests || item.tags,
+  vibe: item.bio || item.status,
+  status: item.status,
+});
+
+export function FeedView({ feed, onOpenUser }) {
   const [showNonFriendComments, setShowNonFriendComments] = useState(false);
   const visibleFeed = useMemo(
     () => filterFeedByChannel(feed, "friends"),
@@ -128,16 +141,36 @@ export function FeedView({ feed }) {
         {visibleFeed.length ? visibleFeed.map((item) => {
           const visibleLikes = filterInteractionsByFriendship(item.likes, showNonFriendComments);
           const visibleComments = filterInteractionsByFriendship(item.comments, showNonFriendComments);
+          const author = getFeedAuthorProfile(item);
 
           return (
           <article key={item.id} className="border-b border-stone-100/90 bg-white/64 px-5 py-6 last:border-b-0">
             <div className="flex items-start gap-3">
-              <Avatar src={item.avatar} name={item.user} />
+              <button
+                type="button"
+                onClick={(event) => onOpenUser?.(author, event.currentTarget)}
+                aria-label={`查看 ${item.user} 的动态`}
+                data-profile-user-id={author.id}
+                data-profile-trigger="avatar"
+                className="shrink-0 rounded-full transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+              >
+                <Avatar src={item.avatar} name={item.user} />
+              </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-semibold text-stone-800">{item.user}</h3>
+                      <h3>
+                        <button
+                          type="button"
+                          onClick={(event) => onOpenUser?.(author, event.currentTarget)}
+                          data-profile-user-id={author.id}
+                          data-profile-trigger="name"
+                          className="rounded text-lg font-semibold text-stone-800 transition hover:text-[#6966dd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+                        >
+                          {item.user}
+                        </button>
+                      </h3>
                       {item.badge ? (
                         <span className="glass-choice-active rounded-full px-2 py-1 text-[11px] font-semibold">
                           {item.badge}
@@ -222,62 +255,161 @@ export function FeedView({ feed }) {
   );
 }
 
+export function UserDynamicsView({ profile, feed, onBack }) {
+  const normalized = normalizePublicProfile(profile);
+  const userPosts = useMemo(
+    () => feed.filter((item) => {
+      const author = getFeedAuthorProfile(item);
+      return author.id === normalized.id || author.nickname === normalized.nickname;
+    }),
+    [feed, normalized.id, normalized.nickname],
+  );
+
+  return (
+    <section className="mx-auto w-full max-w-6xl pb-32 pt-24">
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/64 px-4 py-2.5 text-sm font-semibold text-stone-700 shadow-sm backdrop-blur-xl transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
+      >
+        <ArrowLeft size={18} aria-hidden="true" />
+        返回动态
+      </button>
+
+      <div className="grid items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <aside
+          className="selected-galaxy-card rounded-[32px] border border-white/80 p-6 shadow-soft backdrop-blur-xl lg:sticky lg:top-24"
+          style={{ "--room-color": "#8b82e8" }}
+        >
+          <div className="relative z-10">
+            <div className="flex items-center gap-4">
+              <Avatar src={normalized.avatar} name={normalized.nickname} size="xl" glow />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-[#6b5ee7]">用户主页</p>
+                <h1 className="mt-1 truncate text-3xl font-semibold text-stone-900">
+                  {normalized.nickname}
+                </h1>
+                <p className="mt-1 text-sm text-stone-500">{normalized.region}</p>
+              </div>
+            </div>
+            <p className="mt-5 rounded-2xl bg-[#f4f6ff]/90 px-4 py-3 text-sm leading-6 text-stone-600">
+              {normalized.vibe}
+            </p>
+            <PublicProfileDetails profile={normalized} className="mt-4" />
+          </div>
+        </aside>
+
+        <div className="overflow-hidden rounded-[34px] border border-white/76 bg-white/58 shadow-soft backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/70 bg-white/48 px-5 py-4">
+            <div>
+              <h2 className="text-xl font-semibold text-stone-800">{normalized.nickname} 的动态</h2>
+              <p className="mt-1 text-xs text-stone-400">从相遇到日常，继续认识 TA</p>
+            </div>
+            <span className="rounded-full bg-[#f4f2ff] px-3 py-1.5 text-xs font-semibold text-[#6b5ee7]">
+              {userPosts.length} 条
+            </span>
+          </div>
+
+          {userPosts.length ? userPosts.map((item) => (
+            <article key={item.id} className="border-b border-stone-100/90 bg-white/64 px-6 py-6 last:border-b-0">
+              <div className="flex items-center justify-between gap-4 text-sm text-stone-400">
+                <span>{item.time}</span>
+                {item.badge ? (
+                  <span className="glass-choice-active rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-4 whitespace-pre-line text-xl leading-8 text-stone-900">{item.text}</p>
+              {item.tags?.length ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {item.tags.map((tag) => (
+                    <span key={tag} className="rounded-full bg-[#f4f6ff] px-3 py-1.5 text-xs font-semibold text-[#5d6387]">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <div className="mt-5 flex justify-end gap-5 text-stone-600">
+                <button type="button" className="rounded-full p-2 transition hover:bg-white hover:text-[#6966dd]" aria-label="赞">
+                  <ThumbsUp size={22} />
+                </button>
+                <button type="button" className="rounded-full p-2 transition hover:bg-white hover:text-[#6966dd]" aria-label="评论">
+                  <MessageCircle size={22} />
+                </button>
+                <button type="button" className="rounded-full p-2 transition hover:bg-white hover:text-[#6966dd]" aria-label="分享">
+                  <Share2 size={22} />
+                </button>
+              </div>
+            </article>
+          )) : (
+            <div className="grid min-h-64 place-items-center px-6 py-12 text-center">
+              <div>
+                <Bell className="mx-auto text-[#7770d8]" size={28} aria-hidden="true" />
+                <p className="mt-3 font-semibold text-stone-700">TA 还没有发布动态</p>
+                <p className="mt-1 text-sm text-stone-400">以后再回来看看吧。</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function MessagesView({
   threads,
   games = [],
-  activeFriendId,
-  onActiveFriendChange,
+  activeThreadId: requestedActiveThreadId,
+  onActiveThreadChange,
+  drafts = {},
+  onDraftChange,
+  scrollPositions = {},
+  onScrollPositionChange,
   onSendMessage,
   onStartWaveRoom,
   onToast,
   onOpenStore,
+  wallet,
+  onOpenCheckIn,
+  onCheckIn,
+  onOpenStory,
 }) {
-  const [activeThreadId, setActiveThreadId] = useState(
-    () => threads.find((thread) => thread.friendId === activeFriendId)?.id || threads[0]?.id || null,
-  );
   const [friendActions, setFriendActions] = useState(null);
   const [gamePicker, setGamePicker] = useState(null);
   const [waveRoomPicker, setWaveRoomPicker] = useState(null);
   const [toolPanelOpen, setToolPanelOpen] = useState(false);
   const [callOptionsOpen, setCallOptionsOpen] = useState(false);
-  const [draft, setDraft] = useState("");
   const imageInputRef = useRef(null);
+  const messageListRef = useRef(null);
+  const activeThreadId = threads.some((thread) => thread.id === requestedActiveThreadId)
+    ? requestedActiveThreadId
+    : threads[0]?.id || null;
   const activeThread = threads.find((thread) => thread.id === activeThreadId) || null;
   const isAssistantThread = activeThread?.id === "thread-welcome";
-  const conversationCount = useMemo(
-    () => activeThread?.messages.filter((message) => message.from === "me" || message.from === "them").length || 0,
-    [activeThread],
-  );
-  const textGameUnlocked = conversationCount >= 50;
+  const draft = drafts[activeThreadId] || "";
 
   useEffect(() => {
     setToolPanelOpen(false);
     setCallOptionsOpen(false);
     setWaveRoomPicker(null);
-    setDraft("");
   }, [activeThreadId]);
 
-  useEffect(() => {
-    if (!threads.length) {
-      setActiveThreadId(null);
-      return;
-    }
-
-    if (!activeThreadId || !threads.some((thread) => thread.id === activeThreadId)) {
-      setActiveThreadId(threads[0].id);
-    }
-  }, [activeThreadId, threads]);
-
-  useEffect(() => {
-    if (!activeFriendId) return;
-    const targetThread = threads.find((thread) => thread.friendId === activeFriendId);
-    if (targetThread) setActiveThreadId(targetThread.id);
-  }, [activeFriendId, threads]);
+  useLayoutEffect(() => {
+    const list = messageListRef.current;
+    if (!list || !activeThreadId) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      list.scrollTop = scrollPositions[activeThreadId] ?? list.scrollHeight;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  // Restore once when the routed thread mounts/changes. Scroll events update the
+  // parent cache, but must not continually drive the live scroll position.
+  }, [activeThreadId]);
 
   const submitMessage = () => {
     if (!activeThread || !draft.trim()) return;
     onSendMessage(activeThread.friendId, { type: "text", text: draft.trim() });
-    setDraft("");
+    onDraftChange?.(activeThread.id, "");
     setToolPanelOpen(false);
     setCallOptionsOpen(false);
   };
@@ -298,14 +430,6 @@ export function MessagesView({
   const startCall = (type) => {
     if (!activeThread) return;
     onToast(`正在向 ${activeThread.name} 发起${type}邀请。`);
-  };
-
-  const openTextGame = () => {
-    if (textGameUnlocked) {
-      onToast("双人互动文字游戏已解锁，可以开始一局默契问答。");
-      return;
-    }
-    onToast(`互发 50 条消息后解锁，还差 ${Math.max(0, 50 - conversationCount)} 条。`);
   };
 
   const chatTools = [
@@ -337,39 +461,41 @@ export function MessagesView({
   ];
 
   return (
-    <section className="mx-auto grid w-full max-w-6xl gap-5 pb-32 pt-24 lg:grid-cols-[360px_1fr]">
-      <div className="glass-panel min-h-[560px] rounded-[32px] p-5">
-        <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
-        <div className="space-y-3">
-          {threads.map((thread) => (
-            <button
-              key={thread.id}
-              onClick={() => {
-                setActiveThreadId(thread.id);
-                onActiveFriendChange?.(thread.friendId);
-              }}
-              className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
-                activeThreadId === thread.id ? "ink-glass" : "glass-choice"
-              }`}
-            >
-              <Avatar src={thread.avatar} name={thread.name} />
-              <span>
-                <span className="block font-semibold text-stone-800">
-                  {thread.name}
+    <section className="mx-auto grid w-full max-w-6xl gap-5 pb-32 pt-24 md:h-[100dvh] md:min-h-0 md:grid-cols-[280px_minmax(0,1fr)] md:overflow-hidden lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] mt-5">
+      <div className="card-scroll space-y-5 md:min-h-0 md:overflow-y-auto md:overscroll-contain md:pr-1 [scrollbar-gutter:stable]">
+        <CheckInCard wallet={wallet} onOpen={onOpenCheckIn} onClaim={onCheckIn} />
+        <div className="glass-panel rounded-[32px] p-5">
+          <h2 className="mb-4 text-2xl font-semibold text-stone-800">消息</h2>
+          <div className="space-y-3">
+            {threads.map((thread) => (
+              <button
+                key={thread.id}
+                onClick={() => {
+                  onActiveThreadChange?.(thread);
+                }}
+                className={`flex w-full items-center gap-3 rounded-3xl p-3 text-left transition ${
+                  activeThreadId === thread.id ? "ink-glass" : "glass-choice"
+                }`}
+              >
+                <Avatar src={thread.avatar} name={thread.name} />
+                <span>
+                  <span className="block font-semibold text-stone-800">
+                    {thread.name}
+                  </span>
+                  <span className="mt-1 block text-xs text-stone-500">
+                    {thread.subtitle}
+                  </span>
                 </span>
-                <span className="mt-1 block text-xs text-stone-500">
-                  {thread.subtitle}
-                </span>
-              </span>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="glass-panel min-h-[560px] rounded-[32px] p-5">
+      <div className="glass-panel min-h-[560px] min-w-0 rounded-[32px] p-5 md:-mt-24 md:min-h-0 md:overflow-hidden">
         {activeThread ? (
-          <div className="flex h-full flex-col">
-            <div className="flex items-center gap-3 border-b border-white/70 pb-4">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex shrink-0 items-center gap-3 border-b border-white/70 pb-4">
               {isAssistantThread ? (
                 <Avatar src={activeThread.avatar} name={activeThread.name} />
               ) : (
@@ -394,7 +520,7 @@ export function MessagesView({
               </div>
             ) : null}
             {isAssistantThread ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid shrink-0 gap-3 sm:grid-cols-2">
                 {[
                   { label: "购买月卡", hint: "解锁更多权益" },
                   { label: "个性商城", hint: "装扮头像与聊天空间" },
@@ -402,15 +528,38 @@ export function MessagesView({
                   <button
                     key={item.label}
                     onClick={onOpenStore}
-                    className="ink-glass rounded-3xl px-5 py-4 text-left transition hover:-translate-y-1 hover:brightness-110"
+                    className="assistant-store-action ink-glass text-left transition hover:-translate-y-0.5 hover:brightness-110"
                   >
-                    <span className="block text-base font-semibold text-stone-800">{item.label}</span>
-                    <span className="assistant-action-hint mt-1 block text-sm">{item.hint}</span>
+                    <span className="block text-sm font-semibold text-stone-800">{item.label}</span>
+                    <span className="assistant-action-hint mt-0.5 block text-xs">{item.hint}</span>
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={(event) => onOpenStory?.(activeThread, event.currentTarget)}
+                  data-story-entry-thread-id={activeThread.id}
+                  aria-label="付费进入 AI 互动文游"
+                  title="Demo 模式，不会实际扣费"
+                  className="aurora-dark flex items-center gap-4 rounded-3xl px-5 py-4 text-left text-white shadow-glow transition hover:-translate-y-1 hover:brightness-110 sm:col-span-2"
+                >
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15">
+                    <PenLine size={21} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-base font-semibold">AI 互动文游</span>
+                    <span className="mt-1 block text-sm text-white/70">
+                      进入《冰人文明》 · 付费进入（Demo 不实际扣费）
+                    </span>
+                  </span>
+                  <ChevronRight className="ml-auto shrink-0" size={19} />
+                </button>
               </div>
             ) : null}
-            <div className="flex-1 space-y-3 overflow-auto py-4">
+            <div
+              ref={messageListRef}
+              onScroll={(event) => onScrollPositionChange?.(activeThread.id, event.currentTarget.scrollTop)}
+              className="card-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain py-4 pr-1 [scrollbar-gutter:stable]"
+            >
               {activeThread.messages.map((message, index) => {
                 if (message.from === "system") {
                   return (
@@ -447,7 +596,7 @@ export function MessagesView({
               })}
             </div>
 
-            <div className="mt-4 border-t border-white/70 pt-4">
+            <div className="mt-4 shrink-0 border-t border-white/70 pt-4">
               <input
                 ref={imageInputRef}
                 type="file"
@@ -469,21 +618,15 @@ export function MessagesView({
                     双人游戏
                   </button>
                   <button
-                    onClick={openTextGame}
-                    className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
-                      textGameUnlocked
-                        ? "glass-choice-active"
-                        : "border border-stone-200 bg-white/82 text-stone-800 shadow-sm hover:bg-white"
-                    }`}
-                    title={textGameUnlocked ? "已解锁" : `互发 50 条消息后解锁，当前 ${conversationCount}/50`}
+                    type="button"
+                    onClick={(event) => onOpenStory?.(activeThread, event.currentTarget)}
+                    data-story-entry-thread-id={activeThread.id}
+                    aria-label="付费进入互动文游"
+                    title="Demo 模式，不会实际扣费"
+                    className="glass-choice-active inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition"
                   >
                     <PenLine size={16} />
-                    互动文游
-                    {!textGameUnlocked ? (
-                      <span className="pointer-events-none absolute -right-1 -top-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-stone-200 text-stone-500 shadow-sm">
-                        <Lock size={12} strokeWidth={2.4} />
-                      </span>
-                    ) : null}
+                    付费进入
                   </button>
                   <button
                     onClick={() => setWaveRoomPicker(activeThread)}
@@ -504,7 +647,7 @@ export function MessagesView({
                 </button>
                 <input
                   value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
+                  onChange={(event) => onDraftChange?.(activeThread.id, event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") submitMessage();
                   }}
@@ -615,15 +758,16 @@ export function MessagesView({
 
       {gamePicker ? (
         <Modal title={`和 ${gamePicker.name} 玩什么？`} onClose={() => setGamePicker(null)} width="max-w-md">
+          <p className="mb-4 rounded-2xl bg-[#f4f2ff] px-4 py-3 text-center text-sm font-semibold text-[#6b5ee7]">
+            暂未开放
+          </p>
           <div className="grid grid-cols-2 gap-3">
             {games.map((game) => (
               <button
                 key={game}
-                onClick={() => {
-                  setGamePicker(null);
-                  onToast(`${game} 双人局稍后开放。`);
-                }}
-                className="glass-choice-active rounded-3xl px-5 py-6 text-lg font-semibold transition"
+                type="button"
+                disabled
+                className="cursor-not-allowed rounded-3xl bg-stone-100/80 px-5 py-6 text-lg font-semibold text-stone-400 shadow-sm"
               >
                 {game}
               </button>
@@ -832,9 +976,14 @@ function NewFriendsView({ onBack, onAddContact }) {
   );
 }
 
-export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
+export function FriendsView({
+  friends,
+  onOpenChat,
+  onOpenNewFriends,
+  showNewFriends = false,
+  onShowNewFriends,
+}) {
   const [query, setQuery] = useState("");
-  const [showNewFriends, setShowNewFriends] = useState(false);
   const visibleFriends = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
     if (!normalizedQuery) return friends;
@@ -860,7 +1009,7 @@ export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
   if (showNewFriends) {
     return (
       <NewFriendsView
-        onBack={() => setShowNewFriends(false)}
+        onBack={() => onShowNewFriends?.(false)}
         onAddContact={onOpenNewFriends}
       />
     );
@@ -888,7 +1037,7 @@ export function FriendsView({ friends, onOpenChat, onOpenNewFriends }) {
 
         <button
           type="button"
-          onClick={() => setShowNewFriends(true)}
+          onClick={() => onShowNewFriends?.(true)}
           className="group mt-3 flex w-full items-center gap-4 rounded-[24px] border border-white/70 bg-white/48 p-3 text-left transition hover:bg-white/72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7770d8]/55"
         >
           <span className="aurora-dark grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-glow">

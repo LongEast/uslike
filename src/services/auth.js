@@ -88,9 +88,9 @@ export function toAppUser(apiUser) {
   };
 }
 
-export function resolveApiAssetUrl(url) {
-  if (!url || !url.startsWith("/api/") || !API_BASE_URL) return url;
-  return `${API_BASE_URL.replace(/\/$/, "")}${url}`;
+export function resolveApiAssetUrl(url, apiBaseUrl = API_BASE_URL) {
+  if (!url || !url.startsWith("/api/") || !apiBaseUrl) return url;
+  return `${apiBaseUrl.replace(/\/$/, "")}${url}`;
 }
 
 export function saveAuthSession(authResponse, storage = window.localStorage) {

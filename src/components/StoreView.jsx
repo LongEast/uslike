@@ -446,8 +446,21 @@ function DecorationCard({ product, onPurchase, onEquip, nickname, owned = false,
   );
 }
 
-export default function StoreView({ onBack, onToast, coinBalance, ownedProductIds, onSpendCoins }) {
-  const [section, setSection] = useState("recharge");
+export default function StoreView({
+  onBack,
+  onToast,
+  coinBalance,
+  ownedProductIds,
+  onSpendCoins,
+  section: controlledSection,
+  onSectionChange,
+}) {
+  const [internalSection, setInternalSection] = useState("recharge");
+  const section = controlledSection || internalSection;
+  const setSection = (nextSection) => {
+    setInternalSection(nextSection);
+    onSectionChange?.(nextSection);
+  };
   const nickname = "同频相遇";
   const purchase = (product) => {
     if (product.type !== "bubble" && product.type !== "frame" && product.type !== "text") {

@@ -1295,6 +1295,13 @@ button.ink-glass {
   padding: 12px 22px;
 }
 
+button.assistant-store-action {
+  min-height: 42px;
+  border-radius: 20px;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
 .aurora-dark {
   background:
     linear-gradient(135deg, rgba(37, 76, 180, 0.92), rgba(139, 51, 205, 0.9) 54%, rgba(221, 86, 210, 0.86)),
@@ -1734,6 +1741,12 @@ button.ink-glass {
   background:
     radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--room-color) 18%, transparent), transparent 30%),
     rgba(255, 255, 255, .76);
+}
+
+.selected-galaxy-card--scrollable {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .galaxy-detail-overlay {

@@ -2,11 +2,15 @@ export const CHECK_IN_REWARDS = [1, 1, 2, 2, 3, 3, 5];
 
 export const COIN_STORAGE_KEY = "uslike:coin-wallet-v1";
 export const ROOM_DEPOSIT_STORAGE_KEY = "uslike:room-deposit-v1";
-export const QUICK_EXIT_COUNT_KEY = "quickExitCount";
-export const QUICK_EXIT_WINDOW_KEY = "quickExitWindowStart";
-export const COOLDOWN_UNTIL_KEY = "cooldownUntil";
+export const PENDING_ROOM_DEPARTURE_STORAGE_KEY = "uslike:pending-room-departure-v1";
+export const PENDING_ROOM_DEPARTURE_VERSION = 1;
+export const QUICK_EXIT_COUNT_KEY = "uslike:quick-exit-count-v2";
+export const QUICK_EXIT_WINDOW_KEY = "uslike:quick-exit-window-v2";
+export const COOLDOWN_UNTIL_KEY = "uslike:quick-exit-cooldown-v2";
+export const QUICK_EXIT_LIMIT = 5;
 
 const HOUR = 60 * 60 * 1000;
+const QUICK_EXIT_WINDOW_MS = 60 * 1000;
 
 export const getLocalDateKey = (date = new Date()) => {
   const year = date.getFullYear();
@@ -64,6 +68,140 @@ export const saveRoomDeposit = (deposit) => {
   window.localStorage.setItem("roomId", String(deposit.roomId));
 };
 
+const normalizeDocumentUrl = (value) => {
+  if (typeof value !== "string" || !value) return null;
+  try {
+    const parsed = new URL(value, "https://uslike.invalid");
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
+};
+
+export const createPendingRoomDeparture = ({
+  roomDeposit,
+  roomUrl,
+  departedAt = Date.now(),
+} = {}) => {
+  const normalizedRoomUrl = normalizeDocumentUrl(roomUrl);
+  if (!roomDeposit?.frozen || !roomDeposit.roomId || !normalizedRoomUrl) return null;
+  const enteredAt = Number(roomDeposit.enteredAt);
+  const normalizedDepartureTime = Number(departedAt);
+  return {
+    version: PENDING_ROOM_DEPARTURE_VERSION,
+    roomId: String(roomDeposit.roomId),
+    depositTransactionId: roomDeposit.depositTransactionId
+      ? String(roomDeposit.depositTransactionId)
+      : null,
+    roomUrl: normalizedRoomUrl,
+    departedAt: Number.isFinite(normalizedDepartureTime) ? normalizedDepartureTime : Date.now(),
+    quickExit: Number.isFinite(enteredAt)
+      && Number.isFinite(normalizedDepartureTime)
+      && normalizedDepartureTime >= enteredAt
+      && normalizedDepartureTime - enteredAt < QUICK_EXIT_WINDOW_MS,
+  };
+};
+
+export const savePendingRoomDeparture = (options, storage = globalThis.localStorage) => {
+  const marker = createPendingRoomDeparture(options);
+  if (!marker || !storage) return null;
+  storage.setItem(PENDING_ROOM_DEPARTURE_STORAGE_KEY, JSON.stringify(marker));
+  return marker;
+};
+
+export const loadPendingRoomDeparture = (storage = globalThis.localStorage) => {
+  if (!storage) return null;
+  const marker = safeParse(storage.getItem(PENDING_ROOM_DEPARTURE_STORAGE_KEY), null);
+  if (
+    marker?.version !== PENDING_ROOM_DEPARTURE_VERSION
+    || !marker.roomId
+    || !normalizeDocumentUrl(marker.roomUrl)
+    || !Number.isFinite(Number(marker.departedAt))
+  ) return null;
+  return {
+    ...marker,
+    roomId: String(marker.roomId),
+    depositTransactionId: marker.depositTransactionId
+      ? String(marker.depositTransactionId)
+      : null,
+    roomUrl: normalizeDocumentUrl(marker.roomUrl),
+    departedAt: Number(marker.departedAt),
+    quickExit: Boolean(marker.quickExit),
+  };
+};
+
+export const clearPendingRoomDeparture = (storage = globalThis.localStorage) => {
+  storage?.removeItem(PENDING_ROOM_DEPARTURE_STORAGE_KEY);
+};
+
+export const getDocumentNavigationType = (performanceObject = globalThis.performance) => {
+  const type = performanceObject?.getEntriesByType?.("navigation")?.[0]?.type;
+  if (["navigate", "reload", "back_forward", "prerender"].includes(type)) return type;
+  const legacyType = performanceObject?.navigation?.type;
+  if (legacyType === 1) return "reload";
+  if (legacyType === 2) return "back_forward";
+  return "navigate";
+};
+
+export const classifyPendingRoomDeparture = ({
+  marker,
+  roomDeposit,
+  currentUrl,
+  navigationType,
+  pageshowPersisted = false,
+} = {}) => {
+  if (!marker) return "none";
+  const depositMatches = Boolean(
+    roomDeposit?.frozen
+    && String(roomDeposit.roomId) === marker.roomId
+    && (!marker.depositTransactionId
+      || String(roomDeposit.depositTransactionId || "") === marker.depositTransactionId),
+  );
+  if (!depositMatches) return "discard";
+
+  const isSameRoomUrl = normalizeDocumentUrl(currentUrl) === marker.roomUrl;
+  const isBackForward = pageshowPersisted || navigationType === "back_forward";
+  if (navigationType === "reload" && isSameRoomUrl && !isBackForward) return "restore";
+  return "forfeit";
+};
+
+export const consumePendingRoomDeparture = ({
+  roomDeposit,
+  currentUrl,
+  navigationType,
+  pageshowPersisted = false,
+  storage = globalThis.localStorage,
+} = {}) => {
+  const marker = loadPendingRoomDeparture(storage);
+  if (!marker) {
+    // Invalid/corrupted records must not keep triggering every application boot.
+    if (storage?.getItem(PENDING_ROOM_DEPARTURE_STORAGE_KEY)) clearPendingRoomDeparture(storage);
+    return { action: "none", marker: null };
+  }
+  const action = classifyPendingRoomDeparture({
+    marker,
+    roomDeposit,
+    currentUrl,
+    navigationType,
+    pageshowPersisted,
+  });
+  // Consume before React state updates so StrictMode/pageshow cannot settle twice.
+  clearPendingRoomDeparture(storage);
+  return { action, marker };
+};
+
+export const markDepositTransactionForfeited = (wallet, depositTransactionId) => {
+  if (!wallet || !depositTransactionId) return wallet;
+  const targetId = String(depositTransactionId);
+  let changed = false;
+  const transactions = wallet.transactions.map((transaction) => {
+    if (String(transaction.id) !== targetId) return transaction;
+    changed = true;
+    return { ...transaction, label: "互动保证金扣除（未完成互动）" };
+  });
+  return changed ? { ...wallet, transactions } : wallet;
+};
+
 export const getCheckInState = (wallet, now = new Date()) => {
   const today = getLocalDateKey(now);
   const checkedIn = wallet.lastCheckInDate === today;
@@ -116,10 +254,7 @@ export const recordQuickExit = (now = Date.now()) => {
   const count = current.count + 1;
   const windowStart = current.windowStart || now;
   let cooldownUntil = 0;
-  if (count === 2) cooldownUntil = now + 10 * 60 * 1000;
-  if (count === 3) cooldownUntil = now + 30 * 60 * 1000;
-  if (count === 4) cooldownUntil = now + 60 * 60 * 1000;
-  if (count >= 5) {
+  if (count >= QUICK_EXIT_LIMIT) {
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
     cooldownUntil = endOfDay.getTime();

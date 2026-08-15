@@ -25,6 +25,11 @@ export default {
         pulseSoft: "pulseSoft 2.4s ease-in-out infinite",
         driftLeft: "driftLeft 60s linear forwards",
         driftRight: "driftRight 60s linear forwards",
+        storyScene: "storyScene 8s ease-out both",
+        storyWord: "storyWord 240ms ease-out forwards",
+        storyCursor: "storyCursor 800ms ease-in-out infinite",
+        storyChat: "storyChat 240ms ease-out both",
+        storyTyping: "storyTyping 1s ease-in-out infinite",
       },
       keyframes: {
         floaty: {
@@ -50,6 +55,26 @@ export default {
         driftRight: {
           "0%": { right: "6%" },
           "100%": { right: "48%" },
+        },
+        storyScene: {
+          "0%": { transform: "scale(1.045)" },
+          "100%": { transform: "scale(1)" },
+        },
+        storyWord: {
+          "0%": { opacity: "0", filter: "blur(4px)", transform: "translateY(2px)" },
+          "100%": { opacity: "1", filter: "blur(0)", transform: "translateY(0)" },
+        },
+        storyCursor: {
+          "0%, 100%": { opacity: ".25" },
+          "50%": { opacity: "1" },
+        },
+        storyChat: {
+          "0%": { opacity: "0", transform: "translateY(12px) scale(.97)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        storyTyping: {
+          "0%, 60%, 100%": { opacity: ".35", transform: "translateY(0)" },
+          "30%": { opacity: "1", transform: "translateY(-3px)" },
         },
       },
     },

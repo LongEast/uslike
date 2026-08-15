@@ -109,16 +109,23 @@ export default function VoiceRoom({
         <ChevronLeft size={18} />
         退出房间
       </button>
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed right-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
-      >
-        <MessageCircle size={18} />
-        聊天
-      </button>
+      {!chatOpen ? (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed right-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
+        >
+          <MessageCircle size={18} />
+          聊天
+        </button>
+      ) : null}
 
-      <section className="mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-6xl grid-rows-[auto_1fr_auto] gap-6 pt-16">
-        <QuestionCard
+      <section
+        className={`mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-6 pt-16 ${
+          chatOpen ? "lg:grid-cols-[minmax(0,1fr)_390px]" : "lg:grid-cols-1"
+        }`}
+      >
+        <div className="grid min-h-[calc(100vh-128px)] min-w-0 grid-rows-[auto_1fr_auto] gap-6">
+          <QuestionCard
           question={currentQuestion}
           showTimer={questionIndex === 0}
           ready={skipReady}
@@ -130,9 +137,9 @@ export default function VoiceRoom({
           onSkip={skipQuestion}
         />
 
-        <div className="flex items-start justify-center gap-12 md:gap-28">
-          <UserSeat user={user} micOn={micOn} label="你" />
-          <UserSeat
+          <div className="flex items-start justify-center gap-12 md:gap-28">
+            <UserSeat user={user} micOn={micOn} label="你" />
+            <UserSeat
             user={{ nickname: room.hostName, avatar: room.hostAvatar }}
             micOn
             label="对方"
@@ -149,10 +156,10 @@ export default function VoiceRoom({
                 {friendButtonText}
               </button>
             }
-          />
-        </div>
+            />
+          </div>
 
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-[28px] bg-white/70 p-3 shadow-soft backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-[28px] bg-white/70 p-3 shadow-soft backdrop-blur-xl">
           <div className="inline-flex h-12 overflow-hidden rounded-xl bg-[#f1f2f4] text-stone-700 shadow-sm">
             <button
               onClick={() => setMicOn((value) => !value)}
@@ -188,30 +195,49 @@ export default function VoiceRoom({
             双人游戏
           </button>
           <button
-            onClick={() => onToast(textGameUnlocked ? "双人互动文字游戏已解锁。" : "互发消息超过 50 条后解锁。")}
+            onClick={() => onToast(textGameUnlocked
+              ? "双人互动文字游戏已解锁。"
+              : "互发消息超过 50 条后解锁。\nVIP 可直接解锁（Demo 阶段免费）")}
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 font-semibold ${
               textGameUnlocked ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-stone-100 text-stone-400"
             }`}
           >
             {textGameUnlocked ? <PenLine size={18} /> : <Lock size={18} />}
-            双人互动文字游戏
+            <span className="text-left">
+              <span className="block">双人互动文字游戏</span>
+              {!textGameUnlocked ? (
+                <span className="mt-0.5 block text-[11px] font-medium leading-4 text-stone-400">
+                  VIP 可直接解锁（Demo 阶段免费）
+                </span>
+              ) : null}
+            </span>
           </button>
+          </div>
         </div>
-      </section>
 
-      <ChatSidebar
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-        messages={messages}
-        onSend={sendMessage}
-        textGameUnlocked={textGameUnlocked}
-      />
+        <ChatSidebar
+          inlineDesktop
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          messages={messages}
+          onSend={sendMessage}
+          textGameUnlocked={textGameUnlocked}
+        />
+      </section>
 
       {showGames ? (
         <Modal title="双人游戏" onClose={() => setShowGames(false)} width="max-w-md">
+          <p className="mb-4 rounded-2xl bg-[#f4f2ff] px-4 py-3 text-center text-sm font-semibold text-[#6b5ee7]">
+            暂未开放
+          </p>
           <div className="grid grid-cols-2 gap-3">
             {games.map((game) => (
-              <button key={game} className="rounded-3xl bg-white/76 px-5 py-6 text-lg font-semibold text-stone-800 shadow-sm hover:bg-white">
+              <button
+                key={game}
+                type="button"
+                disabled
+                className="cursor-not-allowed rounded-3xl bg-stone-100/80 px-5 py-6 text-lg font-semibold text-stone-400 shadow-sm"
+              >
                 {game}
               </button>
             ))}
@@ -243,7 +269,7 @@ function QuestionCard({ question, showTimer, ready, answeredBoth, myAnswer, thei
         </button>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {[question.a, question.b].map((answer, index) => (
           <button
             key={answer}

@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import Avatar from "./Avatar.jsx";
 import Modal from "./Modal.jsx";
+import PublicProfileDetails from "./PublicProfileDetails.jsx";
 import SpotlightTutorial from "./SpotlightTutorial.jsx";
 
 const INITIAL_CAMERA = { yaw: -0.38, pitch: 0.58, distance: 120, targetX: 0, targetZ: 0 };
@@ -859,7 +860,7 @@ export default function RoomDiscovery({
   };
 
   return (
-    <main className="main-wash relative min-h-screen overflow-hidden px-6 py-8">
+    <main className="main-wash relative min-h-screen overflow-x-hidden px-6 py-8">
       <button
         onClick={onBack}
         className="fixed left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full bg-white/78 px-4 py-3 font-semibold text-stone-700 shadow-soft backdrop-blur-xl hover:bg-white"
@@ -943,7 +944,7 @@ export default function RoomDiscovery({
         </Modal>
       ) : null}
 
-      <section className="mx-auto grid h-[calc(100vh-64px)] w-full min-w-0 max-w-7xl gap-5 pt-16 lg:grid-cols-[minmax(0,1fr)_390px]">
+      <section className="mx-auto grid min-h-[calc(100vh-64px)] w-full min-w-0 max-w-7xl items-start gap-5 pt-16 lg:grid-cols-[minmax(0,1fr)_390px]">
         <div
           ref={spaceRef}
           onPointerDown={startExploring}
@@ -951,7 +952,7 @@ export default function RoomDiscovery({
           onPointerUp={stopExploring}
           onPointerCancel={stopExploring}
           onClick={closeSelectedFromSpace}
-          className={`semantic-space relative h-full min-h-[620px] min-w-0 overflow-hidden rounded-[36px] border border-white/80 shadow-soft ${
+          className={`semantic-space relative h-[calc(100dvh-128px)] min-h-[620px] min-w-0 self-start overflow-hidden rounded-[36px] border border-white/80 shadow-soft ${
             isExploring ? "is-panning" : ""
           }`}
         >
@@ -1198,7 +1199,7 @@ export default function RoomDiscovery({
           ) : null}
         </div>
 
-        <aside className="glass-panel cosmic-side-panel flex min-h-0 min-w-0 flex-col rounded-[36px] p-5">
+        <aside className="glass-panel cosmic-side-panel flex h-[calc(100dvh-128px)] min-h-[560px] min-w-0 flex-col overflow-hidden rounded-[36px] p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-[#6b5ee7]">附近房间</p>
             <div className="flex items-center gap-2">
@@ -1220,7 +1221,7 @@ export default function RoomDiscovery({
             ref={listScrollRef}
             onScroll={syncListToGalaxy}
             className={`card-scroll flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden ${
-              detailRoom ? "galaxy-list-return" : "mb-5"
+              detailRoom ? "galaxy-list-return" : selectedRoom ? "mb-4 max-h-32 shrink-0" : "mb-5"
             }`}
           >
             {listedRooms.map((room) => {
@@ -1273,7 +1274,7 @@ export default function RoomDiscovery({
 
           {detailRoom ? null : selectedRoom ? (
             <div
-              className="selected-galaxy-card mt-auto rounded-[30px] border border-white/76 bg-white/76 p-5 shadow-sm"
+              className="selected-galaxy-card selected-galaxy-card--scrollable card-scroll mt-auto min-h-0 flex-1 rounded-[30px] border border-white/76 bg-white/76 p-5 shadow-sm"
               style={{ "--room-color": selectedRoom.color || "#8b82e8" }}
             >
               <button
@@ -1302,37 +1303,7 @@ export default function RoomDiscovery({
                 {selectedRoom.vibe}
               </p>
               <div className="mb-4 rounded-[24px] bg-white/70 p-4">
-                <p className="mb-3 text-xs font-semibold text-[#6b5ee7]">TA 的个人信息</p>
-                <div className="grid grid-cols-2 gap-3 text-xs text-stone-500">
-                  <span>
-                    <strong className="block text-sm text-stone-800">{selectedRoom.nickname || selectedRoom.hostName}</strong>
-                    昵称
-                  </span>
-                  <span>
-                    <strong className="block text-sm text-stone-800">
-                      {selectedRoom.age ? `${selectedRoom.age} 岁` : "选填"}
-                    </strong>
-                    年龄
-                  </span>
-                  <span>
-                    <strong className="block text-sm text-stone-800">{selectedRoom.gender || "神秘"}</strong>
-                    性别
-                  </span>
-                  <span>
-                    <strong className="block text-sm text-stone-800">{selectedRoom.region || "未填写"}</strong>
-                    地域
-                  </span>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {(selectedRoom.interests || []).map((interest) => (
-                    <span
-                      key={interest}
-                      className="rounded-full bg-[#f4f6ff] px-3 py-1.5 text-xs font-semibold text-stone-600"
-                    >
-                      {interest}
-                    </span>
-                  ))}
-                </div>
+                <PublicProfileDetails profile={selectedRoom} bare />
                 <button
                   onClick={() => viewProfileFeed(selectedRoom)}
                   className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#f4f6ff] px-4 py-3 text-sm font-semibold text-[#6b5ee7] transition hover:bg-white"
@@ -1357,7 +1328,7 @@ export default function RoomDiscovery({
               <button
                 ref={selectedRoom.id === tutorialRoomId ? tutorialEnterButtonRef : null}
                 onClick={meetRoom}
-                className={`w-full rounded-2xl px-5 py-3 font-semibold text-white transition ${
+                className={`sticky bottom-0 z-10 w-full rounded-2xl px-5 py-3 font-semibold text-white shadow-[0_-14px_28px_rgba(255,255,255,0.82)] transition ${
                   selectedRoom.type === "打字房"
                     ? "bg-[#50bfa5] shadow-[0_18px_40px_rgba(80,191,165,0.26)] hover:bg-[#42aa92]"
                     : "aurora-dark shadow-glow hover:brightness-110"

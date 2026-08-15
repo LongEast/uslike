@@ -116,6 +116,32 @@ npm run build
 
 The built files will be generated in `dist/`.
 
+## Serve the production app with FastAPI
+
+Build the frontend, then start FastAPI from the repository root:
+
+```bash
+npm run build
+.venv/bin/uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+```
+
+FastAPI serves the generated frontend and the API from the same origin. Open
+`http://127.0.0.1:8000/mvp/messages`; refreshing a nested route such as
+`/mvp/story/ice-civilization` returns the React app, while `/api`, `/docs`, `/redoc`,
+`/openapi.json`, and `/api/uploads` remain backend routes.
+
+By default the backend looks for `dist/` at the repository root. Set
+`USLIKE_FRONTEND_DIST_PATH` to use a different build directory:
+
+```bash
+USLIKE_FRONTEND_DIST_PATH=/srv/uslike/frontend-dist \
+  .venv/bin/uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+```
+
+When the default `dist/` has not been built, FastAPI continues in API-only mode for local backend
+development. A missing or invalid explicitly configured directory fails startup with a clear error
+instead of silently serving the wrong files.
+
 ## Preview Production Build
 
 After building, preview the production output locally:

@@ -256,13 +256,22 @@ export default function TextRoom({
               双人游戏
             </button>
             <button
-              onClick={() => onToast(textGameUnlocked ? "双人互动文字游戏已解锁。" : "互发消息超过 50 条后解锁。")}
+              onClick={() => onToast(textGameUnlocked
+                ? "双人互动文字游戏已解锁。"
+                : "互发消息超过 50 条后解锁。\nVIP 可直接解锁（Demo 阶段免费）")}
               className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 font-semibold ${
                 textGameUnlocked ? "bg-[#eeeaff] text-[#6b5ee7]" : "bg-stone-100 text-stone-400"
               }`}
             >
               {textGameUnlocked ? <PenLine size={18} /> : <Lock size={18} />}
-              双人互动文字游戏
+              <span className="text-left">
+                <span className="block">双人互动文字游戏</span>
+                {!textGameUnlocked ? (
+                  <span className="mt-0.5 block text-[11px] font-medium leading-4 text-stone-400">
+                    VIP 可直接解锁（Demo 阶段免费）
+                  </span>
+                ) : null}
+              </span>
             </button>
           </div>
         </div>
@@ -338,9 +347,17 @@ export default function TextRoom({
 
       {showGames ? (
         <Modal title="双人游戏" onClose={() => setShowGames(false)} width="max-w-md">
+          <p className="mb-4 rounded-2xl bg-[#f4f2ff] px-4 py-3 text-center text-sm font-semibold text-[#6b5ee7]">
+            暂未开放
+          </p>
           <div className="grid grid-cols-2 gap-3">
             {games.map((game) => (
-              <button key={game} className="rounded-3xl bg-white/76 px-5 py-6 text-lg font-semibold text-stone-800 shadow-sm hover:bg-white">
+              <button
+                key={game}
+                type="button"
+                disabled
+                className="cursor-not-allowed rounded-3xl bg-stone-100/80 px-5 py-6 text-lg font-semibold text-stone-400 shadow-sm"
+              >
                 {game}
               </button>
             ))}
