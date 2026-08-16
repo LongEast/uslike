@@ -155,3 +155,63 @@ Then open the URL printed by Vite, usually:
 ```text
 http://localhost:4173/
 ```
+
+## Production deployment with PostgreSQL
+
+The production container builds the Vite frontend and serves it from FastAPI, so the browser and
+API use the same origin by default. The runtime image runs as an unprivileged user, applies all
+Alembic migrations before starting the server, listens on the platform-provided `PORT`, and stores
+uploads outside the image.
+
+### Run the production stack locally
+
+Docker Compose starts the application, PostgreSQL, and persistent named volumes:
+
+```bash
+POSTGRES_PASSWORD='choose-a-local-password' docker compose up --build
+```
+
+Open `http://127.0.0.1:8000`. Set `APP_PORT` if port 8000 is already in use:
+
+```bash
+APP_PORT=8080 POSTGRES_PASSWORD='choose-a-local-password' docker compose up --build
+```
+
+The Compose password default is intended only for local development. Set a strong, unique password
+for any shared environment. If the password contains URL-reserved characters, percent-encode it in
+`DATABASE_URL` when deploying outside Compose.
+
+### Deploy the container
+
+Build and push `Dockerfile` to any platform that supports OCI containers. Configure a managed
+PostgreSQL database and these runtime variables:
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL URL, for example `postgresql://USER:PASSWORD@HOST:5432/DBNAME` |
+| `PORT` | Platform-dependent | HTTP port assigned by the platform; defaults to `8000` |
+| `USLIKE_UPLOADS_PATH` | No | Mounted persistent upload directory; defaults to `/var/lib/uslike/uploads` |
+| `FORWARDED_ALLOW_IPS` | No | Proxy addresses trusted by Uvicorn; defaults to `*` inside the container |
+
+Mount a persistent volume at the value of `USLIKE_UPLOADS_PATH`. Database records live in
+PostgreSQL, but uploaded avatars and story images remain files and will be lost on an ephemeral
+filesystem. Existing ignored files under `backend/data/` are intentionally excluded from the image;
+copy approved uploads to the mounted volume separately if they are needed in production.
+
+The image entrypoint runs the following migration before accepting traffic:
+
+```bash
+alembic upgrade head
+```
+
+If the migration fails, the server does not start. The platform health-check path is
+`/api/health`.
+
+For a separately hosted frontend/API, provide the public API origin while building the image. This
+value is embedded into the browser bundle and must not contain secrets:
+
+```bash
+docker build \
+  --build-arg VITE_API_BASE_URL=https://api.example.com \
+  --tag uslike:latest .
+```

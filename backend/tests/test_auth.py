@@ -16,10 +16,14 @@ def database_path(tmp_path):
 @pytest.fixture
 async def client(database_path):
     app = create_app(database_path)
+    await app.state.database.create_schema()
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
-        test_client.app = app
-        yield test_client
+    try:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
+            test_client.app = app
+            yield test_client
+    finally:
+        await app.state.database.dispose()
 
 
 def register_payload(phone="+8613800138000", password="correct-horse"):
@@ -64,9 +68,9 @@ async def test_register_persists_complete_private_metadata(client, database_path
     assert "auth" not in body["user"]
     assert "values_test" not in body["user"]
 
-    persisted_text = database_path.read_text(encoding="utf-8")
-    persisted = json.loads(persisted_text)
-    assert persisted["metadata"]["schema_version"] == 3
+    persisted = await client.app.state.repository.snapshot()
+    persisted_text = json.dumps(persisted, ensure_ascii=False)
+    assert persisted["metadata"]["schema_version"] == 4
     assert persisted["users"][0]["real_name"] == {"status": "unverified", "verified_at": None}
     assert persisted["users"][0]["values_test"]["answers"] == []
     assert persisted["users"][0]["values_test"]["completed_at"] is None
@@ -164,7 +168,7 @@ async def test_values_test_requires_authentication_and_persists_answers(client, 
 
     assert response.status_code == 200
     assert response.json()["saved_answer_count"] == 1
-    persisted = json.loads(database_path.read_text(encoding="utf-8"))
+    persisted = await client.app.state.repository.snapshot()
     saved_test = persisted["users"][0]["values_test"]
     assert saved_test["answers"][0]["question_id"] == "values-family-public"
     assert saved_test["completed_at"] is not None
@@ -216,7 +220,7 @@ async def test_module_onboarding_restarts_until_dismissed_or_completed(client, d
     assert completed.json()["finished"] is True
     assert (await client.get("/api/onboarding/meet", headers=headers)).json()["should_show"] is False
 
-    persisted = json.loads(database_path.read_text(encoding="utf-8"))
+    persisted = await client.app.state.repository.snapshot()
     assert persisted["users"][0]["onboarding_modules"]["meet"]["status"] == "completed"
     assert [event["event"] for event in persisted["behavior_events"]] == ["started", "completed"]
 
@@ -290,7 +294,7 @@ async def test_logout_revokes_session_and_rejects_reuse(client, database_path):
 
     assert (await client.post("/api/auth/logout", headers=headers)).status_code == 204
     assert (await client.post("/api/auth/logout", headers=headers)).status_code == 401
-    persisted = json.loads(database_path.read_text(encoding="utf-8"))
+    persisted = await client.app.state.repository.snapshot()
     assert persisted["sessions"][0]["revoked_at"] is not None
     assert (await client.post("/api/auth/logout")).status_code == 401
 
@@ -298,12 +302,19 @@ async def test_logout_revokes_session_and_rejects_reuse(client, database_path):
 @pytest.mark.anyio
 async def test_logout_rejects_expired_session(client, database_path):
     registration = (await client.post("/api/auth/register", json=register_payload())).json()
+    from sqlalchemy import update
+
+    from backend.app.db_models import Session
+
     database = client.app.state.database
-
-    def expire(data):
-        data["sessions"][0]["expires_at"] = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
-
-    database.mutate(expire)
+    async with database.session() as db:
+        async with db.begin():
+            await db.execute(
+                update(Session).values(
+                    created_at=datetime.now(UTC) - timedelta(days=8),
+                    expires_at=datetime.now(UTC) - timedelta(seconds=1),
+                )
+            )
     headers = {"Authorization": f"Bearer {registration['access_token']}"}
     assert (await client.post("/api/auth/logout", headers=headers)).status_code == 401
 
@@ -345,7 +356,7 @@ async def test_account_reads_summary_and_updates_profile_fields(client, database
     assert updated.json()["user"]["profile"]["interests"] == ["电影", "音乐"]
     assert (await client.patch("/api/account/profile", json={}, headers=headers)).status_code == 422
 
-    persisted = json.loads(database_path.read_text(encoding="utf-8"))
+    persisted = await client.app.state.repository.snapshot()
     assert persisted["users"][0]["id"] == registration["user"]["id"]
 
 
@@ -436,7 +447,8 @@ async def test_password_update_rehashes_and_revokes_other_sessions(client, datab
             json={"phone": "+8613800138000", "password": "new-correct-horse"},
         )
     ).status_code == 200
-    assert "new-correct-horse" not in database_path.read_text(encoding="utf-8")
+    persisted = await client.app.state.repository.snapshot()
+    assert "new-correct-horse" not in json.dumps(persisted, ensure_ascii=False)
 
 
 @pytest.mark.anyio

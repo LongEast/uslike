@@ -1,5 +1,6 @@
 import os
 import tempfile
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .database import JsonDatabase
+from .database import DEFAULT_DATABASE_URL, Database
 from .errors import (
     http_exception_handler,
     request_validation_exception_handler,
@@ -45,13 +46,28 @@ from .models import (
     ValuesTestResponse,
     ValuesTestSummary,
 )
-from .security import create_access_token, hash_access_token, hash_password, verify_password
+from .repository import (
+    AccountRepository,
+    DuplicatePhoneError,
+    IncorrectPasswordError,
+    InvalidCredentialsError,
+)
+from .security import create_access_token, hash_access_token, hash_password
 
 
 SESSION_TTL = timedelta(days=7)
 MAX_AVATAR_BYTES = 2 * 1024 * 1024
 FRONTEND_DIST_ENV = "USLIKE_FRONTEND_DIST_PATH"
+UPLOADS_PATH_ENV = "USLIKE_UPLOADS_PATH"
+DATABASE_URL_ENV = "DATABASE_URL"
+CORS_ORIGINS_ENV = "USLIKE_CORS_ORIGINS"
 DEFAULT_FRONTEND_DIST_PATH = Path(__file__).resolve().parents[2] / "dist"
+DEFAULT_UPLOADS_PATH = Path(__file__).resolve().parents[1] / "data" / "uploads"
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+)
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
@@ -104,34 +120,6 @@ def require_token_digest(credentials: HTTPAuthorizationCredentials | None) -> st
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
     return hash_access_token(credentials.credentials)
-
-
-def find_active_session(
-    data: dict[str, Any],
-    token_digest: str,
-    now: datetime,
-) -> dict[str, Any] | None:
-    return next(
-        (
-            item
-            for item in data["sessions"]
-            if item["token_hash"] == token_digest
-            and item["revoked_at"] is None
-            and datetime.fromisoformat(item["expires_at"]) > now
-        ),
-        None,
-    )
-
-
-def find_authenticated_user(
-    data: dict[str, Any],
-    token_digest: str,
-    now: datetime,
-) -> dict[str, Any] | None:
-    session = find_active_session(data, token_digest, now)
-    if session is None:
-        return None
-    return next((item for item in data["users"] if item["id"] == session["user_id"]), None)
 
 
 def onboarding_response(module: str, state: dict[str, Any] | None) -> OnboardingStateResponse:
@@ -192,18 +180,46 @@ def resolve_frontend_dist_path(
 def create_app(
     database_path: str | Path | None = None,
     *,
+    database_url: str | None = None,
+    uploads_path: str | Path | None = None,
     frontend_dist_path: str | Path | None = None,
+    auto_create_schema: bool | None = None,
 ) -> FastAPI:
-    resolved_path = Path(
-        database_path or os.getenv("USLIKE_DATABASE_PATH", "backend/data/uslike.json")
-    ).expanduser().resolve()
+    if database_path is not None and database_url is not None:
+        raise RuntimeError("Configure either database_path or database_url, not both")
+
+    resolved_database_path: Path | None = None
+    if database_path is not None:
+        # Positional paths remain a convenient isolated SQLite hook for tests.
+        resolved_database_path = Path(database_path).expanduser().resolve()
+        effective_database_url = f"sqlite+aiosqlite:///{resolved_database_path}"
+        should_create_schema = True if auto_create_schema is None else auto_create_schema
+    else:
+        effective_database_url = database_url or os.getenv(DATABASE_URL_ENV, DEFAULT_DATABASE_URL)
+        should_create_schema = (
+            effective_database_url.startswith(("sqlite://", "sqlite+aiosqlite://"))
+            if auto_create_schema is None
+            else auto_create_schema
+        )
+
     resolved_frontend_dist_path = resolve_frontend_dist_path(frontend_dist_path)
-    uploads_directory = resolved_path.parent / "uploads"
+    configured_uploads_path = uploads_path or os.getenv(UPLOADS_PATH_ENV)
+    if isinstance(configured_uploads_path, str) and not configured_uploads_path.strip():
+        raise RuntimeError(f"{UPLOADS_PATH_ENV} must not be empty")
+    uploads_directory = Path(
+        configured_uploads_path
+        or (
+            resolved_database_path.parent / "uploads"
+            if resolved_database_path is not None
+            else DEFAULT_UPLOADS_PATH
+        )
+    ).expanduser().resolve()
     if resolved_frontend_dist_path is not None:
-        for private_label, private_path in (
-            ("database", resolved_path),
-            ("uploads directory", uploads_directory.resolve()),
-        ):
+        private_paths: list[tuple[str, Path]] = []
+        if resolved_database_path is not None:
+            private_paths.append(("database", resolved_database_path))
+        private_paths.append(("uploads directory", uploads_directory))
+        for private_label, private_path in private_paths:
             try:
                 private_path.relative_to(resolved_frontend_dist_path)
             except ValueError:
@@ -212,16 +228,28 @@ def create_app(
                 f"Frontend dist must not contain the {private_label}: {private_path}"
             )
 
-    database = JsonDatabase(resolved_path)
+    database = Database(effective_database_url)
+    repository = AccountRepository(database)
     avatar_directory = uploads_directory / "avatars"
     avatar_directory.mkdir(parents=True, exist_ok=True)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        if should_create_schema:
+            await database.create_schema()
+        try:
+            yield
+        finally:
+            await database.dispose()
+
     app = FastAPI(
         title="Uslike MVP API",
-        version="0.1.0",
+        version="0.2.0",
         description=(
-            "Uslike MVP 的账号认证服务。使用单实例 JSON 文件存储，"
-            "当前仅适合本地开发与产品原型验证。"
+            "Uslike MVP 的账号认证服务。生产数据由 PostgreSQL 持久化，"
+            "数据库结构通过 Alembic 版本化。"
         ),
+        lifespan=lifespan,
         openapi_tags=[
             {"name": "Authentication", "description": "注册、登录与会话撤销"},
             {"name": "Profile", "description": "登录用户的画像与价值观问卷"},
@@ -230,7 +258,9 @@ def create_app(
         ],
     )
     app.state.database = database
+    app.state.repository = repository
     app.state.avatar_directory = avatar_directory
+    app.state.uploads_directory = uploads_directory
     app.state.frontend_dist_path = resolved_frontend_dist_path
     app.mount("/api/uploads", StaticFiles(directory=uploads_directory), name="uploads")
 
@@ -265,13 +295,26 @@ def create_app(
     app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
     app.add_exception_handler(StarletteHTTPException, frontend_aware_http_exception_handler)
     app.add_exception_handler(Exception, unhandled_exception_handler)
+    cors_value = os.getenv(CORS_ORIGINS_ENV)
+    cors_origins = (
+        [origin.strip().rstrip("/") for origin in cors_value.split(",") if origin.strip()]
+        if cors_value is not None
+        else list(DEFAULT_CORS_ORIGINS)
+    )
+    if cors_value is not None and not cors_origins:
+        raise RuntimeError(f"{CORS_ORIGINS_ENV} must contain at least one origin")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173"],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.get("/api/health", tags=["Operations"], summary="数据库就绪探针")
+    async def health() -> dict[str, str]:
+        await database.ping()
+        return {"status": "ok", "database": "ok"}
 
     @app.post(
         "/api/auth/register",
@@ -311,14 +354,10 @@ def create_app(
             "updated_at": now.isoformat(),
             "last_login_at": now.isoformat(),
         }
-
-        def persist(data: dict[str, Any]) -> None:
-            if any(item["phone"] == payload.phone for item in data["users"]):
-                raise HTTPException(status_code=409, detail="该手机号已注册")
-            data["users"].append(user)
-            data["sessions"].append(session)
-
-        database.mutate(persist)
+        try:
+            user = await repository.register(user, session)
+        except DuplicatePhoneError as error:
+            raise HTTPException(status_code=409, detail="该手机号已注册") from error
         return AuthResponse(
             access_token=raw_token,
             expires_at=session["expires_at"],
@@ -336,7 +375,7 @@ def create_app(
         credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     ) -> AccountResponse:
         token_digest = require_token_digest(credentials)
-        user = find_authenticated_user(database.read(), token_digest, utc_now())
+        user = await repository.authenticated_user(token_digest, utc_now())
         if user is None:
             raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
         return account_response(user)
@@ -354,16 +393,17 @@ def create_app(
     ) -> AccountResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def persist(data: dict[str, Any]) -> dict[str, Any]:
-            user = find_authenticated_user(data, token_digest, now)
-            if user is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            user["profile"].update(payload.model_dump(mode="json", exclude_unset=True))
-            user["updated_at"] = now.isoformat()
-            return user
-
-        return account_response(database.mutate(persist))
+        try:
+            user = await repository.update_profile(
+                token_digest,
+                now,
+                payload.model_dump(mode="json", exclude_unset=True),
+            )
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
+        return account_response(user)
 
     @app.put(
         "/api/account/phone",
@@ -382,26 +422,24 @@ def create_app(
     ) -> AccountResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def persist(data: dict[str, Any]) -> dict[str, Any]:
-            session = find_active_session(data, token_digest, now)
-            if session is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            user = next((item for item in data["users"] if item["id"] == session["user_id"]), None)
-            if user is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            if not verify_password(payload.current_password, user["auth"]["salt"], user["auth"]["password_hash"]):
-                raise HTTPException(status_code=400, detail="当前密码错误")
-            if any(item["id"] != user["id"] and item["phone"] == payload.new_phone for item in data["users"]):
-                raise HTTPException(status_code=409, detail="该手机号已被其他账号使用")
-            user["phone"] = payload.new_phone
-            user["updated_at"] = now.isoformat()
-            for other_session in data["sessions"]:
-                if other_session["user_id"] == user["id"] and other_session["id"] != session["id"] and other_session["revoked_at"] is None:
-                    other_session["revoked_at"] = now.isoformat()
-            return user
-
-        return account_response(database.mutate(persist))
+        try:
+            user = await repository.update_phone(
+                token_digest,
+                now,
+                payload.new_phone,
+                payload.current_password,
+            )
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
+        except IncorrectPasswordError as error:
+            raise HTTPException(status_code=400, detail="当前密码错误") from error
+        except DuplicatePhoneError as error:
+            raise HTTPException(
+                status_code=409, detail="该手机号已被其他账号使用"
+            ) from error
+        return account_response(user)
 
     @app.put(
         "/api/account/password",
@@ -419,25 +457,20 @@ def create_app(
     ) -> AccountResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def persist(data: dict[str, Any]) -> dict[str, Any]:
-            session = find_active_session(data, token_digest, now)
-            if session is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            user = next((item for item in data["users"] if item["id"] == session["user_id"]), None)
-            if user is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            if not verify_password(payload.current_password, user["auth"]["salt"], user["auth"]["password_hash"]):
-                raise HTTPException(status_code=400, detail="当前密码错误")
-            salt, password_digest = hash_password(payload.new_password)
-            user["auth"].update({"salt": salt, "password_hash": password_digest})
-            user["updated_at"] = now.isoformat()
-            for other_session in data["sessions"]:
-                if other_session["user_id"] == user["id"] and other_session["id"] != session["id"] and other_session["revoked_at"] is None:
-                    other_session["revoked_at"] = now.isoformat()
-            return user
-
-        return account_response(database.mutate(persist))
+        try:
+            user = await repository.update_password(
+                token_digest,
+                now,
+                payload.current_password,
+                payload.new_password,
+            )
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
+        except IncorrectPasswordError as error:
+            raise HTTPException(status_code=400, detail="当前密码错误") from error
+        return account_response(user)
 
     def uploaded_avatar_path(avatar_url: str | None) -> Path | None:
         prefix = "/api/uploads/avatars/"
@@ -463,7 +496,7 @@ def create_app(
     ) -> AccountResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-        current_user = find_authenticated_user(database.read(), token_digest, now)
+        current_user = await repository.authenticated_user(token_digest, now)
         if current_user is None:
             raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
 
@@ -495,17 +528,16 @@ def create_app(
                 file.flush()
                 os.fsync(file.fileno())
             os.replace(temporary_path, final_path)
-            old_avatar = current_user["profile"].get("avatar")
-
-            def persist(data: dict[str, Any]) -> dict[str, Any]:
-                user = find_authenticated_user(data, token_digest, now)
-                if user is None:
-                    raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-                user["profile"]["avatar"] = f"/api/uploads/avatars/{filename}"
-                user["updated_at"] = now.isoformat()
-                return user
-
-            updated_user = database.mutate(persist)
+            try:
+                updated_user, old_avatar = await repository.set_avatar(
+                    token_digest,
+                    now,
+                    f"/api/uploads/avatars/{filename}",
+                )
+            except InvalidCredentialsError as error:
+                raise HTTPException(
+                    status_code=401, detail="无效或已过期的登录凭证"
+                ) from error
         except Exception:
             if final_path.exists():
                 final_path.unlink()
@@ -531,17 +563,19 @@ def create_app(
     ) -> AccountResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def persist(data: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
-            user = find_authenticated_user(data, token_digest, now)
-            if user is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            old_avatar = user["profile"].get("avatar")
-            user["profile"]["avatar"] = default_avatar_url(user["id"])
-            user["updated_at"] = now.isoformat()
-            return user, old_avatar
-
-        updated_user, old_avatar = database.mutate(persist)
+        current_user = await repository.authenticated_user(token_digest, now)
+        if current_user is None:
+            raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
+        try:
+            updated_user, old_avatar = await repository.set_avatar(
+                token_digest,
+                now,
+                default_avatar_url(current_user["id"]),
+            )
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
         old_path = uploaded_avatar_path(old_avatar)
         if old_path and old_path.exists():
             old_path.unlink()
@@ -558,11 +592,13 @@ def create_app(
         credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     ) -> OnboardingStateResponse:
         token_digest = require_token_digest(credentials)
-        data = database.read()
-        user = find_authenticated_user(data, token_digest, utc_now())
-        if user is None:
-            raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-        return onboarding_response(module, user.get("onboarding_modules", {}).get(module))
+        try:
+            state = await repository.onboarding_state(token_digest, utc_now(), module)
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
+        return onboarding_response(module, state)
 
     @app.post(
         "/api/onboarding/{module}/events",
@@ -577,54 +613,18 @@ def create_app(
     ) -> OnboardingStateResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def persist(data: dict[str, Any]) -> dict[str, Any]:
-            user = find_authenticated_user(data, token_digest, now)
-            if user is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            modules = user.setdefault("onboarding_modules", {})
-            state = modules.setdefault(
+        try:
+            state = await repository.record_onboarding_event(
+                token_digest,
+                now,
                 module,
-                {
-                    "status": "not_started",
-                    "current_step": None,
-                    "started_at": None,
-                    "ended_at": None,
-                    "updated_at": now.isoformat(),
-                },
+                payload.event,
+                payload.step,
             )
-            if payload.event == "restarted":
-                state["status"] = "in_progress"
-                state["current_step"] = payload.step
-                state["started_at"] = now.isoformat()
-                state["ended_at"] = None
-                state["updated_at"] = now.isoformat()
-            elif state["status"] not in {"dismissed", "completed"}:
-                if payload.event == "started":
-                    state["status"] = "in_progress"
-                    state["started_at"] = state["started_at"] or now.isoformat()
-                elif payload.event == "step_viewed":
-                    state["status"] = "in_progress"
-                    state["current_step"] = payload.step
-                elif payload.event in {"dismissed", "completed"}:
-                    state["status"] = payload.event
-                    state["current_step"] = payload.step
-                    state["ended_at"] = now.isoformat()
-                state["updated_at"] = now.isoformat()
-
-            data.setdefault("behavior_events", []).append(
-                {
-                    "id": str(uuid4()),
-                    "user_id": user["id"],
-                    "module": module,
-                    "event": payload.event,
-                    "step": payload.step,
-                    "occurred_at": now.isoformat(),
-                }
-            )
-            return state
-
-        state = database.mutate(persist)
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
         return onboarding_response(module, state)
 
     @app.post(
@@ -640,21 +640,16 @@ def create_app(
     ) -> ValuesTestResponse:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def persist(data: dict[str, Any]) -> None:
-            session = find_active_session(data, token_digest, now)
-            if session is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            user = next((item for item in data["users"] if item["id"] == session["user_id"]), None)
-            if user is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            user["values_test"] = {
-                **payload.model_dump(mode="json"),
-                "completed_at": now.isoformat(),
-            }
-            user["updated_at"] = now.isoformat()
-
-        database.mutate(persist)
+        try:
+            await repository.save_values_test(
+                token_digest,
+                now,
+                payload.model_dump(mode="json"),
+            )
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
         return ValuesTestResponse(saved_answer_count=len(payload.answers), completed_at=now)
 
     @app.post(
@@ -666,23 +661,18 @@ def create_app(
     )
     async def login(payload: LoginRequest) -> AuthResponse:
         now = utc_now()
-
-        def authenticate(data: dict[str, Any]) -> tuple[str, dict[str, Any], dict[str, Any]]:
-            user = next((item for item in data["users"] if item["phone"] == payload.phone), None)
-            if user is None or not verify_password(
-                payload.password,
-                user["auth"]["salt"],
-                user["auth"]["password_hash"],
-            ):
-                raise HTTPException(status_code=401, detail="手机号或密码错误")
-
-            user["last_login_at"] = now.isoformat()
-            user["updated_at"] = now.isoformat()
-            raw_token, session = create_session(user["id"], now)
-            data["sessions"].append(session)
-            return raw_token, session, user
-
-        raw_token, session, user = database.mutate(authenticate)
+        raw_token = create_access_token()
+        session = {
+            "id": str(uuid4()),
+            "token_hash": hash_access_token(raw_token),
+            "created_at": now.isoformat(),
+            "expires_at": (now + SESSION_TTL).isoformat(),
+            "revoked_at": None,
+        }
+        try:
+            user = await repository.login(payload.phone, payload.password, now, session)
+        except InvalidCredentialsError as error:
+            raise HTTPException(status_code=401, detail="手机号或密码错误") from error
         return AuthResponse(
             access_token=raw_token,
             expires_at=session["expires_at"],
@@ -701,14 +691,12 @@ def create_app(
     ) -> Response:
         token_digest = require_token_digest(credentials)
         now = utc_now()
-
-        def revoke(data: dict[str, Any]) -> None:
-            session = find_active_session(data, token_digest, now)
-            if session is None:
-                raise HTTPException(status_code=401, detail="无效或已过期的登录凭证")
-            session["revoked_at"] = now.isoformat()
-
-        database.mutate(revoke)
+        try:
+            await repository.logout(token_digest, now)
+        except InvalidCredentialsError as error:
+            raise HTTPException(
+                status_code=401, detail="无效或已过期的登录凭证"
+            ) from error
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     return app

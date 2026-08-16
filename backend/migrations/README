@@ -1,0 +1,6 @@
+Single-database Alembic migrations for Uslike.
+
+Set DATABASE_URL before running any Alembic command. PostgreSQL URLs using
+postgres://, postgresql://, or a synchronous PostgreSQL driver are converted to
+postgresql+asyncpg:// by env.py. Plain SQLite URLs are converted to
+sqlite+aiosqlite:// so migrations can also be exercised locally.

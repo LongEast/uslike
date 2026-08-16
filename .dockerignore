@@ -1,0 +1,30 @@
+.git
+.github
+.gitignore
+.agents
+.codex
+
+.env
+.env.*
+!.env.example
+
+node_modules
+dist
+.venv
+venv
+
+__pycache__
+*.py[cod]
+.pytest_cache
+.coverage
+htmlcov
+
+# Runtime/user data belongs in PostgreSQL or the mounted uploads volume, never
+# in an image layer or remote build context.
+backend/data
+*.sqlite
+*.sqlite3
+*.db
+
+.DS_Store
+npm-debug.log*
