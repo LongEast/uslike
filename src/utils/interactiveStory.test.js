@@ -305,7 +305,8 @@ test("both true-end preludes converge on five continue scenes and a visual final
     ["true-end-02", "true-end-03", "首领：“还记得挑战的内容吗？”\n你回答：“沿着这个星球的海岸线跑上一圈。”"],
     ["true-end-03", "true-end-04", "弟弟：“他们想逃走吗？”\n姐姐：“不会的。一旦他们有任何一个个体尝试逃出他们的星系，就会被直接击毙，他们这样无异于葬送了整个星球。”\n"],
     ["true-end-04", "true-end-05", "弟弟：“不，他们成功了。”"],
-    ["true-end-05", "true-end-finale", "总统也说出了同样的话：\n他们成功了。"],
+    ["true-end-05", "true-end-finale", "总统也说出了同样的话：\n他们成功了。现在整个星球只有一座小岛在海平面上了。"],
+    ["true-end-06", "true-end-finale2", ""],
   ];
 
   for (const [nodeId, targetId, expectedText] of expectedSlides) {
