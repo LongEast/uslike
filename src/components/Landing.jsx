@@ -450,19 +450,7 @@ export default function Landing({ onStart }) {
             </p>
           </div>
 
-          <div className="landing-benefits-grid grid gap-4 sm:grid-cols-2">6
--2 1
-0 3
-3 3
-4 1
-3 -2
-2 -2
-4
-0 1
-2 2
-3 1
-1 0
-
+          <div className="landing-benefits-grid grid gap-4 sm:grid-cols-2">
             {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (
