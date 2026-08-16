@@ -1,6 +1,10 @@
 export const AUTH_STORAGE_KEY = "uslike.auth.v1";
 const AUTH_STORAGE_VERSION = 1;
-const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || "";
+const DEFAULT_PRODUCTION_API_BASE_URL = "https://uslike-dat0.onrender.com";
+const API_BASE_URL = (
+  import.meta.env?.VITE_API_BASE_URL
+  || (import.meta.env?.PROD ? DEFAULT_PRODUCTION_API_BASE_URL : "")
+);
 const PHONE_PATTERN = /^\+?[0-9]{6,20}$/;
 
 export function normalizePhone(phone) {
