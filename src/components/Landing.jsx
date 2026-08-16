@@ -331,12 +331,12 @@ export default function Landing({ onStart }) {
 
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3">
               {[
-                ["1 分钟", "完成回答"],
-                ["2+N 个人", "电波一下"],
-                ["50 句", "解锁游戏"],
+                ["先答一题", "跳过尬聊"],
+                ["双向揭晓", "看见同频"],
+                ["继续互动", "慢慢熟悉"],
               ].map(([value, label]) => (
                 <div key={value} className="rounded-[22px] border border-white/80 bg-white/68 p-4 shadow-sm backdrop-blur">
-                  <p className="text-2xl font-semibold text-stone-950">{value}</p>
+                  <p className="text-xl font-semibold text-stone-950 sm:text-2xl">{value}</p>
                   <p className="mt-1 text-sm text-stone-500">{label}</p>
                 </div>
               ))}
