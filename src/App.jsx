@@ -27,6 +27,7 @@ import {
   ResumeRoomModal,
 } from "./components/RoomDepositUI.jsx";
 import TextRoom from "./components/TextRoom.jsx";
+import { useTutorialPositionRef } from "./components/TutorialPositionContext.jsx";
 import VoiceRoom from "./components/VoiceRoom.jsx";
 import {
   getGameList,
@@ -208,6 +209,7 @@ function NotFoundPage() {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const tutorialPositionRef = useTutorialPositionRef();
   const [authSession, setAuthSession] = useState(() => loadAuthSession());
   const initialActiveRoomSession = useMemo(() => loadActiveRoomSession({
     userId: String(authSession?.user?.id || "guest"),
@@ -414,6 +416,7 @@ export default function App() {
     return recordOnboardingEvent(authSession.accessToken, "meet", event, step).catch(() => null);
   };
   const openMeet = async () => {
+    tutorialPositionRef.current = null;
     setModal("meet");
     if (!authSession?.accessToken) return;
     try {
@@ -429,7 +432,10 @@ export default function App() {
     setMeetTutorialStep(step);
     void recordMeetTutorialEvent("step_viewed", step);
   };
-  const interruptMeetTutorial = () => setMeetTutorialStep(null);
+  const interruptMeetTutorial = () => {
+    tutorialPositionRef.current = null;
+    setMeetTutorialStep(null);
+  };
   const shouldShowTutorialDismissNotice = () => {
     const userId = authSession?.user?.id || user?.id || "guest";
     const storageKey = `uslike:meet-tutorial-dismiss-notice:${userId}`;
@@ -446,6 +452,7 @@ export default function App() {
   const dismissMeetTutorial = () => {
     const showDismissNotice = shouldShowTutorialDismissNotice();
     void recordMeetTutorialEvent("dismissed", meetTutorialStep);
+    tutorialPositionRef.current = null;
     setMeetTutorialStep(null);
     setCurrentRoom(null);
     setCurrentRoomMode(null);
@@ -454,6 +461,7 @@ export default function App() {
     setModal(showDismissNotice ? "tutorial-dismissed" : null);
   };
   const restartMeetTutorial = () => {
+    tutorialPositionRef.current = null;
     setCurrentRoom(null);
     setCurrentRoomMode(null);
     setWaitingRoom(null);
@@ -463,6 +471,7 @@ export default function App() {
   };
   const completeMeetTutorial = async () => {
     await recordMeetTutorialEvent("completed", "open_messages");
+    tutorialPositionRef.current = null;
     setMeetTutorialStep(null);
     setCurrentRoom(null);
     setCurrentRoomMode(null);
@@ -518,6 +527,7 @@ export default function App() {
       setCurrentRoomMode(null);
       clearActiveRoomSession();
       setWaitingRoom(null);
+      tutorialPositionRef.current = null;
       setMeetTutorialStep(null);
       setMessageUi(createEmptyMessageUi());
       storyReturnFocusRef.current = null;

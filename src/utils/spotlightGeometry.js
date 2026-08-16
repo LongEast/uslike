@@ -21,3 +21,21 @@ export function buildSpotlightPath(width, height, holes) {
     .join(" ");
   return `${outer} ${cutouts}`;
 }
+
+export function clampTutorialBubblePosition(
+  position,
+  bubbleSize,
+  viewport,
+  margin = 16,
+) {
+  const viewportLeft = viewport.left ?? 0;
+  const viewportTop = viewport.top ?? 0;
+  const minLeft = viewportLeft + margin;
+  const minTop = viewportTop + margin;
+  const maxLeft = Math.max(minLeft, viewportLeft + viewport.width - bubbleSize.width - margin);
+  const maxTop = Math.max(minTop, viewportTop + viewport.height - bubbleSize.height - margin);
+  return {
+    left: Math.min(Math.max(position.left, minLeft), maxLeft),
+    top: Math.min(Math.max(position.top, minTop), maxTop),
+  };
+}
