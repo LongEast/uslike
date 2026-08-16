@@ -1,1 +1,157 @@
-# uslike
+# Uslike MVP
+
+React + Vite + Tailwind CSS frontend with a FastAPI JSON-database authentication backend.
+
+Now in-website user tips are also available
+
+## Requirements
+
+- Node.js 18 or newer
+- npm
+- Python 3.11 or newer
+
+## Install frontend
+
+```bash
+npm install
+```
+
+## Install backend
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r backend/requirements-dev.txt
+```
+
+## Run locally
+
+Start the FastAPI server from the repository root:
+
+```bash
+.venv/bin/uvicorn backend.app.main:app --reload
+```
+
+The API runs at `http://127.0.0.1:8000`. Interactive Swagger documentation is available at
+`http://127.0.0.1:8000/docs`.
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+Open the app in your browser:
+
+```text
+http://localhost:5173/
+```
+
+### Frontend API URL
+
+For local development, `VITE_API_BASE_URL` is intentionally optional. When it is unset,
+`import.meta.env.VITE_API_BASE_URL` is `undefined` and the frontend falls back to an empty string.
+API requests therefore use relative `/api/...` URLs, which Vite proxies to
+`http://127.0.0.1:8000` according to `vite.config.js`.
+
+Set `VITE_API_BASE_URL` only when the frontend must call a separately hosted backend directly.
+Create or update `.env.local` in the repository root:
+
+```dotenv
+VITE_API_BASE_URL=https://api.example.com
+```
+
+This also applies when FastAPI uses a different local port. For example:
+
+```bash
+.venv/bin/uvicorn backend.app.main:app --reload --port 8001
+```
+
+```dotenv
+VITE_API_BASE_URL=http://127.0.0.1:8001
+```
+
+Use the backend origin without a trailing slash. Vite exposes only variables prefixed with
+`VITE_` to frontend code. It reads environment files when the development server starts, so stop
+and restart `npm run dev` after changing `.env.local`. For a production deployment, provide the
+variable before running `npm run build`; the value is embedded in the browser bundle and must not
+contain secrets.
+
+The backend creates `backend/data/uslike.json` on the first successful write. The store uses locked,
+atomic file replacement, but is intentionally limited to one application process and should not be
+used as a production database.
+
+Authentication and onboarding endpoints:
+
+- `POST /api/auth/register` creates the account after the basic profile is complete.
+- `POST /api/auth/login` creates a seven-day session.
+- `POST /api/auth/logout` revokes the current session.
+- `GET /api/account` returns the current account profile and questionnaire summary.
+- `PATCH /api/account/profile` updates public profile fields without changing the user UUID.
+- `PUT /api/account/phone` and `PUT /api/account/password` require the current password and revoke
+  the user's other sessions.
+- `POST /api/account/avatar` uploads a JPEG, PNG, or WebP avatar up to 2 MB; `DELETE` on the same
+  path restores the generated default avatar. Runtime uploads live under `backend/data/uploads/`.
+- `POST /api/profile/values-test` validates and saves the optional post-registration questionnaire
+  for the current Bearer Token user. Re-submitting replaces the previous questionnaire response.
+- `GET /api/onboarding/{module}` reports whether a module tutorial should still be shown.
+- `POST /api/onboarding/{module}/events` records tutorial progress, dismissal, completion, or an
+  explicit restart from settings in the generic behavior event log. Interrupted tutorials remain
+  unfinished and restart on the next entry.
+
+## Test
+
+```bash
+.venv/bin/pytest
+npm test
+npm run build
+```
+
+## Build
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+The built files will be generated in `dist/`.
+
+## Serve the production app with FastAPI
+
+Build the frontend, then start FastAPI from the repository root:
+
+```bash
+npm run build
+.venv/bin/uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+```
+
+FastAPI serves the generated frontend and the API from the same origin. Open
+`http://127.0.0.1:8000/mvp/messages`; refreshing a nested route such as
+`/mvp/story/ice-civilization` returns the React app, while `/api`, `/docs`, `/redoc`,
+`/openapi.json`, and `/api/uploads` remain backend routes.
+
+By default the backend looks for `dist/` at the repository root. Set
+`USLIKE_FRONTEND_DIST_PATH` to use a different build directory:
+
+```bash
+USLIKE_FRONTEND_DIST_PATH=/srv/uslike/frontend-dist \
+  .venv/bin/uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+```
+
+When the default `dist/` has not been built, FastAPI continues in API-only mode for local backend
+development. A missing or invalid explicitly configured directory fails startup with a clear error
+instead of silently serving the wrong files.
+
+## Preview Production Build
+
+After building, preview the production output locally:
+
+```bash
+npm run preview
+```
+
+Then open the URL printed by Vite, usually:
+
+```text
+http://localhost:4173/
+```
