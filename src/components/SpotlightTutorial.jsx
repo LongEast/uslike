@@ -162,16 +162,7 @@ export default function SpotlightTutorial({
     scheduleMeasureRef.current?.();
   }, [targets]);
 
-  const primaryHole = holes[0];
-  const targetIsLow = primaryHole && primaryHole.y + primaryHole.height / 2 > viewport.height / 2;
-  const targetIsRight = primaryHole && primaryHole.x + primaryHole.width / 2 > viewport.width / 2;
-  const bubblePosition = [
-    "pointer-events-auto fixed left-1/2 -translate-x-1/2 sm:translate-x-0",
-    targetIsLow ? "top-5 sm:top-6" : "bottom-5 sm:bottom-6",
-    targetIsRight
-      ? "sm:left-6 sm:right-auto"
-      : "sm:left-auto sm:right-6",
-  ].join(" ");
+  const bubblePosition = "pointer-events-auto fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] sm:bottom-[max(1.5rem,env(safe-area-inset-bottom))] sm:right-[max(1.5rem,env(safe-area-inset-right))]";
 
   return createPortal(
     <div
